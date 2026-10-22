@@ -4,11 +4,11 @@ export default function PersonnelView({ users }) {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-2xl font-bold text-white">
-          Liste du Personnel & Enseignants
+        <h2 className="text-2xl font-black text-white">
+          Corps Professoral & Administratif
         </h2>
-        <p className="text-slate-400 text-sm">
-          Corps professoral et administratif du Lycée
+        <p className="text-slate-400 text-xs">
+          Membres du personnel enseignant et encadrant
         </p>
       </div>
 
@@ -16,37 +16,54 @@ export default function PersonnelView({ users }) {
         {users
           .filter(
             (u) =>
-              u.role === "personnel" ||
+              u.role === "prof" ||
               u.role === "secretaire" ||
               u.role === "admin",
           )
-          .map((pers) => (
+          .map((p) => (
             <div
-              key={pers.id}
-              className="bg-slate-900 border border-slate-800 rounded-2xl p-6"
+              key={p.id}
+              className="bg-slate-900 border border-slate-800 rounded-3xl p-6"
             >
               <div className="flex items-center space-x-4 mb-4">
-                <div className="w-12 h-12 rounded-xl bg-blue-600/20 border border-blue-500/30 flex items-center justify-center font-bold text-blue-400 text-base">
-                  {pers.prenom[0]}
-                  {pers.nom[0]}
-                </div>
+                <img
+                  src={p.photo}
+                  alt=""
+                  className="w-12 h-12 rounded-2xl object-cover border border-blue-500/30"
+                />
                 <div>
-                  <h3 className="font-bold text-white text-base">
-                    {pers.prenom} {pers.nom}
+                  <h3 className="font-bold text-white text-sm">
+                    {p.prenom} {p.nom}
                   </h3>
-                  <span className="inline-block px-2 py-0.5 rounded-md bg-blue-500/10 text-blue-400 text-[10px] font-bold uppercase tracking-wider">
-                    {pers.role}
+                  <span className="bg-blue-500/10 text-blue-400 text-[9px] font-bold px-2 py-0.5 rounded uppercase">
+                    {p.role}
                   </span>
                 </div>
               </div>
               <div className="space-y-2 text-xs text-slate-300">
                 <p>
-                  <span className="text-slate-500">Email :</span> {pers.email}
+                  <span className="text-slate-500">Email :</span> {p.email}
                 </p>
                 <p>
-                  <span className="text-slate-500">Contact :</span>{" "}
-                  {pers.contact}
+                  <span className="text-slate-500">Contact :</span> {p.contact}
                 </p>
+                {p.matieres && (
+                  <div className="mt-3 pt-3 border-t border-slate-800">
+                    <span className="text-slate-500 text-[10px] uppercase font-bold block mb-1">
+                      Matières Enseignées :
+                    </span>
+                    <div className="flex flex-wrap gap-1">
+                      {p.matieres.map((m, i) => (
+                        <span
+                          key={i}
+                          className="bg-slate-800 text-slate-300 px-2 py-0.5 rounded text-[10px]"
+                        >
+                          {m}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           ))}
