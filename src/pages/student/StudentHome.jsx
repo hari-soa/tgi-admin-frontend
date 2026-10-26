@@ -1,13 +1,13 @@
 import React from "react";
 import { extractClassNum } from "../../utils/helpers";
 
-export default function StudentHome({
+const StudentHome = ({
   currentUser,
   announcements,
   historiques,
   remarques,
   setActiveTab,
-}) {
+}) => {
   return (
     <div className="space-y-8">
       {/* Landing Page Banner */}
@@ -16,16 +16,18 @@ export default function StudentHome({
           Espace Scolaire Élève
         </span>
         <h2 className="text-3xl font-extrabold text-white mt-1">
-          Bonjour, {currentUser.prenom} {currentUser.nom}
+          Bonjour, {currentUser?.prenom} {currentUser?.nom}
         </h2>
         <p className="text-slate-400 text-sm mt-2 max-w-2xl">
-          {currentUser.role === "ancien"
+          {currentUser?.role === "ancien"
             ? `Dossier d'Ancien Élève — Année de sortie : ${currentUser.anneeSortie}`
-            : `Classe : ${currentUser.classe} • Matricule : ${currentUser.matricule} • ${extractClassNum(currentUser.matricule)}`}
+            : `Classe : ${currentUser?.classe || "N/A"} • Matricule : ${
+                currentUser?.matricule || "N/A"
+              } (${extractClassNum(currentUser?.matricule)})`}
         </p>
       </div>
 
-      {/* News / Actualités */}
+      {/* News / Actualités section */}
       <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6">
         <h3 className="text-lg font-bold text-white mb-2">
           Actualité des Examens
@@ -52,18 +54,25 @@ export default function StudentHome({
         </div>
       </div>
 
-      {/* Annonces générales */}
+      {/* General announcements filtered by target */}
       <div>
         <h3 className="text-lg font-bold text-white mb-4">
           Annonces Générales
         </h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {announcements
-            .filter((a) => a.cible === "tout" || a.cible === currentUser.classe)
+            .filter(
+              (ann) =>
+                ann.cible === "tout" || ann.cible === currentUser?.classe,
+            )
             .map((ann) => (
               <div
                 key={ann.id}
-                className={`p-5 rounded-2xl border ${ann.urgent ? "bg-red-950/20 border-red-800/50" : "bg-slate-900 border-slate-800"}`}
+                className={`p-5 rounded-2xl border transition-all ${
+                  ann.urgent
+                    ? "bg-red-950/20 border-red-800/50"
+                    : "bg-slate-900 border-slate-800"
+                }`}
               >
                 {ann.urgent && (
                   <span className="bg-red-600 text-white text-[10px] font-bold px-2 py-0.5 rounded uppercase tracking-wider mb-2 inline-block">
@@ -73,14 +82,14 @@ export default function StudentHome({
                 <h4 className="font-bold text-white text-sm">{ann.title}</h4>
                 <p className="text-slate-400 text-xs mt-2">{ann.context}</p>
                 <span className="text-[10px] text-slate-500 block mt-4">
-                  {ann.date}
+                  {ann.date || "Récemment"}
                 </span>
               </div>
             ))}
         </div>
       </div>
 
-      {/* Aperçu Historique & Remarques */}
+      {/* Student discipline history & remarks preview */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div className="bg-slate-900 border border-slate-800 p-6 rounded-2xl">
           <h4 className="font-bold text-white text-base mb-3">
@@ -88,12 +97,16 @@ export default function StudentHome({
           </h4>
           <div className="space-y-2">
             {historiques
-              .filter((h) => h.studentId === currentUser.id)
+              .filter((h) => h.studentId === currentUser?.id)
               .slice(0, 2)
               .map((h) => (
                 <div
                   key={h.id}
-                  className={`p-3 rounded-xl border text-xs ${h.isRed ? "bg-red-950/20 border-red-800/40 text-red-200" : "bg-slate-950 border-slate-800 text-slate-300"}`}
+                  className={`p-3 rounded-xl border text-xs ${
+                    h.isRed
+                      ? "bg-red-950/20 border-red-800/40 text-red-200"
+                      : "bg-slate-950 border-slate-800 text-slate-300"
+                  }`}
                 >
                   <span className="font-bold">{h.type}</span> ({h.detail}) —{" "}
                   {h.raison}
@@ -108,12 +121,16 @@ export default function StudentHome({
           </h4>
           <div className="space-y-2">
             {remarques
-              .filter((r) => r.studentId === currentUser.id)
+              .filter((r) => r.studentId === currentUser?.id)
               .slice(0, 2)
               .map((r) => (
                 <div
                   key={r.id}
-                  className={`p-3 rounded-xl border text-xs ${r.isRed ? "bg-red-950/20 border-red-800/40 text-red-200" : "bg-slate-950 border-slate-800 text-slate-300"}`}
+                  className={`p-3 rounded-xl border text-xs ${
+                    r.isRed
+                      ? "bg-red-950/20 border-red-800/40 text-red-200"
+                      : "bg-slate-950 border-slate-800 text-slate-300"
+                  }`}
                 >
                   <span className="font-bold">{r.type}</span> — {r.raison}
                 </div>
@@ -123,4 +140,6 @@ export default function StudentHome({
       </div>
     </div>
   );
-}
+};
+
+export default StudentHome;
