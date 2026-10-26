@@ -41,8 +41,10 @@ const AppRouter = ({
   handleSimulateExport,
   setCurrentUser,
 }) => {
+  const userRole = currentUser?.role?.toLowerCase() || "";
+
   // Student Views
-  if (currentUser.role === "student" || currentUser.role === "ancien") {
+  if (userRole === "student" || userRole === "ancien") {
     if (activeTab === "accueil") {
       return (
         <StudentHome
@@ -75,7 +77,7 @@ const AppRouter = ({
   }
 
   // Secretary Views
-  if (currentUser.role === "secretaire") {
+  if (userRole === "secretaire" || userRole === "secretary") {
     if (activeTab === "dashboard") {
       return (
         <SecretaryDashboard
@@ -100,7 +102,7 @@ const AppRouter = ({
   }
 
   // Admin Views
-  if (currentUser.role === "admin") {
+  if (userRole === "admin") {
     if (activeTab === "dashboard") {
       return (
         <AdminDashboard

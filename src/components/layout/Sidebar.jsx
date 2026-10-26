@@ -7,6 +7,8 @@ const Sidebar = ({
   setTargetStudent,
   handleLogout,
 }) => {
+  const userRole = currentUser?.role?.toLowerCase() || "";
+
   return (
     <aside className="fixed inset-y-0 left-0 w-64 bg-slate-900 border-r border-slate-800 flex flex-col z-30 select-none">
       <div className="p-6 border-b border-slate-800 flex items-center space-x-3 shrink-0">
@@ -36,7 +38,7 @@ const Sidebar = ({
       </div>
 
       <nav className="flex-1 p-4 space-y-1.5 overflow-y-auto">
-        {currentUser.role === "admin" && (
+        {userRole === "admin" && (
           <>
             <button
               onClick={() => {
@@ -95,7 +97,7 @@ const Sidebar = ({
           </>
         )}
 
-        {currentUser.role === "secretaire" && (
+        {(userRole === "secretaire" || userRole === "secretary") && (
           <>
             <button
               onClick={() => setActiveTab("dashboard")}
@@ -124,7 +126,7 @@ const Sidebar = ({
           </>
         )}
 
-        {(currentUser.role === "student" || currentUser.role === "ancien") && (
+        {(userRole === "student" || userRole === "ancien") && (
           <>
             <button
               onClick={() => setActiveTab("accueil")}

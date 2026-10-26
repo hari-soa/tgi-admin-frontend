@@ -1,13 +1,14 @@
 import React, { useState } from "react";
+import { loginUser, getCurrentUserProfile } from "../../services/authService";
 
-const Login = ({ users, setCurrentUser, showToast }) => {
+const Login = ({ setCurrentUser, showToast }) => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
   const [error, setError] = useState("");
 
-  const handleLoginSubmit = (e) => {
+  const handleLoginSubmit = async (e) => {
     e.preventDefault();
     setError("");
 
@@ -16,14 +17,14 @@ const Login = ({ users, setCurrentUser, showToast }) => {
     const adminPasswordEnv =
       import.meta.env.VITE_ADMIN_PASSWORD || "superadmin2026";
 
-    // 1. Check if login matches Super Admin from .env
+    // 1. Gérer le Super Admin en local (contourne l'API si c'est les identifiants env)
     if (email === adminEmailEnv && password === adminPasswordEnv) {
       const superAdminUser = {
         id: 0,
         matricule: "ADM-00001",
         nom: "Super",
         prenom: "Admin",
-        role: "admin",
+        role: "ADMIN",
         email: adminEmailEnv,
         contact: "+33 6 00 00 00 00",
         genre: "male",
@@ -36,27 +37,26 @@ const Login = ({ users, setCurrentUser, showToast }) => {
       return;
     }
 
-    // 2. Otherwise, check in database users (email + matricule as password)
-    const foundUser = users.find(
-      (u) =>
-        u.email.toLowerCase() === email.toLowerCase() &&
-        u.matricule === password,
-    );
+    try {
+      // 2. Pour les autres utilisateurs, appel de l'API backend
+      await loginUser(email, password);
+      const userProfile = await getCurrentUserProfile();
 
-    if (foundUser) {
-      if (foundUser.statut === "desactive") {
+      if (userProfile && userProfile.statut === "desactive") {
         setError(
           "This account has been disabled. Please contact the administrator.",
         );
         return;
       }
-      setCurrentUser(foundUser);
-      if (showToast)
+
+      setCurrentUser(userProfile);
+      if (showToast) {
         showToast(
-          `Successfully logged in as ${foundUser.prenom} ${foundUser.nom} (${foundUser.role.toUpperCase()})`,
+          `Successfully logged in as ${userProfile.firstName || userProfile.prenom || ""} ${userProfile.lastName || userProfile.nom || ""} (${(userProfile.role || "USER").toUpperCase()})`,
         );
-    } else {
-      setError("Invalid email or password (password is your matricule).");
+      }
+    } catch (err) {
+      setError(err.message || "Invalid email or matricule.");
     }
   };
 
@@ -107,7 +107,7 @@ const Login = ({ users, setCurrentUser, showToast }) => {
                   required
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  placeholder="Enter your matricule or admin password"
+                  placeholder="Enter your matricule or password"
                   className="w-full bg-slate-950 border border-slate-800 rounded-lg pl-4 pr-10 py-2.5 text-sm text-slate-100 focus:outline-none focus:border-indigo-500 transition-colors"
                 />
                 <button
@@ -117,7 +117,6 @@ const Login = ({ users, setCurrentUser, showToast }) => {
                   title={showPassword ? "Hide password" : "Show password"}
                 >
                   {showPassword ? (
-                    // Eye off icon
                     <svg
                       className="w-5 h-5"
                       fill="none"
@@ -132,7 +131,6 @@ const Login = ({ users, setCurrentUser, showToast }) => {
                       />
                     </svg>
                   ) : (
-                    // Eye icon
                     <svg
                       className="w-5 h-5"
                       fill="none"
@@ -183,7 +181,6 @@ const Login = ({ users, setCurrentUser, showToast }) => {
         </div>
       </div>
 
-      {/* Footer / All rights reserved */}
       <footer className="py-4 text-center text-xs text-slate-500 border-t border-slate-900">
         © 2026 Lycée Saint-Exupéry. All rights reserved.
       </footer>
