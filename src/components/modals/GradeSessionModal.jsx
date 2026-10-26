@@ -1,6 +1,16 @@
 import React from "react";
+import {
+  MODAL_BACKDROP,
+  MODAL_CONTAINER,
+  CLOSE_BUTTON,
+  FORM_CONTAINER,
+  MODAL_TITLE,
+  FIELD_LABEL,
+  SELECT_INPUT,
+  SUBMIT_BUTTON,
+} from "../../styles/GradeSessionModalStyles";
 
-const GradeSessionModal = ({
+export const GradeSessionModal = ({
   isOpen,
   onClose,
   onSubmit,
@@ -17,25 +27,20 @@ const GradeSessionModal = ({
   const subjectList = subjects || [];
 
   return (
-    <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-      <div className="bg-slate-900 border border-slate-800 rounded-2xl max-w-lg w-full p-6 shadow-2xl relative">
-        <button
-          onClick={onClose}
-          className="absolute top-5 right-5 text-slate-400 hover:text-white transition-colors"
-        >
+    <div className={MODAL_BACKDROP}>
+      <div className={MODAL_CONTAINER}>
+        <button onClick={onClose} className={CLOSE_BUTTON}>
           ✕
         </button>
 
-        <form onSubmit={onSubmit} className="space-y-4 text-xs">
-          <h3 className="text-base font-bold text-white mb-2">
-            Create Grade Session (For Secretary)
-          </h3>
+        <form onSubmit={onSubmit} className={FORM_CONTAINER}>
+          <h3 className={MODAL_TITLE}>Create Grade Session (For Secretary)</h3>
 
           <div>
-            <label className="block text-slate-400 mb-1">Target Subject</label>
+            <label className={FIELD_LABEL}>Target Subject</label>
             <select
               onChange={(e) => handleInputChange("matiere", e.target.value)}
-              className="w-full bg-slate-950 border border-slate-800 rounded-lg p-2 text-white focus:outline-none focus:border-blue-500"
+              className={SELECT_INPUT}
             >
               <option value="">Select a subject...</option>
               {subjectList.map((s) => (
@@ -47,10 +52,10 @@ const GradeSessionModal = ({
           </div>
 
           <div>
-            <label className="block text-slate-400 mb-1">Target Class</label>
+            <label className={FIELD_LABEL}>Target Class</label>
             <select
               onChange={(e) => handleInputChange("classe", e.target.value)}
-              className="w-full bg-slate-950 border border-slate-800 rounded-lg p-2 text-white focus:outline-none focus:border-blue-500"
+              className={SELECT_INPUT}
             >
               <option value="Terminale">Terminale</option>
               <option value="Première">Première</option>
@@ -58,10 +63,7 @@ const GradeSessionModal = ({
             </select>
           </div>
 
-          <button
-            type="submit"
-            className="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-2.5 rounded-xl transition-all mt-2"
-          >
+          <button type="submit" className={SUBMIT_BUTTON}>
             Assign to Secretary
           </button>
         </form>
