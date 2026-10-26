@@ -3,6 +3,7 @@ import Sidebar from "./components/layout/Sidebar";
 import Topbar from "./components/layout/Topbar";
 import AppRouter from "./pages/AppRouter";
 import Toast from "./components/common/Toast";
+import Login from "./components/auth/Login";
 
 // Modaux
 import UserModal from "./components/modals/UserModal";
@@ -23,8 +24,9 @@ import {
   INITIAL_POINTAGES,
 } from "./data/mockData";
 
-export default function App() {
-  const [currentUser, setCurrentUser] = useState(INITIAL_USERS[0]); // Default Admin
+const App = () => {
+  // Start with no user logged in
+  const [currentUser, setCurrentUser] = useState(null);
   const [activeTab, setActiveTab] = useState("dashboard");
 
   const [users, setUsers] = useState(INITIAL_USERS);
@@ -49,6 +51,12 @@ export default function App() {
     setTimeout(() => setToastMessage(""), 4000);
   };
 
+  const handleLogout = () => {
+    setCurrentUser(null);
+    setTargetStudent(null);
+    showToast("Logged out successfully");
+  };
+
   const handleSwitchUser = (role) => {
     const found = users.find((u) => u.role === role);
     if (found) {
@@ -56,7 +64,7 @@ export default function App() {
       if (role === "admin" || role === "secretaire") setActiveTab("dashboard");
       else setActiveTab("accueil");
       showToast(
-        `Connecté en tant que ${found.prenom} ${found.nom} (${role.toUpperCase()})`,
+        `Logged in as ${found.prenom} ${found.nom} (${role.toUpperCase()})`,
       );
     }
   };
@@ -97,7 +105,7 @@ export default function App() {
     setActiveModal(null);
     setFormState({});
     showToast(
-      `Utilisateur ${newUser.nom} ${newUser.prenom} créé (${newUser.matricule})`,
+      `User ${newUser.nom} ${newUser.prenom} created (${newUser.matricule})`,
     );
   };
 
@@ -105,8 +113,8 @@ export default function App() {
     e.preventDefault();
     const newAnn = {
       id: announcements.length + 1,
-      title: formState.title || "Annonce Officielle",
-      context: formState.context || "Détails...",
+      title: formState.title || "Official Announcement",
+      context: formState.context || "Details...",
       date: new Date().toISOString().replace("T", " ").substring(0, 16),
       urgent: formState.urgent === true || formState.urgent === "true",
       cible: formState.cible || "tout",
@@ -114,14 +122,14 @@ export default function App() {
     setAnnouncements([newAnn, ...announcements]);
     setActiveModal(null);
     setFormState({});
-    showToast("Annonce diffusée avec succès !");
+    showToast("Announcement published successfully!");
   };
 
   const handleCreateSubject = (e) => {
     e.preventDefault();
     const newSub = {
       id: subjects.length + 1,
-      nom: formState.nom || "Nouvelle Discipline",
+      nom: formState.nom || "New Subject",
       coeff: parseInt(formState.coeff) || 2,
       prof: formState.prof || "Claire Moreau",
       classe: formState.classe || "Seconde",
@@ -129,14 +137,14 @@ export default function App() {
     setSubjects([...subjects, newSub]);
     setActiveModal(null);
     setFormState({});
-    showToast(`Matière ${newSub.nom} (Coeff ${newSub.coeff}) créée !`);
+    showToast(`Subject ${newSub.nom} (Coeff ${newSub.coeff}) created!`);
   };
 
   const handleCreateGradeSession = (e) => {
     e.preventDefault();
     const newSession = {
       id: gradeSessions.length + 1,
-      matiere: formState.matiere || subjects[0]?.nom || "Mathématiques",
+      matiere: formState.matiere || subjects[0]?.nom || "Mathematics",
       classe: formState.classe || "Terminale",
       dateCreation: new Date().toISOString().replace("T", " ").substring(0, 16),
       dateValidation: null,
@@ -146,7 +154,7 @@ export default function App() {
     setGradeSessions([newSession, ...gradeSessions]);
     setActiveModal(null);
     setFormState({});
-    showToast("Session de note créée et assignée au secrétariat !");
+    showToast("Grade session created and assigned to secretary!");
   };
 
   const handleCreatePointage = (e) => {
@@ -154,9 +162,9 @@ export default function App() {
     const newP = {
       id: pointages.length + 1,
       profName: formState.profName || "Claire Moreau",
-      matiere: formState.matiere || "Mathématiques",
+      matiere: formState.matiere || "Mathematics",
       classe: formState.classe || "Terminale",
-      jour: formState.jour || "Lundi 08:00 - 10:00",
+      jour: formState.jour || "Monday 08:00 - 10:00",
       date: new Date().toISOString().substring(0, 10),
       status: "programme",
       retardMin: 0,
@@ -165,7 +173,7 @@ export default function App() {
     setPointages([...pointages, newP]);
     setActiveModal(null);
     setFormState({});
-    showToast("Pointage de cours configuré avec succès !");
+    showToast("Teacher pointage created successfully!");
   };
 
   const handleAddHistoryToTarget = (e) => {
@@ -176,7 +184,7 @@ export default function App() {
       studentId: targetStudent.id,
       type: formState.type || "Absence",
       detail: formState.detail || "08:00 - 10:00",
-      raison: formState.raison || "Non justifié",
+      raison: formState.raison || "Unjustified",
       author: `${currentUser.prenom} ${currentUser.nom} (${currentUser.role})`,
       date: new Date().toISOString().replace("T", " ").substring(0, 16),
       isRed: formState.type === "Absence" || formState.isRed === "true",
@@ -184,7 +192,7 @@ export default function App() {
     setHistoriques([newH, ...historiques]);
     setActiveModal(null);
     setFormState({});
-    showToast("Événement d’historique ajouté au profil");
+    showToast("History event added to student profile");
   };
 
   const handleAddRemarkToTarget = (e) => {
@@ -193,16 +201,16 @@ export default function App() {
     const newR = {
       id: remarques.length + 1,
       studentId: targetStudent.id,
-      type: formState.type || "Avertissement",
-      raison: formState.raison || "Comportement inadapté",
+      type: formState.type || "Warning",
+      raison: formState.raison || "Inappropriate behavior",
       author: `${currentUser.prenom} ${currentUser.nom} (${currentUser.role})`,
       date: new Date().toISOString().replace("T", " ").substring(0, 16),
-      isRed: formState.type === "Avertissement",
+      isRed: formState.type === "Warning",
     };
     setRemarques([newR, ...remarques]);
     setActiveModal(null);
     setFormState({});
-    showToast("Remarque enregistrée sur la fiche de l’étudiant");
+    showToast("Remark added to student profile");
   };
 
   const handleAdminValidateSession = (sessionId) => {
@@ -217,15 +225,14 @@ export default function App() {
         newResults.push({
           id: newResults.length + 1,
           studentId,
-          examName: "Trimestre 1",
+          examName: "Term 1",
           matiere: session.matiere,
           coeff: 3,
           note: valNum,
           noteCoeff: valNum * 3,
           moyenne: 12.0,
-          mention:
-            valNum >= 16 ? "Très Bien" : valNum >= 14 ? "Bien" : "Passable",
-          rang: "3ème",
+          mention: valNum >= 16 ? "Very Good" : valNum >= 14 ? "Good" : "Pass",
+          rang: "3rd",
         });
       }
     });
@@ -246,9 +253,7 @@ export default function App() {
         return s;
       }),
     );
-    showToast(
-      "Session de notes validée ! Injectée dans le bulletin des étudiants.",
-    );
+    showToast("Grade session validated and injected into student reports!");
   };
 
   const handleSecretarySaveDraft = (sessionId, draftData) => {
@@ -260,7 +265,7 @@ export default function App() {
         return s;
       }),
     );
-    showToast("Brouillon sauvegardé localement !");
+    showToast("Draft saved locally!");
   };
 
   const handleSecretarySubmitToAdmin = (sessionId, draftData) => {
@@ -273,7 +278,7 @@ export default function App() {
       }),
     );
     setActiveGradeSession(null);
-    showToast("Notes soumises à l’administrateur pour validation !");
+    showToast("Grades submitted to administrator for validation!");
   };
 
   const handleTogglePointage = (
@@ -290,7 +295,7 @@ export default function App() {
         return p;
       }),
     );
-    showToast(`Pointage mis à jour : ${status.toUpperCase()}`);
+    showToast(`Pointage updated: ${status.toUpperCase()}`);
   };
 
   const toggleUserStatus = (userId) => {
@@ -301,16 +306,16 @@ export default function App() {
           : u,
       ),
     );
-    showToast("Statut de l’utilisateur mis à jour");
+    showToast("User status updated");
   };
 
   const deleteUser = (userId) => {
     setUsers(users.filter((u) => u.id !== userId));
-    showToast("Utilisateur supprimé");
+    showToast("User deleted");
   };
 
   const handleSimulateExport = (type) => {
-    showToast(`Document [${type}] généré et téléchargé en PDF/CSV !`);
+    showToast(`Document [${type}] generated and downloaded in PDF/CSV!`);
   };
 
   const studentUsers = users.filter((u) => {
@@ -324,21 +329,40 @@ export default function App() {
     ["prof", "admin", "secretaire"].includes(u.role),
   );
 
+  // If no user is authenticated, render the Login screen
+  if (!currentUser) {
+    return (
+      <>
+        <Login
+          users={users}
+          setCurrentUser={setCurrentUser}
+          showToast={showToast}
+        />
+        <Toast message={toastMessage} />
+      </>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 flex font-sans relative">
-      {/* SIDEBAR FIXE */}
+      {/* FIXED SIDEBAR */}
       <Sidebar
         currentUser={currentUser}
         activeTab={activeTab}
         setActiveTab={setActiveTab}
         setTargetStudent={setTargetStudent}
         handleSwitchUser={handleSwitchUser}
+        handleLogout={handleLogout}
       />
 
-      {/* TOPBAR FIXE */}
-      <Topbar currentUser={currentUser} activeTab={activeTab} />
+      {/* FIXED TOPBAR */}
+      <Topbar
+        currentUser={currentUser}
+        activeTab={activeTab}
+        handleLogout={handleLogout}
+      />
 
-      {/* CONTENU PRINCIPAL */}
+      {/* MAIN CONTENT AREA */}
       <div className="flex-1 ml-64 pt-20 flex flex-col min-w-0">
         <main className="flex-1 overflow-y-auto p-6 md:p-8 bg-slate-950">
           <AppRouter
@@ -370,11 +394,12 @@ export default function App() {
             handleTogglePointage={handleTogglePointage}
             handleSimulateExport={handleSimulateExport}
             setCurrentUser={setCurrentUser}
+            handleLogout={handleLogout}
           />
         </main>
       </div>
 
-      {/* MODAUX */}
+      {/* MODALS */}
       <UserModal
         isOpen={activeModal === "user"}
         onClose={() => setActiveModal(null)}
@@ -429,8 +454,10 @@ export default function App() {
         targetStudent={targetStudent}
       />
 
-      {/* TOAST */}
+      {/* TOAST NOTIFICATIONS */}
       <Toast message={toastMessage} />
     </div>
   );
-}
+};
+
+export default App;
