@@ -1,7 +1,55 @@
 import React from "react";
 import { extractClassNum } from "../../utils/helpers";
+import {
+  CONTAINER_WRAPPER,
+  HEADER_SECTION,
+  HEADER_TITLE,
+  HEADER_SUBTITLE,
+  HEADER_ACTIONS,
+  FILTER_SELECT,
+  CREATE_BUTTON,
+  PROFILE_CARD,
+  PROFILE_HEADER,
+  PROFILE_INFO_CONTAINER,
+  PROFILE_AVATAR,
+  PROFILE_NAME,
+  PROFILE_MATRICULE,
+  PROFILE_CLASS_INFO,
+  CLOSE_BUTTON,
+  META_GRID,
+  META_LABEL,
+  META_VALUE_WHITE,
+  META_VALUE_CAPITALIZE,
+  STATUS_ACTIVE,
+  STATUS_INACTIVE,
+  PROFILE_ACTIONS,
+  ACTION_BLUE_BUTTON,
+  ACTION_SECONDARY_BUTTON,
+  SUB_SECTIONS_GRID,
+  SUB_SECTION_BOX,
+  SUB_SECTION_TITLE,
+  SUB_SECTION_ITEM,
+  ITEM_LABEL_BLUE,
+  ITEM_LABEL_EMERALD,
+  TABLE_CONTAINER,
+  TABLE_SCROLL,
+  TABLE_ELEMENT,
+  TABLE_HEAD,
+  TABLE_BODY,
+  TABLE_ROW,
+  TABLE_CELL_STUDENT,
+  TABLE_AVATAR,
+  TABLE_CELL_MATRICULE,
+  TABLE_CELL_DEFAULT,
+  ALUMNI_TEXT,
+  STATUS_BUTTON_ACTIVE,
+  STATUS_BUTTON_INACTIVE,
+  TABLE_ACTIONS_CELL,
+  PROFILE_VIEW_BUTTON,
+  DELETE_BUTTON,
+} from "../../styles/AdminStudentsStyles";
 
-const AdminStudents = ({
+export const AdminStudents = ({
   studentUsers,
   selectedStudentFilter,
   setSelectedStudentFilter,
@@ -16,22 +64,19 @@ const AdminStudents = ({
   remarques,
 }) => {
   return (
-    <div className="space-y-6">
-      {/* Header section with title, filter dropdown, and creation button */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+    <div className={CONTAINER_WRAPPER}>
+      <div className={HEADER_SECTION}>
         <div>
-          <h2 className="text-2xl font-bold text-white">
-            Gestion de la Liste des Étudiants
-          </h2>
-          <p className="text-slate-400 text-sm">
+          <h2 className={HEADER_TITLE}>Gestion de la Liste des Étudiants</h2>
+          <p className={HEADER_SUBTITLE}>
             Vue globale, filtrage et modification des dossiers
           </p>
         </div>
-        <div className="flex items-center space-x-2">
+        <div className={HEADER_ACTIONS}>
           <select
             value={selectedStudentFilter}
             onChange={(e) => setSelectedStudentFilter(e.target.value)}
-            className="bg-slate-900 border border-slate-800 text-slate-200 text-xs px-3 py-2 rounded-xl focus:outline-none transition-all"
+            className={FILTER_SELECT}
           >
             <option value="tout">Toutes les classes</option>
             <option value="Seconde">Seconde</option>
@@ -41,33 +86,31 @@ const AdminStudents = ({
           </select>
           <button
             onClick={() => setActiveModal("user")}
-            className="bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold px-4 py-2 rounded-xl transition-all shadow-lg shadow-blue-600/30"
+            className={CREATE_BUTTON}
           >
             + Nouvel élève
           </button>
         </div>
       </div>
 
-      {/* Conditional rendering: Detailed student profile or global student table */}
       {targetStudent ? (
-        <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 space-y-6">
-          {/* Student Profile Header */}
-          <div className="flex items-center justify-between border-b border-slate-800 pb-4">
-            <div className="flex items-center space-x-4">
+        <div className={PROFILE_CARD}>
+          <div className={PROFILE_HEADER}>
+            <div className={PROFILE_INFO_CONTAINER}>
               <img
                 src={targetStudent.photo}
                 alt="target"
-                className="w-16 h-16 rounded-2xl object-cover border border-blue-500/30"
+                className={PROFILE_AVATAR}
               />
               <div>
-                <h3 className="text-xl font-bold text-white">
+                <h3 className={PROFILE_NAME}>
                   {targetStudent.prenom} {targetStudent.nom}
                 </h3>
-                <p className="text-xs text-blue-400">
+                <p className={PROFILE_MATRICULE}>
                   Matricule : {targetStudent.matricule} •{" "}
                   {extractClassNum(targetStudent.matricule)}
                 </p>
-                <p className="text-xs text-slate-400 mt-1">
+                <p className={PROFILE_CLASS_INFO}>
                   {targetStudent.role === "ancien"
                     ? `Ancien élève (${targetStudent.anneeSortie})`
                     : `Classe : ${targetStudent.classe}`}
@@ -76,118 +119,105 @@ const AdminStudents = ({
             </div>
             <button
               onClick={() => setTargetStudent(null)}
-              className="text-xs text-slate-400 hover:text-white transition-colors"
+              className={CLOSE_BUTTON}
             >
               ← Fermer la fiche
             </button>
           </div>
 
-          {/* Student Information Grid */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs bg-slate-950 p-4 rounded-xl border border-slate-800">
+          <div className={META_GRID}>
             <div>
-              <span className="text-slate-500">Genre :</span>{" "}
-              <span className="text-white capitalize">
+              <span className={META_LABEL}>Genre :</span>{" "}
+              <span className={META_VALUE_CAPITALIZE}>
                 {targetStudent.genre}
               </span>
             </div>
             <div>
-              <span className="text-slate-500">Email :</span>{" "}
-              <span className="text-white">{targetStudent.email}</span>
+              <span className={META_LABEL}>Email :</span>{" "}
+              <span className={META_VALUE_WHITE}>{targetStudent.email}</span>
             </div>
             <div>
-              <span className="text-slate-500">Contact :</span>{" "}
-              <span className="text-white">{targetStudent.contact}</span>
+              <span className={META_LABEL}>Contact :</span>{" "}
+              <span className={META_VALUE_WHITE}>{targetStudent.contact}</span>
             </div>
             <div>
-              <span className="text-slate-500">Date/Lieu Naiss. :</span>{" "}
-              <span className="text-white">
+              <span className={META_LABEL}>Date/Lieu Naiss. :</span>{" "}
+              <span className={META_VALUE_WHITE}>
                 {targetStudent.dateNaissance} ({targetStudent.lieuNaissance})
               </span>
             </div>
             <div>
-              <span className="text-slate-500">Adresse :</span>{" "}
-              <span className="text-white">{targetStudent.adresse}</span>
+              <span className={META_LABEL}>Adresse :</span>{" "}
+              <span className={META_VALUE_WHITE}>{targetStudent.adresse}</span>
             </div>
             <div>
-              <span className="text-slate-500">Statut :</span>{" "}
+              <span className={META_LABEL}>Statut :</span>{" "}
               <span
-                className={`font-bold ${
+                className={
                   targetStudent.statut === "active"
-                    ? "text-emerald-400"
-                    : "text-red-400"
-                }`}
+                    ? STATUS_ACTIVE
+                    : STATUS_INACTIVE
+                }
               >
                 {targetStudent.statut}
               </span>
             </div>
           </div>
 
-          {/* Action Buttons for Student Profile */}
-          <div className="flex flex-wrap gap-3">
+          <div className={PROFILE_ACTIONS}>
             <button
               onClick={() => {
                 setCurrentUser(targetStudent);
                 setActiveTab("notes");
               }}
-              className="bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold px-4 py-2 rounded-xl transition-all shadow-lg shadow-blue-600/20"
+              className={ACTION_BLUE_BUTTON}
             >
               Voir résultat (Bulletin)
             </button>
             <button
               onClick={() => setActiveModal("target_history")}
-              className="bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold px-4 py-2 rounded-xl border border-slate-700 transition-all"
+              className={ACTION_SECONDARY_BUTTON}
             >
               + Créer un historique
             </button>
             <button
               onClick={() => setActiveModal("target_remark")}
-              className="bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold px-4 py-2 rounded-xl border border-slate-700 transition-all"
+              className={ACTION_SECONDARY_BUTTON}
             >
               + Créer une remarque
             </button>
           </div>
 
-          {/* History and Remarks Sections */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="bg-slate-950 p-4 rounded-xl border border-slate-800">
-              <h4 className="font-bold text-white text-xs mb-2">
-                Historique Discipline
-              </h4>
+          <div className={SUB_SECTIONS_GRID}>
+            <div className={SUB_SECTION_BOX}>
+              <h4 className={SUB_SECTION_TITLE}>Historique Discipline</h4>
               {historiques
                 .filter((h) => h.studentId === targetStudent.id)
                 .map((h) => (
-                  <div
-                    key={h.id}
-                    className="text-[11px] border-b border-slate-800/60 py-1.5 text-slate-300"
-                  >
-                    <span className="font-bold text-blue-400">{h.type}</span> —{" "}
+                  <div key={h.id} className={SUB_SECTION_ITEM}>
+                    <span className={ITEM_LABEL_BLUE}>{h.type}</span> —{" "}
                     {h.raison} ({h.date})
                   </div>
                 ))}
             </div>
-            <div className="bg-slate-950 p-4 rounded-xl border border-slate-800">
-              <h4 className="font-bold text-white text-xs mb-2">
-                Remarques Dossier
-              </h4>
+            <div className={SUB_SECTION_BOX}>
+              <h4 className={SUB_SECTION_TITLE}>Remarques Dossier</h4>
               {remarques
                 .filter((r) => r.studentId === targetStudent.id)
                 .map((r) => (
-                  <div
-                    key={r.id}
-                    className="text-[11px] border-b border-slate-800/60 py-1.5 text-slate-300"
-                  >
-                    <span className="font-bold text-emerald-400">{r.type}</span>{" "}
-                    — {r.raison} ({r.date})
+                  <div key={r.id} className={SUB_SECTION_ITEM}>
+                    <span className={ITEM_LABEL_EMERALD}>{r.type}</span> —{" "}
+                    {r.raison} ({r.date})
                   </div>
                 ))}
             </div>
           </div>
         </div>
       ) : (
-        <div className="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-xl">
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-xs">
-              <thead className="bg-slate-950 text-slate-400 uppercase font-semibold border-b border-slate-800">
+        <div className={TABLE_CONTAINER}>
+          <div className={TABLE_SCROLL}>
+            <table className={TABLE_ELEMENT}>
+              <thead className={TABLE_HEAD}>
                 <tr>
                   <th className="p-4">Élève</th>
                   <th className="p-4">Matricule</th>
@@ -197,28 +227,25 @@ const AdminStudents = ({
                   <th className="p-4 text-right">Actions</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-800 text-slate-200">
+              <tbody className={TABLE_BODY}>
                 {studentUsers.map((student) => (
-                  <tr
-                    key={student.id}
-                    className="hover:bg-slate-800/40 transition-colors"
-                  >
-                    <td className="p-4 font-bold text-white flex items-center space-x-3">
+                  <tr key={student.id} className={TABLE_ROW}>
+                    <td className={TABLE_CELL_STUDENT}>
                       <img
                         src={student.photo}
                         alt="avatar"
-                        className="w-8 h-8 rounded-full object-cover border border-slate-700"
+                        className={TABLE_AVATAR}
                       />
                       <span>
                         {student.nom} {student.prenom}
                       </span>
                     </td>
-                    <td className="p-4 font-mono text-blue-400">
+                    <td className={TABLE_CELL_MATRICULE}>
                       {student.matricule}
                     </td>
-                    <td className="p-4">
+                    <td className={TABLE_CELL_DEFAULT}>
                       {student.role === "ancien" ? (
-                        <span className="text-slate-400">
+                        <span className={ALUMNI_TEXT}>
                           Ancien ({student.anneeSortie})
                         </span>
                       ) : (
@@ -232,25 +259,25 @@ const AdminStudents = ({
                     <td className="p-4">
                       <button
                         onClick={() => toggleUserStatus(student.id)}
-                        className={`px-2.5 py-1 rounded text-[10px] font-bold transition-all ${
+                        className={
                           student.statut === "active"
-                            ? "bg-emerald-500/20 text-emerald-400 hover:bg-emerald-500/30"
-                            : "bg-red-500/20 text-red-400 hover:bg-red-500/30"
-                        }`}
+                            ? STATUS_BUTTON_ACTIVE
+                            : STATUS_BUTTON_INACTIVE
+                        }
                       >
                         {student.statut.toUpperCase()}
                       </button>
                     </td>
-                    <td className="p-4 text-right space-x-2">
+                    <td className={TABLE_ACTIONS_CELL}>
                       <button
                         onClick={() => setTargetStudent(student)}
-                        className="bg-blue-600/20 hover:bg-blue-600 text-blue-300 hover:text-white px-3 py-1 rounded text-xs transition-colors"
+                        className={PROFILE_VIEW_BUTTON}
                       >
                         Voir le profil
                       </button>
                       <button
                         onClick={() => deleteUser(student.id)}
-                        className="bg-red-500/10 hover:bg-red-600 text-red-400 hover:text-white px-2 py-1 rounded text-xs transition-colors"
+                        className={DELETE_BUTTON}
                       >
                         Supprimer
                       </button>
