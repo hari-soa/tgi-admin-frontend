@@ -1,16 +1,17 @@
 import React from "react";
 import { extractClassNum } from "../../utils/helpers";
 
-export default function SecretaryGrades({
+const SecretaryGrades = ({
   users,
   gradeSessions,
   activeGradeSession,
   setActiveGradeSession,
   handleSecretarySaveDraft,
   handleSecretarySubmitToAdmin,
-}) {
+}) => {
   return (
     <div className="space-y-8">
+      {/* Header section */}
       <div>
         <h2 className="text-2xl font-bold text-white">
           Saisie & Suivi des Sessions de Notes
@@ -20,6 +21,7 @@ export default function SecretaryGrades({
         </p>
       </div>
 
+      {/* Conditional rendering: Active grade session roster or session list */}
       {activeGradeSession ? (
         <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 space-y-6">
           <div className="flex items-center justify-between border-b border-slate-800 pb-4">
@@ -31,17 +33,19 @@ export default function SecretaryGrades({
                 {activeGradeSession.matiere} — {activeGradeSession.classe}
               </h3>
               <p className="text-xs text-slate-400 mt-1">
-                Date de création : {activeGradeSession.dateCreation}
+                Date de création :{" "}
+                {activeGradeSession.dateCreation || "Récemment"}
               </p>
             </div>
             <button
               onClick={() => setActiveGradeSession(null)}
-              className="text-xs text-slate-400 hover:text-white"
+              className="text-xs text-slate-400 hover:text-white transition-colors"
             >
               ← Retour à la liste
             </button>
           </div>
 
+          {/* Student roster for grade input */}
           <div className="space-y-3">
             <h4 className="text-sm font-semibold text-slate-200">
               Roster des étudiants ({activeGradeSession.classe})
@@ -64,7 +68,7 @@ export default function SecretaryGrades({
                       <img
                         src={student.photo}
                         alt="etu"
-                        className="w-8 h-8 rounded-lg object-cover"
+                        className="w-8 h-8 rounded-lg object-cover border border-slate-800"
                       />
                       <div>
                         <p className="text-sm font-bold text-white">
@@ -87,6 +91,9 @@ export default function SecretaryGrades({
                         min="0"
                         defaultValue={currentVal}
                         onChange={(e) => {
+                          if (!activeGradeSession.notesDraft) {
+                            activeGradeSession.notesDraft = {};
+                          }
                           activeGradeSession.notesDraft[student.id] =
                             e.target.value;
                         }}
@@ -98,15 +105,16 @@ export default function SecretaryGrades({
               })}
           </div>
 
+          {/* Action buttons for saving draft or submitting to admin */}
           <div className="flex items-center justify-end space-x-4 pt-4 border-t border-slate-800">
             <button
               onClick={() =>
                 handleSecretarySaveDraft(
                   activeGradeSession.id,
-                  activeGradeSession.notesDraft,
+                  activeGradeSession.notesDraft || {},
                 )
               }
-              className="bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold px-5 py-2.5 rounded-xl border border-slate-700"
+              className="bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold px-5 py-2.5 rounded-xl border border-slate-700 transition-all"
             >
               Sauvegarder en brouillon
             </button>
@@ -114,10 +122,10 @@ export default function SecretaryGrades({
               onClick={() =>
                 handleSecretarySubmitToAdmin(
                   activeGradeSession.id,
-                  activeGradeSession.notesDraft,
+                  activeGradeSession.notesDraft || {},
                 )
               }
-              className="bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold px-6 py-2.5 rounded-xl shadow-lg shadow-blue-600/30"
+              className="bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold px-6 py-2.5 rounded-xl shadow-lg shadow-blue-600/30 transition-all"
             >
               Envoyer à l'Admin pour validation
             </button>
@@ -128,38 +136,40 @@ export default function SecretaryGrades({
           {gradeSessions.map((session) => (
             <div
               key={session.id}
-              className="bg-slate-900 border border-slate-800 p-6 rounded-2xl"
+              className="bg-slate-900 border border-slate-800 p-6 rounded-2xl flex flex-col justify-between"
             >
-              <div className="flex items-center justify-between mb-2">
-                <h3 className="font-bold text-white text-base">
-                  {session.matiere}
-                </h3>
-                <span
-                  className={`text-[10px] font-bold px-2 py-0.5 rounded uppercase ${
-                    session.statut === "valide"
-                      ? "bg-emerald-500/10 text-emerald-400"
-                      : session.statut === "attente_validation"
-                        ? "bg-purple-500/10 text-purple-400"
-                        : "bg-yellow-500/10 text-yellow-400"
-                  }`}
-                >
-                  {session.statut.replace("_", " ")}
-                </span>
-              </div>
-              <p className="text-xs text-slate-400">
-                Classe :{" "}
-                <span className="text-white font-semibold">
-                  {session.classe}
-                </span>
-              </p>
-              <p className="text-[11px] text-slate-500 mt-2">
-                Créée : {session.dateCreation}
-              </p>
-              {session.dateValidation && (
-                <p className="text-[11px] text-emerald-400">
-                  Validée le : {session.dateValidation}
+              <div>
+                <div className="flex items-center justify-between mb-2">
+                  <h3 className="font-bold text-white text-base">
+                    {session.matiere}
+                  </h3>
+                  <span
+                    className={`text-[10px] font-bold px-2 py-0.5 rounded uppercase ${
+                      session.statut === "valide"
+                        ? "bg-emerald-500/10 text-emerald-400"
+                        : session.statut === "attente_validation"
+                          ? "bg-purple-500/10 text-purple-400"
+                          : "bg-yellow-500/10 text-yellow-400"
+                    }`}
+                  >
+                    {session.statut?.replace("_", " ") || "brouillon"}
+                  </span>
+                </div>
+                <p className="text-xs text-slate-400">
+                  Classe :{" "}
+                  <span className="text-white font-semibold">
+                    {session.classe}
+                  </span>
                 </p>
-              )}
+                <p className="text-[11px] text-slate-500 mt-2">
+                  Créée : {session.dateCreation || "Récemment"}
+                </p>
+                {session.dateValidation && (
+                  <p className="text-[11px] text-emerald-400 mt-1">
+                    Validée le : {session.dateValidation}
+                  </p>
+                )}
+              </div>
 
               {session.statut !== "valide" && (
                 <button
@@ -175,4 +185,6 @@ export default function SecretaryGrades({
       )}
     </div>
   );
-}
+};
+
+export default SecretaryGrades;
