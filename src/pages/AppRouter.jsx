@@ -11,7 +11,7 @@ import StaffList from "./shared/StaffList";
 import Announcements from "./shared/Announcements";
 import Profile from "./shared/Profile";
 
-export default function AppRouter({
+const AppRouter = ({
   currentUser,
   activeTab,
   setActiveTab,
@@ -40,7 +40,7 @@ export default function AppRouter({
   handleTogglePointage,
   handleSimulateExport,
   setCurrentUser,
-}) {
+}) => {
   // Student Views
   if (currentUser.role === "student" || currentUser.role === "ancien") {
     if (activeTab === "accueil") {
@@ -161,5 +161,7 @@ export default function AppRouter({
     return <Profile currentUser={currentUser} />;
   }
 
-  return <div>Vue non trouvée.</div>;
-}
+  return <div className="text-white p-8">View not found.</div>;
+};
+
+export default AppRouter;
