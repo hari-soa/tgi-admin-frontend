@@ -1,8 +1,8 @@
 import React from "react";
 
-export default function Topbar({ currentUser, activeTab }) {
+const Topbar = ({ currentUser, activeTab }) => {
   return (
-    <header className="fixed top-0 right-0 left-64 h-20 bg-slate-900 border-b border-slate-800 px-6 flex items-center justify-between z-20">
+    <header className="fixed top-0 right-0 left-64 h-20 bg-slate-900 border-b border-slate-800 px-8 flex items-center justify-between z-20">
       <div className="flex items-center space-x-4">
         <h1 className="text-lg font-bold text-white capitalize">
           {activeTab === "dashboard"
@@ -14,7 +14,8 @@ export default function Topbar({ currentUser, activeTab }) {
       </div>
 
       <div className="flex items-center space-x-4">
-        <div className="flex items-center space-x-3 border-l border-slate-800 pl-4">
+        {/* User Profile Info */}
+        <div className="flex items-center space-x-3 border-l border-slate-800 pl-6">
           <img
             src={currentUser.photo}
             alt="profile"
@@ -37,4 +38,6 @@ export default function Topbar({ currentUser, activeTab }) {
       </div>
     </header>
   );
-}
+};
+
+export default Topbar;

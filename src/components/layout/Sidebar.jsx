@@ -1,12 +1,12 @@
 import React from "react";
 
-export default function Sidebar({
+const Sidebar = ({
   currentUser,
   activeTab,
   setActiveTab,
   setTargetStudent,
-  handleSwitchUser,
-}) {
+  handleLogout,
+}) => {
   return (
     <aside className="fixed inset-y-0 left-0 w-64 bg-slate-900 border-r border-slate-800 flex flex-col z-30 select-none">
       <div className="p-6 border-b border-slate-800 flex items-center space-x-3 shrink-0">
@@ -166,31 +166,30 @@ export default function Sidebar({
         )}
       </nav>
 
-      <div className="p-4 border-t border-slate-800 space-y-2 shrink-0">
-        <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block">
-          Changer d'utilisateur
-        </span>
-        <div className="grid grid-cols-3 gap-1">
-          <button
-            onClick={() => handleSwitchUser("admin")}
-            className="bg-slate-800 hover:bg-blue-600/30 text-slate-300 text-[10px] py-1.5 rounded font-medium"
+      {/* Footer Sidebar with Logout Button */}
+      <div className="p-4 border-t border-slate-800 shrink-0">
+        <button
+          onClick={handleLogout}
+          className="w-full flex items-center justify-center space-x-2 bg-rose-600/10 hover:bg-rose-600/20 text-rose-400 border border-rose-500/20 py-2.5 rounded-xl text-xs font-semibold transition-colors"
+        >
+          <svg
+            className="w-4 h-4"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
           >
-            Admin
-          </button>
-          <button
-            onClick={() => handleSwitchUser("secretaire")}
-            className="bg-slate-800 hover:bg-blue-600/30 text-slate-300 text-[10px] py-1.5 rounded font-medium"
-          >
-            Secr.
-          </button>
-          <button
-            onClick={() => handleSwitchUser("student")}
-            className="bg-slate-800 hover:bg-blue-600/30 text-slate-300 text-[10px] py-1.5 rounded font-medium"
-          >
-            Élève
-          </button>
-        </div>
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
+            />
+          </svg>
+          <span>Se déconnecter</span>
+        </button>
       </div>
     </aside>
   );
-}
+};
+
+export default Sidebar;
