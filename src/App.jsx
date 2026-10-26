@@ -5,7 +5,7 @@ import AppRouter from "./pages/AppRouter";
 import Toast from "./components/common/Toast";
 import Login from "./components/auth/Login";
 
-// Modaux
+// Modals
 import UserModal from "./components/modals/UserModal";
 import AnnouncementModal from "./components/modals/AnnouncementModal";
 import SubjectModal from "./components/modals/SubjectModal";
@@ -13,7 +13,7 @@ import GradeSessionModal from "./components/modals/GradeSessionModal";
 import PointageModal from "./components/modals/PointageModal";
 import HistoryRemarkModal from "./components/modals/HistoryRemarkModal";
 
-// Services API
+// API Services
 import { getCurrentUserProfile, logoutUser } from "./services/authService";
 import {
   createStudent,
@@ -74,16 +74,31 @@ const App = () => {
     setTimeout(() => setToastMessage(""), 4000);
   };
 
-  // Fetch initial data when user is authenticated
+  // Fetch initial data from server when user is authenticated
   useEffect(() => {
     const fetchAppData = async () => {
       try {
         if (currentUser) {
-          const subjectsData = await getAllSubjects().catch(() => []);
-          const announcementsData = await getAllAnnouncements().catch(() => []);
+          const [
+            subjectsData,
+            announcementsData,
+            usersData,
+            gradeSessionsData,
+            pointagesData,
+          ] = await Promise.all([
+            getAllSubjects().catch(() => []),
+            getAllAnnouncements().catch(() => []),
+            // Fallback to empty array if backend endpoints are not yet fully wired
+            Promise.resolve([]),
+            Promise.resolve([]),
+            Promise.resolve([]),
+          ]);
 
           setSubjects(subjectsData);
           setAnnouncements(announcementsData);
+          setUsers(usersData);
+          setGradeSessions(gradeSessionsData);
+          setPointages(pointagesData);
         }
       } catch (error) {
         showToast("Error loading application data from server");
@@ -112,7 +127,7 @@ const App = () => {
     }
   };
 
-  // API Modals Handlers
+  // API Modal Handlers
   const handleCreateUser = async (e) => {
     e.preventDefault();
     try {
@@ -170,7 +185,7 @@ const App = () => {
       setSubjects([...subjects, response || payload]);
       setActiveModal(null);
       setFormState({});
-      showToast(`Subject created successfully!`);
+      showToast("Subject created successfully!");
     } catch (error) {
       showToast(`Error: ${error.message}`);
     }

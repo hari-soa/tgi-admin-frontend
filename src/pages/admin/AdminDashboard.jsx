@@ -1,6 +1,6 @@
 import React from "react";
 
-export default function AdminDashboard({
+const AdminDashboard = ({
   currentUser,
   users,
   subjects,
@@ -8,14 +8,15 @@ export default function AdminDashboard({
   announcements,
   setActiveModal,
   handleAdminValidateSession,
-}) {
+}) => {
+  // Filter grade sessions that require administrator validation
   const pendingSessions = gradeSessions.filter(
-    (s) => s.statut === "attente_validation",
+    (session) => session.statut === "attente_validation",
   );
 
   return (
     <div className="space-y-8">
-      {/* Landing Page Banner */}
+      {/* Control Panel Header Banner */}
       <div className="bg-gradient-to-r from-blue-900/50 via-slate-900 to-slate-900 border border-slate-800 rounded-2xl p-8">
         <span className="text-xs font-bold text-blue-400 uppercase tracking-widest">
           Panneau de Contrôle Administrateur
@@ -27,41 +28,43 @@ export default function AdminDashboard({
           Gérez les utilisateurs, diffusez les annonces, programmez les matières
           et validez les notes transmises par le secrétariat.
         </p>
+
+        {/* Quick Actions Buttons */}
         <div className="flex flex-wrap gap-4 mt-6">
           <button
             onClick={() => setActiveModal("user")}
-            className="bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold px-4 py-2.5 rounded-xl shadow-lg shadow-blue-600/30"
+            className="bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold px-4 py-2.5 rounded-xl shadow-lg shadow-blue-600/35 transition-all"
           >
             + Créer un utilisateur
           </button>
           <button
             onClick={() => setActiveModal("announcement")}
-            className="bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold px-4 py-2.5 rounded-xl border border-slate-700"
+            className="bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold px-4 py-2.5 rounded-xl border border-slate-700 transition-all"
           >
             + Créer une annonce
           </button>
           <button
             onClick={() => setActiveModal("subject")}
-            className="bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold px-4 py-2.5 rounded-xl border border-slate-700"
+            className="bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold px-4 py-2.5 rounded-xl border border-slate-700 transition-all"
           >
             + Créer une matière
           </button>
           <button
             onClick={() => setActiveModal("grade_session")}
-            className="bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold px-4 py-2.5 rounded-xl border border-slate-700"
+            className="bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold px-4 py-2.5 rounded-xl border border-slate-700 transition-all"
           >
             + Créer une note
           </button>
           <button
             onClick={() => setActiveModal("pointage")}
-            className="bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold px-4 py-2.5 rounded-xl border border-slate-700"
+            className="bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold px-4 py-2.5 rounded-xl border border-slate-700 transition-all"
           >
             + Créer un pointage
           </button>
         </div>
       </div>
 
-      {/* Counters */}
+      {/* Statistics Counters Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <div className="bg-slate-900 border border-slate-800 p-5 rounded-2xl">
           <span className="text-xs text-blue-400 font-bold uppercase">
@@ -97,7 +100,7 @@ export default function AdminDashboard({
         </div>
       </div>
 
-      {/* Notes en attente de validation */}
+      {/* Pending Grade Sessions Section */}
       <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6">
         <h3 className="text-lg font-bold text-white mb-4">
           Notes Transmises par la Secrétaire (En attente de validation)
@@ -139,4 +142,6 @@ export default function AdminDashboard({
       </div>
     </div>
   );
-}
+};
+
+export default AdminDashboard;
