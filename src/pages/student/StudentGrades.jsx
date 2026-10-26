@@ -1,49 +1,71 @@
 import React, { useState } from "react";
+import {
+  CONTAINER_WRAPPER,
+  HEADER_SECTION,
+  HEADER_TITLE,
+  HEADER_SUBTITLE,
+  HEADER_ACTIONS,
+  SELECT_INPUT,
+  EXPORT_BUTTON,
+  TABLE_CONTAINER,
+  TABLE_HEADER_BOX,
+  TABLE_TITLE,
+  TABLE_SCROLL,
+  TABLE_ELEMENT,
+  TABLE_HEAD,
+  TABLE_BODY,
+  TABLE_ROW,
+  CELL_SUBJECT,
+  CELL_NOTE,
+  CELL_NOTE_COEFF,
+  CELL_AVERAGE,
+  MENTION_BADGE,
+  CELL_RANK,
+} from "../../styles/StudentGradesStyles";
 
-const StudentGrades = ({ currentUser, examResults, handleSimulateExport }) => {
-  // State for filtering exam reports (e.g., Trimester 1 vs Mock Exam)
+export const StudentGrades = ({
+  currentUser,
+  examResults,
+  handleSimulateExport,
+}) => {
   const [selectedExamFilter, setSelectedExamFilter] = useState("Trimestre 1");
 
   return (
-    <div className="space-y-8">
-      {/* Header section with title, period selector, and PDF export simulation button */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+    <div className={CONTAINER_WRAPPER}>
+      <div className={HEADER_SECTION}>
         <div>
-          <h2 className="text-2xl font-bold text-white">
-            Résultats & Notes d'Examens
-          </h2>
-          <p className="text-slate-400 text-sm">
+          <h2 className={HEADER_TITLE}>Résultats & Notes d'Examens</h2>
+          <p className={HEADER_SUBTITLE}>
             Bulletins détaillés et moyennes annuelles
           </p>
         </div>
-        <div className="flex items-center space-x-2">
+        <div className={HEADER_ACTIONS}>
           <select
             value={selectedExamFilter}
             onChange={(e) => setSelectedExamFilter(e.target.value)}
-            className="bg-slate-900 border border-slate-800 text-slate-200 text-xs px-3 py-2 rounded-xl focus:outline-none transition-all"
+            className={SELECT_INPUT}
           >
             <option value="Trimestre 1">Trimestre 1</option>
             <option value="Examen Blanc">Examen Blanc</option>
           </select>
           <button
             onClick={() => handleSimulateExport(`Examen_${selectedExamFilter}`)}
-            className="bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold px-4 py-2 rounded-xl border border-slate-700 transition-all shadow-md"
+            className={EXPORT_BUTTON}
           >
             Exporter Examen (PDF)
           </button>
         </div>
       </div>
 
-      {/* Grades and performance table section */}
-      <div className="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-xl">
-        <div className="p-4 border-b border-slate-800 bg-slate-900/50">
-          <h3 className="font-bold text-white text-sm">
+      <div className={TABLE_CONTAINER}>
+        <div className={TABLE_HEADER_BOX}>
+          <h3 className={TABLE_TITLE}>
             Détail des Matières — {selectedExamFilter}
           </h3>
         </div>
-        <div className="overflow-x-auto">
-          <table className="w-full text-left text-xs">
-            <thead className="bg-slate-950 text-slate-400 uppercase font-semibold border-b border-slate-800">
+        <div className={TABLE_SCROLL}>
+          <table className={TABLE_ELEMENT}>
+            <thead className={TABLE_HEAD}>
               <tr>
                 <th className="p-4">Matière</th>
                 <th className="p-4">Coefficient</th>
@@ -54,7 +76,7 @@ const StudentGrades = ({ currentUser, examResults, handleSimulateExport }) => {
                 <th className="p-4">Rang</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-800 text-slate-200">
+            <tbody className={TABLE_BODY}>
               {examResults
                 .filter(
                   (res) =>
@@ -62,23 +84,18 @@ const StudentGrades = ({ currentUser, examResults, handleSimulateExport }) => {
                     res.examName === selectedExamFilter,
                 )
                 .map((res) => (
-                  <tr
-                    key={res.id}
-                    className="hover:bg-slate-800/40 transition-colors"
-                  >
-                    <td className="p-4 font-bold text-white">{res.matiere}</td>
+                  <tr key={res.id} className={TABLE_ROW}>
+                    <td className={CELL_SUBJECT}>{res.matiere}</td>
                     <td className="p-4">{res.coeff}</td>
-                    <td className="p-4 font-extrabold text-blue-400 text-sm">
-                      {res.note} / 20
-                    </td>
-                    <td className="p-4 font-semibold">{res.noteCoeff}</td>
-                    <td className="p-4 text-slate-400">{res.moyenne}</td>
+                    <td className={CELL_NOTE}>{res.note} / 20</td>
+                    <td className={CELL_NOTE_COEFF}>{res.noteCoeff}</td>
+                    <td className={CELL_AVERAGE}>{res.moyenne}</td>
                     <td className="p-4">
-                      <span className="bg-blue-500/10 text-blue-400 px-2 py-0.5 rounded font-semibold text-[10px]">
+                      <span className={MENTION_BADGE}>
                         {res.mention || "N/A"}
                       </span>
                     </td>
-                    <td className="p-4 font-bold">{res.rang || "N/A"}</td>
+                    <td className={CELL_RANK}>{res.rang || "N/A"}</td>
                   </tr>
                 ))}
             </tbody>
