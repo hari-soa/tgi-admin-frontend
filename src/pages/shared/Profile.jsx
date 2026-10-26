@@ -1,48 +1,63 @@
 import React from "react";
 import { extractClassNum } from "../../utils/helpers";
+import {
+  CONTAINER_WRAPPER,
+  HEADER_TITLE,
+  HEADER_SUBTITLE,
+  CARD_BOX,
+  USER_HEADER_SECTION,
+  PROFILE_IMAGE,
+  USER_INFO_BOX,
+  USER_NAME,
+  USER_MATRICULE,
+  BADGE_CONTAINER,
+  ROLE_BADGE,
+  STATUS_ACTIVE_BADGE,
+  STATUS_INACTIVE_BADGE,
+  DETAILS_GRID,
+  FIELD_LABEL,
+  FIELD_VALUE,
+  FIELD_VALUE_CAPITALIZE,
+  ADDRESS_GRID_SPAN,
+} from "../../styles/ProfileStyles";
 
-const Profile = ({ currentUser }) => {
+export const Profile = ({ currentUser }) => {
   if (!currentUser) return null;
 
   const isStudentOrAlumni =
     currentUser.role === "student" || currentUser.role === "ancien";
 
   return (
-    <div className="space-y-6 max-w-4xl mx-auto">
-      {/* Header title */}
+    <div className={CONTAINER_WRAPPER}>
       <div>
-        <h2 className="text-2xl font-bold text-white">Mon Profil Personnel</h2>
-        <p className="text-slate-400 text-sm">
+        <h2 className={HEADER_TITLE}>Mon Profil Personnel</h2>
+        <p className={HEADER_SUBTITLE}>
           Informations administratives enregistrées
         </p>
       </div>
 
-      {/* Main profile card */}
-      <div className="bg-slate-900 border border-slate-800 rounded-2xl p-8 shadow-xl">
-        {/* User header section */}
-        <div className="flex flex-col sm:flex-row items-center space-y-4 sm:space-y-0 sm:space-x-6 pb-6 border-b border-slate-800">
+      <div className={CARD_BOX}>
+        <div className={USER_HEADER_SECTION}>
           <img
             src={currentUser.photo || "/default-avatar.png"}
             alt="profile"
-            className="w-24 h-24 rounded-2xl object-cover border-2 border-blue-500/40"
+            className={PROFILE_IMAGE}
           />
-          <div className="text-center sm:text-left">
-            <h3 className="text-2xl font-black text-white">
+          <div className={USER_INFO_BOX}>
+            <h3 className={USER_NAME}>
               {currentUser.prenom} {currentUser.nom}
             </h3>
-            <p className="text-blue-400 text-sm font-semibold mt-1">
+            <p className={USER_MATRICULE}>
               Matricule : {currentUser.matricule || "N/A"}
             </p>
-            <div className="flex items-center justify-center sm:justify-start space-x-2 mt-2">
-              <span className="inline-block px-2.5 py-1 rounded bg-blue-500/10 text-blue-400 text-xs font-bold uppercase tracking-wider">
-                {currentUser.role}
-              </span>
+            <div className={BADGE_CONTAINER}>
+              <span className={ROLE_BADGE}>{currentUser.role}</span>
               <span
-                className={`px-2.5 py-1 rounded text-xs font-bold ${
+                className={
                   currentUser.statut === "active"
-                    ? "bg-emerald-500/20 text-emerald-400"
-                    : "bg-red-500/20 text-red-400"
-                }`}
+                    ? STATUS_ACTIVE_BADGE
+                    : STATUS_INACTIVE_BADGE
+                }
               >
                 {currentUser.statut
                   ? currentUser.statut.toUpperCase()
@@ -52,41 +67,31 @@ const Profile = ({ currentUser }) => {
           </div>
         </div>
 
-        {/* User detailed metadata grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 pt-6 text-sm">
+        <div className={DETAILS_GRID}>
           <div>
-            <label className="block text-xs font-semibold text-slate-500 uppercase">
-              Email
-            </label>
-            <p className="text-white font-medium mt-1">
+            <label className={FIELD_LABEL}>Email</label>
+            <p className={FIELD_VALUE}>
               {currentUser.email || "Non renseigné"}
             </p>
           </div>
           <div>
-            <label className="block text-xs font-semibold text-slate-500 uppercase">
-              Contact / Téléphone
-            </label>
-            <p className="text-white font-medium mt-1">
+            <label className={FIELD_LABEL}>Contact / Téléphone</label>
+            <p className={FIELD_VALUE}>
               {currentUser.contact || "Non renseigné"}
             </p>
           </div>
           <div>
-            <label className="block text-xs font-semibold text-slate-500 uppercase">
-              Genre
-            </label>
-            <p className="text-white font-medium mt-1 capitalize">
+            <label className={FIELD_LABEL}>Genre</label>
+            <p className={FIELD_VALUE_CAPITALIZE}>
               {currentUser.genre || "Non spécifié"}
             </p>
           </div>
 
-          {/* Conditional fields for students and alumni */}
           {isStudentOrAlumni && (
             <>
               <div>
-                <label className="block text-xs font-semibold text-slate-500 uppercase">
-                  Année d'Entrée / Sortie
-                </label>
-                <p className="text-white font-medium mt-1">
+                <label className={FIELD_LABEL}>Année d'Entrée / Sortie</label>
+                <p className={FIELD_VALUE}>
                   {currentUser.anneeEntree || "N/A"}{" "}
                   {currentUser.anneeSortie
                     ? `— Sortie en ${currentUser.anneeSortie}`
@@ -94,10 +99,8 @@ const Profile = ({ currentUser }) => {
                 </p>
               </div>
               <div>
-                <label className="block text-xs font-semibold text-slate-500 uppercase">
-                  Classe & Numéro en classe
-                </label>
-                <p className="text-white font-medium mt-1">
+                <label className={FIELD_LABEL}>Classe & Numéro en classe</label>
+                <p className={FIELD_VALUE}>
                   {currentUser.role === "ancien"
                     ? "Sans classe (Alumni)"
                     : `${currentUser.classe || "Non assignée"} (${extractClassNum(
@@ -106,21 +109,17 @@ const Profile = ({ currentUser }) => {
                 </p>
               </div>
               <div>
-                <label className="block text-xs font-semibold text-slate-500 uppercase">
-                  Date & Lieu de Naissance
-                </label>
-                <p className="text-white font-medium mt-1">
+                <label className={FIELD_LABEL}>Date & Lieu de Naissance</label>
+                <p className={FIELD_VALUE}>
                   {currentUser.dateNaissance || "N/A"}{" "}
                   {currentUser.lieuNaissance
                     ? `(${currentUser.lieuNaissance})`
                     : ""}
                 </p>
               </div>
-              <div className="sm:col-span-2">
-                <label className="block text-xs font-semibold text-slate-500 uppercase">
-                  Adresse Résidentielle
-                </label>
-                <p className="text-white font-medium mt-1">
+              <div className={ADDRESS_GRID_SPAN}>
+                <label className={FIELD_LABEL}>Adresse Résidentielle</label>
+                <p className={FIELD_VALUE}>
                   {currentUser.adresse || "Non renseignée"}
                 </p>
               </div>
