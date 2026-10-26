@@ -88,10 +88,9 @@ const App = () => {
           ] = await Promise.all([
             getAllSubjects().catch(() => []),
             getAllAnnouncements().catch(() => []),
-            // Fallback to empty array if backend endpoints are not yet fully wired
-            Promise.resolve([]),
-            Promise.resolve([]),
-            Promise.resolve([]),
+            Promise.resolve([]), // userService si dispo
+            Promise.resolve([]), // gradeService si dispo
+            getDailyAttendance().catch(() => []), // <-- Ici on branche le vrai service de pointage !
           ]);
 
           setSubjects(subjectsData);
