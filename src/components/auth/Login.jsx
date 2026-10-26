@@ -1,7 +1,31 @@
 import React, { useState } from "react";
 import { loginUser, getCurrentUserProfile } from "../../services/authService";
+import logoImage from "../../assets/logo-tgi.jpg";
+import {
+  CONTAINER_WRAPPER,
+  CONTENT_WRAPPER,
+  CARD_BOX,
+  HEADER_CONTAINER,
+  LOGO_IMAGE,
+  TITLE_TEXT,
+  SUBTITLE_TEXT,
+  ERROR_BOX,
+  FORM_CONTAINER,
+  LABEL_TEXT,
+  INPUT_FIELD,
+  PASSWORD_INPUT_FIELD,
+  PASSWORD_TOGGLE_BTN,
+  ICON_SIZE,
+  PASSWORD_HELP_TEXT,
+  OPTIONS_CONTAINER,
+  REMEMBER_ME_LABEL,
+  CHECKBOX_INPUT,
+  CHECKBOX_TEXT,
+  SUBMIT_BUTTON,
+  FOOTER_CONTAINER,
+} from "../../styles/LoginStyles";
 
-const Login = ({ setCurrentUser, showToast }) => {
+export const Login = ({ setCurrentUser, showToast }) => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -12,12 +36,9 @@ const Login = ({ setCurrentUser, showToast }) => {
     e.preventDefault();
     setError("");
 
-    const adminEmailEnv =
-      import.meta.env.VITE_ADMIN_EMAIL || "superadmin@tgi.edu";
-    const adminPasswordEnv =
-      import.meta.env.VITE_ADMIN_PASSWORD || "superadmin2026";
+    const adminEmailEnv = import.meta.env.VITE_ADMIN_EMAIL;
+    const adminPasswordEnv = import.meta.env.VITE_ADMIN_PASSWORD;
 
-    // 1. Gérer le Super Admin en local (contourne l'API si c'est les identifiants env)
     if (email === adminEmailEnv && password === adminPasswordEnv) {
       const superAdminUser = {
         id: 0,
@@ -38,7 +59,6 @@ const Login = ({ setCurrentUser, showToast }) => {
     }
 
     try {
-      // 2. Pour les autres utilisateurs, appel de l'API backend
       await loginUser(email, password);
       const userProfile = await getCurrentUserProfile();
 
@@ -61,64 +81,53 @@ const Login = ({ setCurrentUser, showToast }) => {
   };
 
   return (
-    <div className="min-h-screen bg-slate-950 flex flex-col justify-between text-slate-100 font-sans">
-      <div className="flex-1 flex items-center justify-center p-4">
-        <div className="max-w-md w-full bg-slate-900 border border-slate-800 rounded-2xl shadow-2xl p-8 space-y-6">
-          {/* School Header & Logo */}
-          <div className="text-center space-y-2">
-            <div className="inline-flex items-center justify-center w-16 h-16 rounded-xl bg-indigo-600/20 border border-indigo-500/30 text-indigo-400 text-2xl font-bold mb-2">
-              TGI
+    <div className={CONTAINER_WRAPPER}>
+      <div className={CONTENT_WRAPPER}>
+        <div className={CARD_BOX}>
+          <div className={HEADER_CONTAINER}>
+            <img src={logoImage} alt="Logo" className={LOGO_IMAGE} />
+            <div className="text-left">
+              <h1 className={TITLE_TEXT}>Collège Saint Michel Amparibe</h1>
+              <p className={SUBTITLE_TEXT}>
+                TGI - Technologie Générale Industriel
+              </p>
             </div>
-            <h1 className="text-2xl font-bold tracking-tight text-white">
-              Lycée Saint-Exupéry
-            </h1>
-            <p className="text-sm text-slate-400">Academic Management System</p>
           </div>
+          {error && <div className={ERROR_BOX}>{error}</div>}
 
-          {error && (
-            <div className="bg-rose-500/10 border border-rose-500/20 text-rose-400 text-sm p-3 rounded-lg text-center">
-              {error}
-            </div>
-          )}
-
-          {/* Login Form */}
-          <form onSubmit={handleLoginSubmit} className="space-y-4">
+          <form onSubmit={handleLoginSubmit} className={FORM_CONTAINER}>
             <div>
-              <label className="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-1">
-                Email Address
-              </label>
+              <label className={LABEL_TEXT}>Email</label>
               <input
                 type="email"
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="e.g. user@st-exupery.edu"
-                className="w-full bg-slate-950 border border-slate-800 rounded-lg px-4 py-2.5 text-sm text-slate-100 focus:outline-none focus:border-indigo-500 transition-colors"
+                placeholder="Enter your eamil"
+                className={INPUT_FIELD}
               />
             </div>
 
             <div>
-              <label className="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-1">
-                Password (Matricule)
-              </label>
+              <label className={LABEL_TEXT}>Password</label>
               <div className="relative">
                 <input
                   type={showPassword ? "text" : "password"}
                   required
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  placeholder="Enter your matricule or password"
-                  className="w-full bg-slate-950 border border-slate-800 rounded-lg pl-4 pr-10 py-2.5 text-sm text-slate-100 focus:outline-none focus:border-indigo-500 transition-colors"
+                  placeholder="Enter your password"
+                  className={PASSWORD_INPUT_FIELD}
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-200 transition-colors focus:outline-none"
+                  className={PASSWORD_TOGGLE_BTN}
                   title={showPassword ? "Hide password" : "Show password"}
                 >
                   {showPassword ? (
                     <svg
-                      className="w-5 h-5"
+                      className={ICON_SIZE}
                       fill="none"
                       viewBox="0 0 24 24"
                       stroke="currentColor"
@@ -132,7 +141,7 @@ const Login = ({ setCurrentUser, showToast }) => {
                     </svg>
                   ) : (
                     <svg
-                      className="w-5 h-5"
+                      className={ICON_SIZE}
                       fill="none"
                       viewBox="0 0 24 24"
                       stroke="currentColor"
@@ -153,36 +162,29 @@ const Login = ({ setCurrentUser, showToast }) => {
                   )}
                 </button>
               </div>
-              <p className="text-[11px] text-slate-500 mt-1">
-                * For staff/students, your password is your unique matricule
-                (e.g. TGI-25020).
-              </p>
             </div>
 
-            <div className="flex items-center justify-between text-sm">
-              <label className="flex items-center space-x-2 cursor-pointer text-slate-300">
+            <div className={OPTIONS_CONTAINER}>
+              <label className={REMEMBER_ME_LABEL}>
                 <input
                   type="checkbox"
                   checked={rememberMe}
                   onChange={(e) => setRememberMe(e.target.checked)}
-                  className="rounded border-slate-800 bg-slate-950 text-indigo-600 focus:ring-0"
+                  className={CHECKBOX_INPUT}
                 />
-                <span className="text-xs">Remember me</span>
+                <span className={CHECKBOX_TEXT}>Remember me</span>
               </label>
             </div>
 
-            <button
-              type="submit"
-              className="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-medium py-2.5 rounded-lg transition-colors shadow-lg shadow-indigo-600/20"
-            >
+            <button type="submit" className={SUBMIT_BUTTON}>
               Sign In
             </button>
           </form>
         </div>
       </div>
 
-      <footer className="py-4 text-center text-xs text-slate-500 border-t border-slate-900">
-        © 2026 Lycée Saint-Exupéry. All rights reserved.
+      <footer className={FOOTER_CONTAINER}>
+        © 2026 TGI. All rights reserved.
       </footer>
     </div>
   );
