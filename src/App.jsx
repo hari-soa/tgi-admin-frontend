@@ -1,170 +1,513 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import Sidebar from "./components/layout/Sidebar";
+import Topbar from "./components/layout/Topbar";
+import AppRouter from "./pages/AppRouter";
+import Toast from "./components/common/Toast";
+import Login from "./components/auth/Login";
+
+// Modals
+import UserModal from "./components/modals/UserModal";
+import AnnouncementModal from "./components/modals/AnnouncementModal";
+import SubjectModal from "./components/modals/SubjectModal";
+import GradeSessionModal from "./components/modals/GradeSessionModal";
+import PointageModal from "./components/modals/PointageModal";
+import HistoryRemarkModal from "./components/modals/HistoryRemarkModal";
+
+// API Services
+import { getCurrentUserProfile, logoutUser } from "./services/authService";
 import {
-  INITIAL_USERS,
-  INITIAL_SUBJECTS,
-  INITIAL_ANNOUNCEMENTS,
-  INITIAL_GRADES,
-  INITIAL_GRADE_SLOTS,
-  INITIAL_HISTORIES,
-  INITIAL_REMARQUES,
-  INITIAL_NOTIFICATIONS,
-} from "./data/mockData";
+  createStudent,
+  createAdministrator,
+  createSecretary,
+  deactivateStudent,
+  updateUser,
+} from "./services/userService";
+import {
+  getAllSubjects,
+  createSubject,
+  deleteSubject,
+} from "./services/subjectService";
+import {
+  getAllAnnouncements,
+  createAnnouncement,
+  deleteAnnouncement,
+} from "./services/announcementService";
+import {
+  createGrade,
+  submitGradeSession,
+  reviewGrade,
+  createAnnualResult,
+  getStudentResults,
+} from "./services/gradeService";
+import {
+  createAttendanceSlot,
+  getDailyAttendance,
+  checkAttendance,
+  updateAttendanceMotif,
+  createHistoryRecord,
+  createRemarkRecord,
+} from "./services/attendanceDisciplineService";
 
-import Sidebar from "./components/Sidebar";
-import Topbar from "./components/Topbar";
-import ModalManager from "./components/modals/ModalManager";
-
-import LoginView from "./views/LoginView";
-import StudentProfileDetail from "./views/StudentProfileDetail";
-import NotesView from "./views/NotesView";
-
-export default function App() {
+const App = () => {
   const [currentUser, setCurrentUser] = useState(null);
   const [activeTab, setActiveTab] = useState("dashboard");
 
-  const [users, setUsers] = useState(INITIAL_USERS);
-  const [subjects, setSubjects] = useState(INITIAL_SUBJECTS);
-  const [announcements, setAnnouncements] = useState(INITIAL_ANNOUNCEMENTS);
-  const [grades, setGrades] = useState(INITIAL_GRADES);
-  const [gradeSlots, setGradeSlots] = useState(INITIAL_GRADE_SLOTS);
-  const [histories, setHistories] = useState(INITIAL_HISTORIES);
-  const [remarques, setRemarques] = useState(INITIAL_REMARQUES);
-  const [notifications] = useState(INITIAL_NOTIFICATIONS);
+  const [users, setUsers] = useState([]);
+  const [announcements, setAnnouncements] = useState([]);
+  const [subjects, setSubjects] = useState([]);
+  const [examResults, setExamResults] = useState([]);
+  const [gradeSessions, setGradeSessions] = useState([]);
+  const [historiques, setHistoriques] = useState([]);
+  const [remarques, setRemarques] = useState([]);
+  const [pointages, setPointages] = useState([]);
 
-  const [selectedStudent, setSelectedStudent] = useState(null);
+  const [selectedStudentFilter, setSelectedStudentFilter] = useState("tout");
   const [activeModal, setActiveModal] = useState(null);
-  const [modalData, setModalData] = useState({});
-  const [excelBuffer, setExcelBuffer] = useState({});
   const [toastMessage, setToastMessage] = useState("");
 
-  const triggerToast = (msg) => {
+  const [targetStudent, setTargetStudent] = useState(null);
+  const [activeGradeSession, setActiveGradeSession] = useState(null);
+  const [formState, setFormState] = useState({});
+
+  const showToast = (msg) => {
     setToastMessage(msg);
     setTimeout(() => setToastMessage(""), 4000);
   };
 
-  const handleLogin = (role) => {
-    const user = users.find((u) => u.role === role) || users[0];
-    setCurrentUser(user);
-    if (role === "admin" || role === "secretaire") setActiveTab("dashboard");
-    else if (role === "student") {
-      setActiveTab("accueil");
-      setSelectedStudent(user);
-    }
-    triggerToast(`Espace connecté : ${user.prenom} ${user.nom}`);
-  };
+  // Fetch initial data from server when user is authenticated
+  useEffect(() => {
+    const fetchAppData = async () => {
+      try {
+        if (currentUser) {
+          const [
+            subjectsData,
+            announcementsData,
+            usersData,
+            gradeSessionsData,
+            pointagesData,
+          ] = await Promise.all([
+            getAllSubjects().catch(() => []),
+            getAllAnnouncements().catch(() => []),
+            Promise.resolve([]), // userService si dispo
+            Promise.resolve([]), // gradeService si dispo
+            getDailyAttendance().catch(() => []), // <-- Ici on branche le vrai service de pointage !
+          ]);
+
+          setSubjects(subjectsData);
+          setAnnouncements(announcementsData);
+          setUsers(usersData);
+          setGradeSessions(gradeSessionsData);
+          setPointages(pointagesData);
+        }
+      } catch (error) {
+        showToast("Error loading application data from server");
+      }
+    };
+
+    fetchAppData();
+  }, [currentUser]);
 
   const handleLogout = () => {
+    logoutUser();
     setCurrentUser(null);
-    setSelectedStudent(null);
-    setActiveTab("dashboard");
-    triggerToast("Déconnexion réussie");
+    setTargetStudent(null);
+    showToast("Logged out successfully");
   };
 
-  const computeStudentStats = (studentId, filterExam = "ALL") => {
-    const studentGrades = grades.filter(
-      (g) => g.studentId === studentId && g.status === "PUBLISHED",
-    );
-    let totalWeighted = 0;
-    let totalCoeff = 0;
+  const handleSwitchUser = (role) => {
+    const found = users.find((u) => u.role === role);
+    if (found) {
+      setCurrentUser(found);
+      if (role === "admin" || role === "secretaire") setActiveTab("dashboard");
+      else setActiveTab("accueil");
+      showToast(
+        `Logged in as ${found.prenom} ${found.nom} (${role.toUpperCase()})`,
+      );
+    }
+  };
 
-    const rows = subjects.map((sub) => {
-      let matchingGrades = studentGrades.filter((g) => g.subjectId === sub.id);
-      if (filterExam !== "ALL") {
-        matchingGrades = matchingGrades.filter(
-          (g) => g.examCode === filterExam,
-        );
+  // API Modal Handlers
+  const handleCreateUser = async (e) => {
+    e.preventDefault();
+    try {
+      const payload = { ...formState };
+      let response;
+
+      if (payload.role === "student" || payload.role === "ancien") {
+        response = await createStudent(payload);
+      } else if (payload.role === "secretaire") {
+        response = await createSecretary(payload);
+      } else {
+        response = await createAdministrator(payload);
       }
 
-      const noteValue =
-        matchingGrades.length > 0
-          ? matchingGrades.reduce((acc, curr) => acc + curr.note, 0) /
-            matchingGrades.length
-          : null;
+      setUsers([...users, response || payload]);
+      setActiveModal(null);
+      setFormState({});
+      showToast("User created successfully on server!");
+    } catch (error) {
+      showToast(`Error: ${error.message}`);
+    }
+  };
 
-      if (noteValue !== null) {
-        totalWeighted += noteValue * sub.coeff;
-        totalCoeff += sub.coeff;
-      }
-
-      return {
-        subject: sub,
-        note: noteValue,
-        weighted: noteValue !== null ? (noteValue * sub.coeff).toFixed(2) : "-",
+  const handleCreateAnnouncement = async (e) => {
+    e.preventDefault();
+    try {
+      const payload = {
+        title: formState.title || "Official Announcement",
+        context: formState.context || "Details...",
+        urgent: formState.urgent === true || formState.urgent === "true",
+        cible: formState.cible || "tout",
       };
-    });
 
-    const average =
-      totalCoeff > 0 ? (totalWeighted / totalCoeff).toFixed(2) : null;
-    return { rows, average, totalCoeff };
+      const response = await createAnnouncement(payload);
+      setAnnouncements([response || payload, ...announcements]);
+      setActiveModal(null);
+      setFormState({});
+      showToast("Announcement published successfully!");
+    } catch (error) {
+      showToast(`Error: ${error.message}`);
+    }
   };
 
+  const handleCreateSubject = async (e) => {
+    e.preventDefault();
+    try {
+      const payload = {
+        nom: formState.nom || "New Subject",
+        coeff: parseInt(formState.coeff) || 2,
+        prof: formState.prof || "",
+        classe: formState.classe || "Seconde",
+      };
+
+      const response = await createSubject(payload);
+      setSubjects([...subjects, response || payload]);
+      setActiveModal(null);
+      setFormState({});
+      showToast("Subject created successfully!");
+    } catch (error) {
+      showToast(`Error: ${error.message}`);
+    }
+  };
+
+  const handleCreateGradeSession = async (e) => {
+    e.preventDefault();
+    try {
+      const payload = {
+        matiere: formState.matiere || subjects[0]?.nom || "Mathematics",
+        classe: formState.classe || "Terminale",
+      };
+
+      const response = await submitGradeSession(payload);
+      setGradeSessions([response || payload, ...gradeSessions]);
+      setActiveModal(null);
+      setFormState({});
+      showToast("Grade session created and assigned to secretary!");
+    } catch (error) {
+      showToast(`Error: ${error.message}`);
+    }
+  };
+
+  const handleCreatePointage = async (e) => {
+    e.preventDefault();
+    try {
+      const payload = {
+        profName: formState.profName || "",
+        matiere: formState.matiere || "Mathematics",
+        classe: formState.classe || "Terminale",
+        jour: formState.jour || "Monday 08:00 - 10:00",
+      };
+
+      const response = await createAttendanceSlot(payload);
+      setPointages([...pointages, response || payload]);
+      setActiveModal(null);
+      setFormState({});
+      showToast("Teacher attendance slot created successfully!");
+    } catch (error) {
+      showToast(`Error: ${error.message}`);
+    }
+  };
+
+  const handleAddHistoryToTarget = async (e) => {
+    e.preventDefault();
+    if (!targetStudent) return;
+    try {
+      const payload = {
+        studentId: targetStudent.id,
+        type: formState.type || "Absence",
+        detail: formState.detail || "08:00 - 10:00",
+        raison: formState.raison || "Unjustified",
+      };
+
+      const response = await createHistoryRecord(payload);
+      setHistoriques([response || payload, ...historiques]);
+      setActiveModal(null);
+      setFormState({});
+      showToast("History event added to student profile");
+    } catch (error) {
+      showToast(`Error: ${error.message}`);
+    }
+  };
+
+  const handleAddRemarkToTarget = async (e) => {
+    e.preventDefault();
+    if (!targetStudent) return;
+    try {
+      const payload = {
+        studentId: targetStudent.id,
+        type: formState.type || "Warning",
+        raison: formState.raison || "Inappropriate behavior",
+      };
+
+      const response = await createRemarkRecord(payload);
+      setRemarques([response || payload, ...remarques]);
+      setActiveModal(null);
+      setFormState({});
+      showToast("Remark added to student profile");
+    } catch (error) {
+      showToast(`Error: ${error.message}`);
+    }
+  };
+
+  const handleAdminValidateSession = (sessionId) => {
+    const session = gradeSessions.find((s) => s.id === sessionId);
+    if (!session) return;
+
+    setGradeSessions(
+      gradeSessions.map((s) => {
+        if (s.id === sessionId) {
+          return {
+            ...s,
+            statut: "valide",
+            dateValidation: new Date()
+              .toISOString()
+              .replace("T", " ")
+              .substring(0, 16),
+          };
+        }
+        return s;
+      }),
+    );
+    showToast("Grade session validated and injected into student reports!");
+  };
+
+  const handleSecretarySaveDraft = (sessionId, draftData) => {
+    setGradeSessions(
+      gradeSessions.map((s) => {
+        if (s.id === sessionId) {
+          return { ...s, notesDraft: draftData, statut: "brouillon" };
+        }
+        return s;
+      }),
+    );
+    showToast("Draft saved locally!");
+  };
+
+  const handleSecretarySubmitToAdmin = (sessionId, draftData) => {
+    setGradeSessions(
+      gradeSessions.map((s) => {
+        if (s.id === sessionId) {
+          return { ...s, notesDraft: draftData, statut: "attente_validation" };
+        }
+        return s;
+      }),
+    );
+    setActiveGradeSession(null);
+    showToast("Grades submitted to administrator for validation!");
+  };
+
+  const handleTogglePointage = async (
+    pointageId,
+    status,
+    retardMin = 0,
+    motif = "",
+  ) => {
+    try {
+      await checkAttendance({ slotId: pointageId, status, retardMin, motif });
+      setPointages(
+        pointages.map((p) => {
+          if (p.id === pointageId) {
+            return { ...p, status, retardMin, motif };
+          }
+          return p;
+        }),
+      );
+      showToast(`Pointage updated: ${status.toUpperCase()}`);
+    } catch (error) {
+      showToast(`Error: ${error.message}`);
+    }
+  };
+
+  const toggleUserStatus = async (userId) => {
+    try {
+      const targetUser = users.find((u) => u.id === userId);
+      const newStatus =
+        targetUser?.statut === "active" ? "desactive" : "active";
+      await updateUser(userId, { statut: newStatus });
+
+      setUsers(
+        users.map((u) => (u.id === userId ? { ...u, statut: newStatus } : u)),
+      );
+      showToast("User status updated");
+    } catch (error) {
+      showToast(`Error: ${error.message}`);
+    }
+  };
+
+  const deleteUser = async (userId) => {
+    try {
+      await deactivateStudent(userId);
+      setUsers(users.filter((u) => u.id !== userId));
+      showToast("User deleted/deactivated");
+    } catch (error) {
+      showToast(`Error: ${error.message}`);
+    }
+  };
+
+  const handleSimulateExport = (type) => {
+    showToast(`Document [${type}] generated and downloaded in PDF/CSV!`);
+  };
+
+  const studentUsers = users.filter((u) => {
+    if (u.role !== "student" && u.role !== "ancien") return false;
+    if (selectedStudentFilter === "tout") return true;
+    if (selectedStudentFilter === "ancien") return u.role === "ancien";
+    return u.classe?.toLowerCase() === selectedStudentFilter.toLowerCase();
+  });
+
+  const staffUsers = users.filter((u) =>
+    ["prof", "admin", "secretaire"].includes(u.role),
+  );
+
+  // If no user is authenticated, render the Login screen
   if (!currentUser) {
-    return <LoginView handleLogin={handleLogin} toastMessage={toastMessage} />;
+    return (
+      <>
+        <Login
+          users={users}
+          setCurrentUser={setCurrentUser}
+          showToast={showToast}
+        />
+        <Toast message={toastMessage} />
+      </>
+    );
   }
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 font-sans flex antialiased">
+    <div className="min-h-screen bg-slate-950 text-slate-100 flex font-sans relative">
+      {/* FIXED SIDEBAR */}
       <Sidebar
         currentUser={currentUser}
         activeTab={activeTab}
         setActiveTab={setActiveTab}
-        setSelectedStudent={setSelectedStudent}
+        setTargetStudent={setTargetStudent}
+        handleSwitchUser={handleSwitchUser}
         handleLogout={handleLogout}
       />
 
+      {/* FIXED TOPBAR */}
       <Topbar
+        currentUser={currentUser}
         activeTab={activeTab}
-        selectedStudent={selectedStudent}
-        currentUser={currentUser}
-        handleLogin={handleLogin}
+        handleLogout={handleLogout}
       />
 
-      <main className="flex-1 ml-64 pt-16 p-8 min-w-0 bg-slate-950">
-        {selectedStudent ? (
-          <StudentProfileDetail
-            selectedStudent={selectedStudent}
-            setSelectedStudent={setSelectedStudent}
+      {/* MAIN CONTENT AREA */}
+      <div className="flex-1 ml-64 pt-20 flex flex-col min-w-0">
+        <main className="flex-1 overflow-y-auto p-6 md:p-8 bg-slate-950">
+          <AppRouter
             currentUser={currentUser}
-            setActiveModal={setActiveModal}
-            computeStudentStats={computeStudentStats}
-            histories={histories}
+            activeTab={activeTab}
+            setActiveTab={setActiveTab}
+            users={users}
+            studentUsers={studentUsers}
+            staffUsers={staffUsers}
+            announcements={announcements}
+            subjects={subjects}
+            examResults={examResults}
+            gradeSessions={gradeSessions}
+            historiques={historiques}
             remarques={remarques}
+            pointages={pointages}
+            selectedStudentFilter={selectedStudentFilter}
+            setSelectedStudentFilter={setSelectedStudentFilter}
+            targetStudent={targetStudent}
+            setTargetStudent={setTargetStudent}
+            activeGradeSession={activeGradeSession}
+            setActiveGradeSession={setActiveGradeSession}
+            setActiveModal={setActiveModal}
+            handleAdminValidateSession={handleAdminValidateSession}
+            toggleUserStatus={toggleUserStatus}
+            deleteUser={deleteUser}
+            handleSecretarySaveDraft={handleSecretarySaveDraft}
+            handleSecretarySubmitToAdmin={handleSecretarySubmitToAdmin}
+            handleTogglePointage={handleTogglePointage}
+            handleSimulateExport={handleSimulateExport}
+            setCurrentUser={setCurrentUser}
+            handleLogout={handleLogout}
           />
-        ) : (
-          <>
-            {activeTab === "notes" && (
-              <NotesView
-                currentUser={currentUser}
-                computeStudentStats={computeStudentStats}
-                modalData={modalData}
-                setModalData={setModalData}
-                setActiveModal={setActiveModal}
-              />
-            )}
-          </>
-        )}
-      </main>
+        </main>
+      </div>
 
-      <ModalManager
-        activeModal={activeModal}
-        setActiveModal={setActiveModal}
-        modalData={modalData}
-        setModalData={setModalData}
-        users={users}
+      {/* MODALS */}
+      <UserModal
+        isOpen={activeModal === "user"}
+        onClose={() => setActiveModal(null)}
+        onSubmit={handleCreateUser}
+        formState={formState}
+        setFormState={setFormState}
+      />
+      <AnnouncementModal
+        isOpen={activeModal === "announcement"}
+        onClose={() => setActiveModal(null)}
+        onSubmit={handleCreateAnnouncement}
+        formState={formState}
+        setFormState={setFormState}
+      />
+      <SubjectModal
+        isOpen={activeModal === "subject"}
+        onClose={() => setActiveModal(null)}
+        onSubmit={handleCreateSubject}
+        formState={formState}
+        setFormState={setFormState}
+        staffUsers={staffUsers}
+      />
+      <GradeSessionModal
+        isOpen={activeModal === "grade_session"}
+        onClose={() => setActiveModal(null)}
+        onSubmit={handleCreateGradeSession}
+        formState={formState}
+        setFormState={setFormState}
         subjects={subjects}
-        grades={grades}
-        excelBuffer={excelBuffer}
-        setExcelBuffer={setExcelBuffer}
-        currentUser={currentUser}
-        computeStudentStats={computeStudentStats}
-        triggerToast={triggerToast}
+      />
+      <PointageModal
+        isOpen={activeModal === "pointage"}
+        onClose={() => setActiveModal(null)}
+        onSubmit={handleCreatePointage}
+        formState={formState}
+        setFormState={setFormState}
+        staffUsers={staffUsers}
+      />
+      <HistoryRemarkModal
+        isOpen={
+          activeModal === "target_history" || activeModal === "target_remark"
+        }
+        onClose={() => setActiveModal(null)}
+        type={activeModal}
+        onSubmit={
+          activeModal === "target_history"
+            ? handleAddHistoryToTarget
+            : handleAddRemarkToTarget
+        }
+        formState={formState}
+        setFormState={setFormState}
+        targetStudent={targetStudent}
       />
 
-      {toastMessage && (
-        <div className="fixed bottom-6 right-6 bg-blue-600 text-white text-xs font-bold px-5 py-3 rounded-2xl shadow-2xl z-50 animate-bounce flex items-center space-x-2">
-          <span>{toastMessage}</span>
-        </div>
-      )}
+      {/* TOAST NOTIFICATIONS */}
+      <Toast message={toastMessage} />
     </div>
   );
-}
+};
+
+export default App;

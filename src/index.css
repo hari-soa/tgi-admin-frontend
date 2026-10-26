@@ -1,3 +1,9 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+body {
+  margin: 0;
+  background-color: #020617; /* Slate 950 */
+  color: #f8fafc;
+}
