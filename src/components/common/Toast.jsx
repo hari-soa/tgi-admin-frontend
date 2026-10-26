@@ -1,6 +1,6 @@
 import React from "react";
 
-export default function Toast({ message }) {
+const Toast = ({ message }) => {
   if (!message) return null;
 
   return (
@@ -8,4 +8,6 @@ export default function Toast({ message }) {
       <span>{message}</span>
     </div>
   );
-}
+};
+
+export default Toast;
