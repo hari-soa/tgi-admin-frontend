@@ -1,6 +1,19 @@
 import React from "react";
+import {
+  MODAL_BACKDROP,
+  MODAL_CONTAINER,
+  CLOSE_BUTTON,
+  FORM_CONTAINER,
+  MODAL_TITLE,
+  FIELD_LABEL,
+  TEXT_INPUT,
+  TEXTAREA_INPUT,
+  GRID_TWO_COLS,
+  SELECT_INPUT,
+  SUBMIT_BUTTON,
+} from "../../styles/AnnouncementModalStyles";
 
-const AnnouncementModal = ({
+export const AnnouncementModal = ({
   isOpen,
   onClose,
   onSubmit,
@@ -14,54 +27,43 @@ const AnnouncementModal = ({
   };
 
   return (
-    <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-      <div className="bg-slate-900 border border-slate-800 rounded-2xl max-w-lg w-full p-6 shadow-2xl relative">
-        <button
-          onClick={onClose}
-          className="absolute top-5 right-5 text-slate-400 hover:text-white transition-colors"
-        >
+    <div className={MODAL_BACKDROP}>
+      <div className={MODAL_CONTAINER}>
+        <button onClick={onClose} className={CLOSE_BUTTON}>
           ✕
         </button>
 
-        <form onSubmit={onSubmit} className="space-y-4 text-xs">
-          <h3 className="text-base font-bold text-white mb-2">
-            Publish New Announcement
-          </h3>
+        <form onSubmit={onSubmit} className={FORM_CONTAINER}>
+          <h3 className={MODAL_TITLE}>Publish New Announcement</h3>
 
           <div>
-            <label className="block text-slate-400 mb-1">
-              Announcement Title
-            </label>
+            <label className={FIELD_LABEL}>Announcement Title</label>
             <input
               type="text"
               placeholder="e.g. End of term schedule"
               onChange={(e) => handleInputChange("title", e.target.value)}
-              className="w-full bg-slate-950 border border-slate-800 rounded-lg p-2 text-white focus:outline-none focus:border-blue-500"
+              className={TEXT_INPUT}
               required
             />
           </div>
 
           <div>
-            <label className="block text-slate-400 mb-1">
-              Context / Description
-            </label>
+            <label className={FIELD_LABEL}>Context / Description</label>
             <textarea
               rows="3"
               placeholder="Enter announcement details here..."
               onChange={(e) => handleInputChange("context", e.target.value)}
-              className="w-full bg-slate-950 border border-slate-800 rounded-lg p-2 text-white focus:outline-none focus:border-blue-500"
+              className={TEXTAREA_INPUT}
               required
             ></textarea>
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
+          <div className={GRID_TWO_COLS}>
             <div>
-              <label className="block text-slate-400 mb-1">
-                Target Audience
-              </label>
+              <label className={FIELD_LABEL}>Target Audience</label>
               <select
                 onChange={(e) => handleInputChange("cible", e.target.value)}
-                className="w-full bg-slate-950 border border-slate-800 rounded-lg p-2 text-white focus:outline-none focus:border-blue-500"
+                className={SELECT_INPUT}
               >
                 <option value="tout">All</option>
                 <option value="Seconde">Seconde</option>
@@ -70,14 +72,12 @@ const AnnouncementModal = ({
               </select>
             </div>
             <div>
-              <label className="block text-slate-400 mb-1">
-                Priority Level
-              </label>
+              <label className={FIELD_LABEL}>Priority Level</label>
               <select
                 onChange={(e) =>
                   handleInputChange("urgent", e.target.value === "true")
                 }
-                className="w-full bg-slate-950 border border-slate-800 rounded-lg p-2 text-white focus:outline-none focus:border-blue-500"
+                className={SELECT_INPUT}
               >
                 <option value="false">Normal</option>
                 <option value="true">Urgent (Red)</option>
@@ -85,10 +85,7 @@ const AnnouncementModal = ({
             </div>
           </div>
 
-          <button
-            type="submit"
-            className="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-2.5 rounded-xl transition-all mt-2"
-          >
+          <button type="submit" className={SUBMIT_BUTTON}>
             Publish Immediately
           </button>
         </form>

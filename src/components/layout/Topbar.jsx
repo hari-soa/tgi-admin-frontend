@@ -1,10 +1,24 @@
 import React from "react";
+import {
+  TOPBAR_CONTAINER,
+  TITLE_CONTAINER,
+  TITLE_TEXT,
+  ACTIONS_CONTAINER,
+  PROFILE_WRAPPER,
+  PROFILE_IMAGE,
+  PROFILE_TEXT_CONTAINER,
+  PROFILE_NAME,
+  PROFILE_META,
+  ROLE_BADGE,
+  STATUS_ACTIVE,
+  STATUS_INACTIVE,
+} from "../../styles/TopbarStyles";
 
-const Topbar = ({ currentUser, activeTab }) => {
+export const Topbar = ({ currentUser, activeTab }) => {
   return (
-    <header className="fixed top-0 right-0 left-64 h-20 bg-slate-900 border-b border-slate-800 px-8 flex items-center justify-between z-20">
-      <div className="flex items-center space-x-4">
-        <h1 className="text-lg font-bold text-white capitalize">
+    <header className={TOPBAR_CONTAINER}>
+      <div className={TITLE_CONTAINER}>
+        <h1 className={TITLE_TEXT}>
           {activeTab === "dashboard"
             ? "Tableau de bord"
             : activeTab === "accueil"
@@ -13,24 +27,25 @@ const Topbar = ({ currentUser, activeTab }) => {
         </h1>
       </div>
 
-      <div className="flex items-center space-x-4">
-        {/* User Profile Info */}
-        <div className="flex items-center space-x-3 border-l border-slate-800 pl-6">
+      <div className={ACTIONS_CONTAINER}>
+        <div className={PROFILE_WRAPPER}>
           <img
-            src={currentUser.photo}
+            src={currentUser?.photo}
             alt="profile"
-            className="w-10 h-10 rounded-xl object-cover border border-blue-500/30"
+            className={PROFILE_IMAGE}
           />
-          <div className="hidden sm:block text-left">
-            <p className="text-sm font-semibold text-white leading-tight">
-              {currentUser.prenom} {currentUser.nom}
+          <div className={PROFILE_TEXT_CONTAINER}>
+            <p className={PROFILE_NAME}>
+              {currentUser?.prenom} {currentUser?.nom}
             </p>
-            <div className="flex items-center space-x-1.5 mt-0.5">
-              <span className="inline-block px-2 py-0.5 rounded bg-blue-500/10 text-blue-400 text-[10px] font-bold uppercase tracking-wider">
-                {currentUser.role}
-              </span>
+            <div className={PROFILE_META}>
+              <span className={ROLE_BADGE}>{currentUser?.role}</span>
               <span
-                className={`w-2 h-2 rounded-full ${currentUser.statut === "active" ? "bg-emerald-500" : "bg-red-500"}`}
+                className={
+                  currentUser?.statut === "active"
+                    ? STATUS_ACTIVE
+                    : STATUS_INACTIVE
+                }
               ></span>
             </div>
           </div>

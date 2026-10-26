@@ -1,93 +1,102 @@
 import React from "react";
+import {
+  CONTAINER_WRAPPER,
+  HEADER_SECTION,
+  HEADER_TITLE,
+  HEADER_SUBTITLE,
+  NEW_POINTAGE_BUTTON,
+  GRID_CONTAINER,
+  CARD_BOX,
+  CARD_HEADER,
+  DAY_TEXT,
+  STATUS_PRESENT,
+  STATUS_LATE,
+  STATUS_ABSENT,
+  STATUS_PENDING,
+  PROF_NAME,
+  SUBJECT_LINE,
+  CLASS_HIGHLIGHT,
+  LATE_DETAIL_TEXT,
+  ABSENT_DETAIL_TEXT,
+  CARD_FOOTER,
+  FOOTER_NOTE,
+  BUTTONS_GROUP,
+  BUTTON_PRESENT,
+  BUTTON_LATE,
+  BUTTON_ABSENT,
+} from "../../styles/AdminPointageStyles";
 
-const AdminPointage = ({
+export const AdminPointage = ({
   currentUser,
   pointages,
   handleTogglePointage,
   setActiveModal,
 }) => {
+  const getStatusBadgeClass = (status) => {
+    if (status === "present") return STATUS_PRESENT;
+    if (status === "retard") return STATUS_LATE;
+    if (status === "absent") return STATUS_ABSENT;
+    return STATUS_PENDING;
+  };
+
   return (
-    <div className="space-y-6">
-      {/* Header section with title and action button */}
-      <div className="flex items-center justify-between">
+    <div className={CONTAINER_WRAPPER}>
+      <div className={HEADER_SECTION}>
         <div>
-          <h2 className="text-2xl font-bold text-white">
-            Registre du Pointage Enseignants
-          </h2>
-          <p className="text-slate-400 text-sm">
+          <h2 className={HEADER_TITLE}>Registre du Pointage Enseignants</h2>
+          <p className={HEADER_SUBTITLE}>
             Suivi de présence aux cours fixés selon l'emploi du temps
           </p>
         </div>
         {currentUser?.role === "admin" && (
           <button
             onClick={() => setActiveModal("pointage")}
-            className="bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold px-4 py-2 rounded-xl transition-all shadow-lg shadow-blue-600/30"
+            className={NEW_POINTAGE_BUTTON}
           >
             + Nouveau Pointage Fixe
           </button>
         )}
       </div>
 
-      {/* Attendance slots grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      <div className={GRID_CONTAINER}>
         {pointages.map((p) => (
-          <div
-            key={p.id}
-            className="bg-slate-900 border border-slate-800 p-5 rounded-2xl flex flex-col justify-between"
-          >
+          <div key={p.id} className={CARD_BOX}>
             <div>
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-xs font-bold text-blue-400">
-                  {p.jour}
-                </span>
-                <span
-                  className={`text-[10px] font-bold px-2 py-0.5 rounded uppercase ${
-                    p.status === "present"
-                      ? "bg-emerald-500/20 text-emerald-400"
-                      : p.status === "retard"
-                        ? "bg-yellow-500/20 text-yellow-400"
-                        : p.status === "absent"
-                          ? "bg-red-500/20 text-red-400"
-                          : "bg-slate-800 text-slate-400"
-                  }`}
-                >
+              <div className={CARD_HEADER}>
+                <span className={DAY_TEXT}>{p.jour}</span>
+                <span className={getStatusBadgeClass(p.status)}>
                   {p.status || "en attente"}
                 </span>
               </div>
 
-              <h4 className="font-bold text-white text-base">{p.profName}</h4>
-              <p className="text-xs text-slate-300 mt-1 flex items-center space-x-1">
+              <h4 className={PROF_NAME}>{p.profName}</h4>
+              <p className={SUBJECT_LINE}>
                 <span>{p.matiere}</span>
-                <span className="text-blue-400 font-medium">({p.classe})</span>
+                <span className={CLASS_HIGHLIGHT}>({p.classe})</span>
               </p>
 
               {p.status === "retard" && (
-                <p className="text-xs text-yellow-400 mt-2">
-                  Retard : +{p.retardMin} min
-                </p>
+                <p className={LATE_DETAIL_TEXT}>Retard : +{p.retardMin} min</p>
               )}
               {p.status === "absent" && (
-                <p className="text-xs text-red-400 mt-2">
+                <p className={ABSENT_DETAIL_TEXT}>
                   Motif : {p.motif || "Non spécifié"}
                 </p>
               )}
             </div>
 
-            {/* Actions to update attendance status in real-time */}
-            <div className="mt-4 pt-3 border-t border-slate-800 flex items-center justify-between">
-              <span className="text-[10px] text-slate-500">
-                Fixe (Hebdomadaire)
-              </span>
-              <div className="flex space-x-1">
+            <div className={CARD_FOOTER}>
+              <span className={FOOTER_NOTE}>Fixe (Hebdomadaire)</span>
+              <div className={BUTTONS_GROUP}>
                 <button
                   onClick={() => handleTogglePointage(p.id, "present")}
-                  className="bg-emerald-600/20 hover:bg-emerald-600 text-emerald-400 hover:text-white px-2 py-1 rounded text-[10px] transition-colors"
+                  className={BUTTON_PRESENT}
                 >
                   Présent
                 </button>
                 <button
                   onClick={() => handleTogglePointage(p.id, "retard", 15)}
-                  className="bg-yellow-600/20 hover:bg-yellow-600 text-yellow-400 hover:text-white px-2 py-1 rounded text-[10px] transition-colors"
+                  className={BUTTON_LATE}
                 >
                   Retard
                 </button>
@@ -95,7 +104,7 @@ const AdminPointage = ({
                   onClick={() =>
                     handleTogglePointage(p.id, "absent", 0, "Injustifiée")
                   }
-                  className="bg-red-600/20 hover:bg-red-600 text-red-400 hover:text-white px-2 py-1 rounded text-[10px] transition-colors"
+                  className={BUTTON_ABSENT}
                 >
                   Absent
                 </button>

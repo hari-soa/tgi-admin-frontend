@@ -1,6 +1,18 @@
 import React from "react";
+import {
+  MODAL_BACKDROP,
+  MODAL_CONTAINER,
+  CLOSE_BUTTON,
+  FORM_CONTAINER,
+  MODAL_TITLE,
+  FIELD_LABEL,
+  TEXT_INPUT,
+  SELECT_INPUT,
+  GRID_TWO_COLS,
+  SUBMIT_BUTTON,
+} from "../../styles/SubjectModalStyles";
 
-const SubjectModal = ({
+export const SubjectModal = ({
   isOpen,
   onClose,
   onSubmit,
@@ -19,49 +31,42 @@ const SubjectModal = ({
     : [];
 
   return (
-    <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-      <div className="bg-slate-900 border border-slate-800 rounded-2xl max-w-lg w-full p-6 shadow-2xl relative">
-        <button
-          onClick={onClose}
-          className="absolute top-5 right-5 text-slate-400 hover:text-white transition-colors"
-        >
+    <div className={MODAL_BACKDROP}>
+      <div className={MODAL_CONTAINER}>
+        <button onClick={onClose} className={CLOSE_BUTTON}>
           ✕
         </button>
 
-        <form onSubmit={onSubmit} className="space-y-4 text-xs">
-          <h3 className="text-base font-bold text-white mb-2">
-            Create New Subject
-          </h3>
+        <form onSubmit={onSubmit} className={FORM_CONTAINER}>
+          <h3 className={MODAL_TITLE}>Create New Subject</h3>
 
           <div>
-            <label className="block text-slate-400 mb-1">Subject Name</label>
+            <label className={FIELD_LABEL}>Subject Name</label>
             <input
               type="text"
               placeholder="e.g. Mathematics"
               onChange={(e) => handleInputChange("nom", e.target.value)}
-              className="w-full bg-slate-950 border border-slate-800 rounded-lg p-2 text-white focus:outline-none focus:border-blue-500"
+              className={TEXT_INPUT}
               required
             />
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
+          <div className={GRID_TWO_COLS}>
             <div>
-              <label className="block text-slate-400 mb-1">Coefficient</label>
+              <label className={FIELD_LABEL}>Coefficient</label>
               <input
                 type="number"
                 defaultValue="2"
                 onChange={(e) => handleInputChange("coeff", e.target.value)}
-                className="w-full bg-slate-950 border border-slate-800 rounded-lg p-2 text-white focus:outline-none focus:border-blue-500"
+                className={TEXT_INPUT}
                 required
               />
             </div>
             <div>
-              <label className="block text-slate-400 mb-1">
-                Associated Class
-              </label>
+              <label className={FIELD_LABEL}>Associated Class</label>
               <select
                 onChange={(e) => handleInputChange("classe", e.target.value)}
-                className="w-full bg-slate-950 border border-slate-800 rounded-lg p-2 text-white focus:outline-none focus:border-blue-500"
+                className={SELECT_INPUT}
               >
                 <option value="Seconde">Seconde</option>
                 <option value="Première">Première</option>
@@ -71,12 +76,10 @@ const SubjectModal = ({
           </div>
 
           <div>
-            <label className="block text-slate-400 mb-1">
-              Responsible Professor
-            </label>
+            <label className={FIELD_LABEL}>Responsible Professor</label>
             <select
               onChange={(e) => handleInputChange("prof", e.target.value)}
-              className="w-full bg-slate-950 border border-slate-800 rounded-lg p-2 text-white focus:outline-none focus:border-blue-500"
+              className={SELECT_INPUT}
             >
               <option value="">Select a professor...</option>
               {professorList.map((p) => (
@@ -87,10 +90,7 @@ const SubjectModal = ({
             </select>
           </div>
 
-          <button
-            type="submit"
-            className="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-2.5 rounded-xl transition-all mt-2"
-          >
+          <button type="submit" className={SUBMIT_BUTTON}>
             Save Subject
           </button>
         </form>

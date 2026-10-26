@@ -1,7 +1,43 @@
 import React from "react";
 import { extractClassNum } from "../../utils/helpers";
+import {
+  CONTAINER_WRAPPER,
+  HEADER_TITLE,
+  HEADER_SUBTITLE,
+  ACTIVE_SESSION_CONTAINER,
+  ACTIVE_SESSION_HEADER,
+  ACTIVE_SESSION_TAG,
+  ACTIVE_SESSION_TITLE,
+  ACTIVE_SESSION_DATE,
+  BACK_BUTTON,
+  ROSTER_SECTION,
+  ROSTER_TITLE,
+  ROSTER_CARD,
+  STUDENT_INFO_ROW,
+  STUDENT_AVATAR,
+  STUDENT_NAME,
+  STUDENT_MATRICULE,
+  GRADE_INPUT_ROW,
+  GRADE_LABEL,
+  GRADE_INPUT,
+  FORM_ACTIONS_ROW,
+  DRAFT_BUTTON,
+  SUBMIT_BUTTON,
+  SESSIONS_GRID,
+  SESSION_CARD,
+  SESSION_CARD_HEADER,
+  SESSION_SUBJECT_TITLE,
+  STATUS_VALIDATED,
+  STATUS_PENDING_VALIDATION,
+  STATUS_DEFAULT,
+  SESSION_CLASS_TEXT,
+  SESSION_CLASS_HIGHLIGHT,
+  SESSION_CREATION_DATE,
+  SESSION_VALIDATION_DATE,
+  EDIT_GRADES_BUTTON,
+} from "../../styles/SecretaryGradesStyles";
 
-const SecretaryGrades = ({
+export const SecretaryGrades = ({
   users,
   gradeSessions,
   activeGradeSession,
@@ -9,45 +45,44 @@ const SecretaryGrades = ({
   handleSecretarySaveDraft,
   handleSecretarySubmitToAdmin,
 }) => {
+  const getStatusBadgeClass = (status) => {
+    if (status === "valide") return STATUS_VALIDATED;
+    if (status === "attente_validation") return STATUS_PENDING_VALIDATION;
+    return STATUS_DEFAULT;
+  };
+
   return (
-    <div className="space-y-8">
-      {/* Header section */}
+    <div className={CONTAINER_WRAPPER}>
       <div>
-        <h2 className="text-2xl font-bold text-white">
-          Saisie & Suivi des Sessions de Notes
-        </h2>
-        <p className="text-slate-400 text-sm">
+        <h2 className={HEADER_TITLE}>Saisie & Suivi des Sessions de Notes</h2>
+        <p className={HEADER_SUBTITLE}>
           Gestion des enregistrements de notes par matière et par classe
         </p>
       </div>
 
-      {/* Conditional rendering: Active grade session roster or session list */}
       {activeGradeSession ? (
-        <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 space-y-6">
-          <div className="flex items-center justify-between border-b border-slate-800 pb-4">
+        <div className={ACTIVE_SESSION_CONTAINER}>
+          <div className={ACTIVE_SESSION_HEADER}>
             <div>
-              <span className="text-xs font-bold text-blue-400 uppercase">
-                Grille d'évaluation
-              </span>
-              <h3 className="text-xl font-bold text-white">
+              <span className={ACTIVE_SESSION_TAG}>Grille d'évaluation</span>
+              <h3 className={ACTIVE_SESSION_TITLE}>
                 {activeGradeSession.matiere} — {activeGradeSession.classe}
               </h3>
-              <p className="text-xs text-slate-400 mt-1">
+              <p className={ACTIVE_SESSION_DATE}>
                 Date de création :{" "}
                 {activeGradeSession.dateCreation || "Récemment"}
               </p>
             </div>
             <button
               onClick={() => setActiveGradeSession(null)}
-              className="text-xs text-slate-400 hover:text-white transition-colors"
+              className={BACK_BUTTON}
             >
               ← Retour à la liste
             </button>
           </div>
 
-          {/* Student roster for grade input */}
-          <div className="space-y-3">
-            <h4 className="text-sm font-semibold text-slate-200">
+          <div className={ROSTER_SECTION}>
+            <h4 className={ROSTER_TITLE}>
               Roster des étudiants ({activeGradeSession.classe})
             </h4>
             {users
@@ -60,30 +95,25 @@ const SecretaryGrades = ({
                 const currentVal =
                   activeGradeSession.notesDraft?.[student.id] || "";
                 return (
-                  <div
-                    key={student.id}
-                    className="bg-slate-950 border border-slate-800 p-4 rounded-xl flex items-center justify-between"
-                  >
-                    <div className="flex items-center space-x-3">
+                  <div key={student.id} className={ROSTER_CARD}>
+                    <div className={STUDENT_INFO_ROW}>
                       <img
                         src={student.photo}
                         alt="etu"
-                        className="w-8 h-8 rounded-lg object-cover border border-slate-800"
+                        className={STUDENT_AVATAR}
                       />
                       <div>
-                        <p className="text-sm font-bold text-white">
+                        <p className={STUDENT_NAME}>
                           {student.nom} {student.prenom}
                         </p>
-                        <p className="text-xs text-slate-400">
+                        <p className={STUDENT_MATRICULE}>
                           {student.matricule} •{" "}
                           {extractClassNum(student.matricule)}
                         </p>
                       </div>
                     </div>
-                    <div className="flex items-center space-x-2">
-                      <label className="text-xs text-slate-400">
-                        Note /20 :
-                      </label>
+                    <div className={GRADE_INPUT_ROW}>
+                      <label className={GRADE_LABEL}>Note /20 :</label>
                       <input
                         type="number"
                         step="0.5"
@@ -97,7 +127,7 @@ const SecretaryGrades = ({
                           activeGradeSession.notesDraft[student.id] =
                             e.target.value;
                         }}
-                        className="w-20 bg-slate-900 border border-slate-800 rounded-lg px-3 py-1.5 text-sm text-white font-bold focus:border-blue-500 focus:outline-none"
+                        className={GRADE_INPUT}
                       />
                     </div>
                   </div>
@@ -105,8 +135,7 @@ const SecretaryGrades = ({
               })}
           </div>
 
-          {/* Action buttons for saving draft or submitting to admin */}
-          <div className="flex items-center justify-end space-x-4 pt-4 border-t border-slate-800">
+          <div className={FORM_ACTIONS_ROW}>
             <button
               onClick={() =>
                 handleSecretarySaveDraft(
@@ -114,7 +143,7 @@ const SecretaryGrades = ({
                   activeGradeSession.notesDraft || {},
                 )
               }
-              className="bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold px-5 py-2.5 rounded-xl border border-slate-700 transition-all"
+              className={DRAFT_BUTTON}
             >
               Sauvegarder en brouillon
             </button>
@@ -125,47 +154,34 @@ const SecretaryGrades = ({
                   activeGradeSession.notesDraft || {},
                 )
               }
-              className="bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold px-6 py-2.5 rounded-xl shadow-lg shadow-blue-600/30 transition-all"
+              className={SUBMIT_BUTTON}
             >
               Envoyer à l'Admin pour validation
             </button>
           </div>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className={SESSIONS_GRID}>
           {gradeSessions.map((session) => (
-            <div
-              key={session.id}
-              className="bg-slate-900 border border-slate-800 p-6 rounded-2xl flex flex-col justify-between"
-            >
+            <div key={session.id} className={SESSION_CARD}>
               <div>
-                <div className="flex items-center justify-between mb-2">
-                  <h3 className="font-bold text-white text-base">
-                    {session.matiere}
-                  </h3>
-                  <span
-                    className={`text-[10px] font-bold px-2 py-0.5 rounded uppercase ${
-                      session.statut === "valide"
-                        ? "bg-emerald-500/10 text-emerald-400"
-                        : session.statut === "attente_validation"
-                          ? "bg-purple-500/10 text-purple-400"
-                          : "bg-yellow-500/10 text-yellow-400"
-                    }`}
-                  >
+                <div className={SESSION_CARD_HEADER}>
+                  <h3 className={SESSION_SUBJECT_TITLE}>{session.matiere}</h3>
+                  <span className={getStatusBadgeClass(session.statut)}>
                     {session.statut?.replace("_", " ") || "brouillon"}
                   </span>
                 </div>
-                <p className="text-xs text-slate-400">
+                <p className={SESSION_CLASS_TEXT}>
                   Classe :{" "}
-                  <span className="text-white font-semibold">
+                  <span className={SESSION_CLASS_HIGHLIGHT}>
                     {session.classe}
                   </span>
                 </p>
-                <p className="text-[11px] text-slate-500 mt-2">
+                <p className={SESSION_CREATION_DATE}>
                   Créée : {session.dateCreation || "Récemment"}
                 </p>
                 {session.dateValidation && (
-                  <p className="text-[11px] text-emerald-400 mt-1">
+                  <p className={SESSION_VALIDATION_DATE}>
                     Validée le : {session.dateValidation}
                   </p>
                 )}
@@ -174,7 +190,7 @@ const SecretaryGrades = ({
               {session.statut !== "valide" && (
                 <button
                   onClick={() => setActiveGradeSession(session)}
-                  className="w-full mt-4 bg-slate-800 hover:bg-blue-600 text-white text-xs font-semibold py-2 rounded-xl transition-colors"
+                  className={EDIT_GRADES_BUTTON}
                 >
                   Saisir / Modifier les notes
                 </button>
