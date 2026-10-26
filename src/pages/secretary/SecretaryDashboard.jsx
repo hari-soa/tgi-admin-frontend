@@ -1,16 +1,19 @@
 import React from "react";
 
-export default function SecretaryDashboard({
+const SecretaryDashboard = ({
   gradeSessions,
   setActiveGradeSession,
   setActiveTab,
-}) {
+}) => {
+  // Filter sessions that are pending entry or currently saved as draft
   const pendingOrDraftSessions = gradeSessions.filter(
-    (s) => s.statut === "attente_saisie" || s.statut === "brouillon",
+    (session) =>
+      session.statut === "attente_saisie" || session.statut === "brouillon",
   );
 
   return (
     <div className="space-y-8">
+      {/* Secretary header banner */}
       <div className="bg-gradient-to-r from-blue-900/50 via-slate-900 to-slate-900 border border-slate-800 rounded-2xl p-8">
         <span className="text-xs font-bold text-blue-400 uppercase tracking-widest">
           Secrétariat Pédagogique
@@ -24,6 +27,7 @@ export default function SecretaryDashboard({
         </p>
       </div>
 
+      {/* Grade sessions pending input section */}
       <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6">
         <h3 className="text-lg font-bold text-white mb-4">
           Sessions de Notes en Attente de Saisie
@@ -52,7 +56,7 @@ export default function SecretaryDashboard({
                     </span>
                   </div>
                   <p className="text-xs text-slate-400 mt-1">
-                    Créé par Admin le : {session.dateCreation}
+                    Créé par Admin le : {session.dateCreation || "Récemment"}
                   </p>
                 </div>
                 <button
@@ -71,4 +75,6 @@ export default function SecretaryDashboard({
       </div>
     </div>
   );
-}
+};
+
+export default SecretaryDashboard;
