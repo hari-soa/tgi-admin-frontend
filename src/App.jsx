@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Sidebar from "./components/layout/Sidebar";
 import Topbar from "./components/layout/Topbar";
 import AppRouter from "./pages/AppRouter";
@@ -13,30 +13,53 @@ import GradeSessionModal from "./components/modals/GradeSessionModal";
 import PointageModal from "./components/modals/PointageModal";
 import HistoryRemarkModal from "./components/modals/HistoryRemarkModal";
 
+// Services API
+import { getCurrentUserProfile, logoutUser } from "./services/authService";
 import {
-  INITIAL_USERS,
-  INITIAL_ANNOUNCEMENTS,
-  INITIAL_SUBJECTS,
-  INITIAL_EXAM_RESULTS,
-  INITIAL_GRADE_SESSIONS,
-  INITIAL_HISTORIQUE,
-  INITIAL_REMARQUES,
-  INITIAL_POINTAGES,
-} from "./data/mockData";
+  createStudent,
+  createAdministrator,
+  createSecretary,
+  deactivateStudent,
+  updateUser,
+} from "./services/userService";
+import {
+  getAllSubjects,
+  createSubject,
+  deleteSubject,
+} from "./services/subjectService";
+import {
+  getAllAnnouncements,
+  createAnnouncement,
+  deleteAnnouncement,
+} from "./services/announcementService";
+import {
+  createGrade,
+  submitGradeSession,
+  reviewGrade,
+  createAnnualResult,
+  getStudentResults,
+} from "./services/gradeService";
+import {
+  createAttendanceSlot,
+  getDailyAttendance,
+  checkAttendance,
+  updateAttendanceMotif,
+  createHistoryRecord,
+  createRemarkRecord,
+} from "./services/attendanceDisciplineService";
 
 const App = () => {
-  // Start with no user logged in
   const [currentUser, setCurrentUser] = useState(null);
   const [activeTab, setActiveTab] = useState("dashboard");
 
-  const [users, setUsers] = useState(INITIAL_USERS);
-  const [announcements, setAnnouncements] = useState(INITIAL_ANNOUNCEMENTS);
-  const [subjects, setSubjects] = useState(INITIAL_SUBJECTS);
-  const [examResults, setExamResults] = useState(INITIAL_EXAM_RESULTS);
-  const [gradeSessions, setGradeSessions] = useState(INITIAL_GRADE_SESSIONS);
-  const [historiques, setHistoriques] = useState(INITIAL_HISTORIQUE);
-  const [remarques, setRemarques] = useState(INITIAL_REMARQUES);
-  const [pointages, setPointages] = useState(INITIAL_POINTAGES);
+  const [users, setUsers] = useState([]);
+  const [announcements, setAnnouncements] = useState([]);
+  const [subjects, setSubjects] = useState([]);
+  const [examResults, setExamResults] = useState([]);
+  const [gradeSessions, setGradeSessions] = useState([]);
+  const [historiques, setHistoriques] = useState([]);
+  const [remarques, setRemarques] = useState([]);
+  const [pointages, setPointages] = useState([]);
 
   const [selectedStudentFilter, setSelectedStudentFilter] = useState("tout");
   const [activeModal, setActiveModal] = useState(null);
@@ -51,7 +74,27 @@ const App = () => {
     setTimeout(() => setToastMessage(""), 4000);
   };
 
+  // Fetch initial data when user is authenticated
+  useEffect(() => {
+    const fetchAppData = async () => {
+      try {
+        if (currentUser) {
+          const subjectsData = await getAllSubjects().catch(() => []);
+          const announcementsData = await getAllAnnouncements().catch(() => []);
+
+          setSubjects(subjectsData);
+          setAnnouncements(announcementsData);
+        }
+      } catch (error) {
+        showToast("Error loading application data from server");
+      }
+    };
+
+    fetchAppData();
+  }, [currentUser]);
+
   const handleLogout = () => {
+    logoutUser();
     setCurrentUser(null);
     setTargetStudent(null);
     showToast("Logged out successfully");
@@ -69,175 +112,153 @@ const App = () => {
     }
   };
 
-  // Handlers pour modaux
-  const handleCreateUser = (e) => {
+  // API Modals Handlers
+  const handleCreateUser = async (e) => {
     e.preventDefault();
-    const entryYear = formState.anneeEntree || "25";
-    const numInClass = formState.numInClass || "020";
-    const matricule =
-      formState.role === "student"
-        ? `TGI-${entryYear}${numInClass}`
-        : `PRF-${entryYear}${numInClass}`;
+    try {
+      const payload = { ...formState };
+      let response;
 
-    const newUser = {
-      id: users.length + 1,
-      matricule,
-      nom: formState.nom || "Nouveau",
-      prenom: formState.prenom || "Utilisateur",
-      role: formState.role || "student",
-      email: formState.email || "user@st-exupery.edu",
-      contact: formState.contact || "+33 6 00 00 00 00",
-      genre: formState.genre || "male",
-      dateNaissance: formState.dateNaissance || "2008-01-01",
-      lieuNaissance: formState.lieuNaissance || "Paris",
-      adresse: formState.adresse || "Paris",
-      classe:
-        formState.role === "student" ? formState.classe || "Seconde" : null,
-      anneeEntree: `20${entryYear}`,
-      anneeSortie: formState.role === "ancien" ? "2025" : null,
-      statut: "active",
-      photo:
-        "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150&auto=format&fit=crop&q=80",
-      updatedAt: new Date().toISOString().replace("T", " ").substring(0, 16),
-    };
+      if (payload.role === "student" || payload.role === "ancien") {
+        response = await createStudent(payload);
+      } else if (payload.role === "secretaire") {
+        response = await createSecretary(payload);
+      } else {
+        response = await createAdministrator(payload);
+      }
 
-    setUsers([...users, newUser]);
-    setActiveModal(null);
-    setFormState({});
-    showToast(
-      `User ${newUser.nom} ${newUser.prenom} created (${newUser.matricule})`,
-    );
+      setUsers([...users, response || payload]);
+      setActiveModal(null);
+      setFormState({});
+      showToast("User created successfully on server!");
+    } catch (error) {
+      showToast(`Error: ${error.message}`);
+    }
   };
 
-  const handleCreateAnnouncement = (e) => {
+  const handleCreateAnnouncement = async (e) => {
     e.preventDefault();
-    const newAnn = {
-      id: announcements.length + 1,
-      title: formState.title || "Official Announcement",
-      context: formState.context || "Details...",
-      date: new Date().toISOString().replace("T", " ").substring(0, 16),
-      urgent: formState.urgent === true || formState.urgent === "true",
-      cible: formState.cible || "tout",
-    };
-    setAnnouncements([newAnn, ...announcements]);
-    setActiveModal(null);
-    setFormState({});
-    showToast("Announcement published successfully!");
+    try {
+      const payload = {
+        title: formState.title || "Official Announcement",
+        context: formState.context || "Details...",
+        urgent: formState.urgent === true || formState.urgent === "true",
+        cible: formState.cible || "tout",
+      };
+
+      const response = await createAnnouncement(payload);
+      setAnnouncements([response || payload, ...announcements]);
+      setActiveModal(null);
+      setFormState({});
+      showToast("Announcement published successfully!");
+    } catch (error) {
+      showToast(`Error: ${error.message}`);
+    }
   };
 
-  const handleCreateSubject = (e) => {
+  const handleCreateSubject = async (e) => {
     e.preventDefault();
-    const newSub = {
-      id: subjects.length + 1,
-      nom: formState.nom || "New Subject",
-      coeff: parseInt(formState.coeff) || 2,
-      prof: formState.prof || "Claire Moreau",
-      classe: formState.classe || "Seconde",
-    };
-    setSubjects([...subjects, newSub]);
-    setActiveModal(null);
-    setFormState({});
-    showToast(`Subject ${newSub.nom} (Coeff ${newSub.coeff}) created!`);
+    try {
+      const payload = {
+        nom: formState.nom || "New Subject",
+        coeff: parseInt(formState.coeff) || 2,
+        prof: formState.prof || "",
+        classe: formState.classe || "Seconde",
+      };
+
+      const response = await createSubject(payload);
+      setSubjects([...subjects, response || payload]);
+      setActiveModal(null);
+      setFormState({});
+      showToast(`Subject created successfully!`);
+    } catch (error) {
+      showToast(`Error: ${error.message}`);
+    }
   };
 
-  const handleCreateGradeSession = (e) => {
+  const handleCreateGradeSession = async (e) => {
     e.preventDefault();
-    const newSession = {
-      id: gradeSessions.length + 1,
-      matiere: formState.matiere || subjects[0]?.nom || "Mathematics",
-      classe: formState.classe || "Terminale",
-      dateCreation: new Date().toISOString().replace("T", " ").substring(0, 16),
-      dateValidation: null,
-      statut: "attente_saisie",
-      notesDraft: {},
-    };
-    setGradeSessions([newSession, ...gradeSessions]);
-    setActiveModal(null);
-    setFormState({});
-    showToast("Grade session created and assigned to secretary!");
+    try {
+      const payload = {
+        matiere: formState.matiere || subjects[0]?.nom || "Mathematics",
+        classe: formState.classe || "Terminale",
+      };
+
+      const response = await submitGradeSession(payload);
+      setGradeSessions([response || payload, ...gradeSessions]);
+      setActiveModal(null);
+      setFormState({});
+      showToast("Grade session created and assigned to secretary!");
+    } catch (error) {
+      showToast(`Error: ${error.message}`);
+    }
   };
 
-  const handleCreatePointage = (e) => {
+  const handleCreatePointage = async (e) => {
     e.preventDefault();
-    const newP = {
-      id: pointages.length + 1,
-      profName: formState.profName || "Claire Moreau",
-      matiere: formState.matiere || "Mathematics",
-      classe: formState.classe || "Terminale",
-      jour: formState.jour || "Monday 08:00 - 10:00",
-      date: new Date().toISOString().substring(0, 10),
-      status: "programme",
-      retardMin: 0,
-      motif: "",
-    };
-    setPointages([...pointages, newP]);
-    setActiveModal(null);
-    setFormState({});
-    showToast("Teacher pointage created successfully!");
+    try {
+      const payload = {
+        profName: formState.profName || "",
+        matiere: formState.matiere || "Mathematics",
+        classe: formState.classe || "Terminale",
+        jour: formState.jour || "Monday 08:00 - 10:00",
+      };
+
+      const response = await createAttendanceSlot(payload);
+      setPointages([...pointages, response || payload]);
+      setActiveModal(null);
+      setFormState({});
+      showToast("Teacher attendance slot created successfully!");
+    } catch (error) {
+      showToast(`Error: ${error.message}`);
+    }
   };
 
-  const handleAddHistoryToTarget = (e) => {
+  const handleAddHistoryToTarget = async (e) => {
     e.preventDefault();
     if (!targetStudent) return;
-    const newH = {
-      id: historiques.length + 1,
-      studentId: targetStudent.id,
-      type: formState.type || "Absence",
-      detail: formState.detail || "08:00 - 10:00",
-      raison: formState.raison || "Unjustified",
-      author: `${currentUser.prenom} ${currentUser.nom} (${currentUser.role})`,
-      date: new Date().toISOString().replace("T", " ").substring(0, 16),
-      isRed: formState.type === "Absence" || formState.isRed === "true",
-    };
-    setHistoriques([newH, ...historiques]);
-    setActiveModal(null);
-    setFormState({});
-    showToast("History event added to student profile");
+    try {
+      const payload = {
+        studentId: targetStudent.id,
+        type: formState.type || "Absence",
+        detail: formState.detail || "08:00 - 10:00",
+        raison: formState.raison || "Unjustified",
+      };
+
+      const response = await createHistoryRecord(payload);
+      setHistoriques([response || payload, ...historiques]);
+      setActiveModal(null);
+      setFormState({});
+      showToast("History event added to student profile");
+    } catch (error) {
+      showToast(`Error: ${error.message}`);
+    }
   };
 
-  const handleAddRemarkToTarget = (e) => {
+  const handleAddRemarkToTarget = async (e) => {
     e.preventDefault();
     if (!targetStudent) return;
-    const newR = {
-      id: remarques.length + 1,
-      studentId: targetStudent.id,
-      type: formState.type || "Warning",
-      raison: formState.raison || "Inappropriate behavior",
-      author: `${currentUser.prenom} ${currentUser.nom} (${currentUser.role})`,
-      date: new Date().toISOString().replace("T", " ").substring(0, 16),
-      isRed: formState.type === "Warning",
-    };
-    setRemarques([newR, ...remarques]);
-    setActiveModal(null);
-    setFormState({});
-    showToast("Remark added to student profile");
+    try {
+      const payload = {
+        studentId: targetStudent.id,
+        type: formState.type || "Warning",
+        raison: formState.raison || "Inappropriate behavior",
+      };
+
+      const response = await createRemarkRecord(payload);
+      setRemarques([response || payload, ...remarques]);
+      setActiveModal(null);
+      setFormState({});
+      showToast("Remark added to student profile");
+    } catch (error) {
+      showToast(`Error: ${error.message}`);
+    }
   };
 
   const handleAdminValidateSession = (sessionId) => {
     const session = gradeSessions.find((s) => s.id === sessionId);
     if (!session) return;
 
-    const newResults = [...examResults];
-    Object.entries(session.notesDraft).forEach(([studentIdStr, noteVal]) => {
-      const studentId = parseInt(studentIdStr);
-      const valNum = parseFloat(noteVal);
-      if (!isNaN(valNum)) {
-        newResults.push({
-          id: newResults.length + 1,
-          studentId,
-          examName: "Term 1",
-          matiere: session.matiere,
-          coeff: 3,
-          note: valNum,
-          noteCoeff: valNum * 3,
-          moyenne: 12.0,
-          mention: valNum >= 16 ? "Very Good" : valNum >= 14 ? "Good" : "Pass",
-          rang: "3rd",
-        });
-      }
-    });
-
-    setExamResults(newResults);
     setGradeSessions(
       gradeSessions.map((s) => {
         if (s.id === sessionId) {
@@ -281,37 +302,52 @@ const App = () => {
     showToast("Grades submitted to administrator for validation!");
   };
 
-  const handleTogglePointage = (
+  const handleTogglePointage = async (
     pointageId,
     status,
     retardMin = 0,
     motif = "",
   ) => {
-    setPointages(
-      pointages.map((p) => {
-        if (p.id === pointageId) {
-          return { ...p, status, retardMin, motif };
-        }
-        return p;
-      }),
-    );
-    showToast(`Pointage updated: ${status.toUpperCase()}`);
+    try {
+      await checkAttendance({ slotId: pointageId, status, retardMin, motif });
+      setPointages(
+        pointages.map((p) => {
+          if (p.id === pointageId) {
+            return { ...p, status, retardMin, motif };
+          }
+          return p;
+        }),
+      );
+      showToast(`Pointage updated: ${status.toUpperCase()}`);
+    } catch (error) {
+      showToast(`Error: ${error.message}`);
+    }
   };
 
-  const toggleUserStatus = (userId) => {
-    setUsers(
-      users.map((u) =>
-        u.id === userId
-          ? { ...u, statut: u.statut === "active" ? "desactive" : "active" }
-          : u,
-      ),
-    );
-    showToast("User status updated");
+  const toggleUserStatus = async (userId) => {
+    try {
+      const targetUser = users.find((u) => u.id === userId);
+      const newStatus =
+        targetUser?.statut === "active" ? "desactive" : "active";
+      await updateUser(userId, { statut: newStatus });
+
+      setUsers(
+        users.map((u) => (u.id === userId ? { ...u, statut: newStatus } : u)),
+      );
+      showToast("User status updated");
+    } catch (error) {
+      showToast(`Error: ${error.message}`);
+    }
   };
 
-  const deleteUser = (userId) => {
-    setUsers(users.filter((u) => u.id !== userId));
-    showToast("User deleted");
+  const deleteUser = async (userId) => {
+    try {
+      await deactivateStudent(userId);
+      setUsers(users.filter((u) => u.id !== userId));
+      showToast("User deleted/deactivated");
+    } catch (error) {
+      showToast(`Error: ${error.message}`);
+    }
   };
 
   const handleSimulateExport = (type) => {
