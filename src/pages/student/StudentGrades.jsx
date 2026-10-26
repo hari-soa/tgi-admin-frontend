@@ -1,14 +1,12 @@
 import React, { useState } from "react";
 
-export default function StudentGrades({
-  currentUser,
-  examResults,
-  handleSimulateExport,
-}) {
+const StudentGrades = ({ currentUser, examResults, handleSimulateExport }) => {
+  // State for filtering exam reports (e.g., Trimester 1 vs Mock Exam)
   const [selectedExamFilter, setSelectedExamFilter] = useState("Trimestre 1");
 
   return (
     <div className="space-y-8">
+      {/* Header section with title, period selector, and PDF export simulation button */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
           <h2 className="text-2xl font-bold text-white">
@@ -22,21 +20,22 @@ export default function StudentGrades({
           <select
             value={selectedExamFilter}
             onChange={(e) => setSelectedExamFilter(e.target.value)}
-            className="bg-slate-900 border border-slate-800 text-slate-200 text-xs px-3 py-2 rounded-xl focus:outline-none"
+            className="bg-slate-900 border border-slate-800 text-slate-200 text-xs px-3 py-2 rounded-xl focus:outline-none transition-all"
           >
             <option value="Trimestre 1">Trimestre 1</option>
             <option value="Examen Blanc">Examen Blanc</option>
           </select>
           <button
             onClick={() => handleSimulateExport(`Examen_${selectedExamFilter}`)}
-            className="bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold px-4 py-2 rounded-xl border border-slate-700"
+            className="bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold px-4 py-2 rounded-xl border border-slate-700 transition-all shadow-md"
           >
             Exporter Examen (PDF)
           </button>
         </div>
       </div>
 
-      <div className="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden">
+      {/* Grades and performance table section */}
+      <div className="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-xl">
         <div className="p-4 border-b border-slate-800 bg-slate-900/50">
           <h3 className="font-bold text-white text-sm">
             Détail des Matières — {selectedExamFilter}
@@ -58,9 +57,9 @@ export default function StudentGrades({
             <tbody className="divide-y divide-slate-800 text-slate-200">
               {examResults
                 .filter(
-                  (r) =>
-                    r.studentId === currentUser.id &&
-                    r.examName === selectedExamFilter,
+                  (res) =>
+                    res.studentId === currentUser?.id &&
+                    res.examName === selectedExamFilter,
                 )
                 .map((res) => (
                   <tr
@@ -76,10 +75,10 @@ export default function StudentGrades({
                     <td className="p-4 text-slate-400">{res.moyenne}</td>
                     <td className="p-4">
                       <span className="bg-blue-500/10 text-blue-400 px-2 py-0.5 rounded font-semibold text-[10px]">
-                        {res.mention}
+                        {res.mention || "N/A"}
                       </span>
                     </td>
-                    <td className="p-4 font-bold">{res.rang}</td>
+                    <td className="p-4 font-bold">{res.rang || "N/A"}</td>
                   </tr>
                 ))}
             </tbody>
@@ -88,4 +87,6 @@ export default function StudentGrades({
       </div>
     </div>
   );
-}
+};
+
+export default StudentGrades;
