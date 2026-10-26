@@ -1,13 +1,17 @@
 import React, { useState, useEffect } from "react";
+import {
+  TOAST_CONTAINER,
+  TOAST_VISIBLE,
+  TOAST_HIDDEN,
+} from "../../styles/ToastStyles";
 
-const Toast = ({ message }) => {
+export const Toast = ({ message }) => {
   const [visible, setVisible] = useState(false);
 
   useEffect(() => {
     if (message) {
       setVisible(true);
 
-      // Start fading out shortly before the toast is completely removed
       const timer = setTimeout(() => {
         setVisible(false);
       }, 3500);
@@ -22,9 +26,7 @@ const Toast = ({ message }) => {
 
   return (
     <div
-      className={`fixed bottom-5 right-5 bg-blue-600 text-white px-5 py-3 rounded-xl shadow-2xl z-50 text-sm font-semibold animate-bounce flex items-center space-x-2 transition-opacity duration-500 ${
-        visible ? "opacity-100" : "opacity-0"
-      }`}
+      className={`${TOAST_CONTAINER} ${visible ? TOAST_VISIBLE : TOAST_HIDDEN}`}
     >
       <span>{message}</span>
     </div>
