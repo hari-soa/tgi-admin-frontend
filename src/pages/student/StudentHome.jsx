@@ -1,7 +1,35 @@
 import React from "react";
 import { extractClassNum } from "../../utils/helpers";
+import {
+  CONTAINER_WRAPPER,
+  BANNER_CONTAINER,
+  BANNER_TAG,
+  BANNER_TITLE,
+  BANNER_DESCRIPTION,
+  SECTION_BOX,
+  SECTION_TITLE,
+  SUBSECTION_TITLE,
+  NEWS_CARD,
+  NEWS_BADGE,
+  NEWS_TITLE,
+  NEWS_SUBTITLE,
+  NEWS_BUTTON,
+  GRID_TWO_COLS,
+  ANNOUNCEMENT_CARD_URGENT,
+  ANNOUNCEMENT_CARD_NORMAL,
+  ANNOUNCEMENT_BADGE_URGENT,
+  ANNOUNCEMENT_TITLE,
+  ANNOUNCEMENT_CONTEXT,
+  ANNOUNCEMENT_DATE,
+  PREVIEW_GRID,
+  PREVIEW_BOX,
+  PREVIEW_TITLE,
+  PREVIEW_LIST,
+  PREVIEW_ITEM_RED,
+  PREVIEW_ITEM_NORMAL,
+} from "../../styles/StudentHomeStyles";
 
-const StudentHome = ({
+export const StudentHome = ({
   currentUser,
   announcements,
   historiques,
@@ -9,16 +37,13 @@ const StudentHome = ({
   setActiveTab,
 }) => {
   return (
-    <div className="space-y-8">
-      {/* Landing Page Banner */}
-      <div className="bg-gradient-to-r from-blue-900/50 via-slate-900 to-slate-900 border border-slate-800 rounded-2xl p-8 relative overflow-hidden">
-        <span className="text-xs font-bold text-blue-400 uppercase tracking-widest">
-          Espace Scolaire Élève
-        </span>
-        <h2 className="text-3xl font-extrabold text-white mt-1">
+    <div className={CONTAINER_WRAPPER}>
+      <div className={BANNER_CONTAINER}>
+        <span className={BANNER_TAG}>Espace Scolaire Élève</span>
+        <h2 className={BANNER_TITLE}>
           Bonjour, {currentUser?.prenom} {currentUser?.nom}
         </h2>
-        <p className="text-slate-400 text-sm mt-2 max-w-2xl">
+        <p className={BANNER_DESCRIPTION}>
           {currentUser?.role === "ancien"
             ? `Dossier d'Ancien Élève — Année de sortie : ${currentUser.anneeSortie}`
             : `Classe : ${currentUser?.classe || "N/A"} • Matricule : ${
@@ -27,39 +52,28 @@ const StudentHome = ({
         </p>
       </div>
 
-      {/* News / Actualités section */}
-      <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6">
-        <h3 className="text-lg font-bold text-white mb-2">
-          Actualité des Examens
-        </h3>
-        <div className="bg-blue-950/30 border border-blue-800/40 p-4 rounded-xl flex items-center justify-between">
+      <div className={SECTION_BOX}>
+        <h3 className={SECTION_TITLE}>Actualité des Examens</h3>
+        <div className={NEWS_CARD}>
           <div>
-            <span className="bg-emerald-500/10 text-emerald-400 text-[10px] font-bold px-2 py-0.5 rounded uppercase">
-              Résultats Publiés
-            </span>
-            <h4 className="font-bold text-white text-base mt-1">
+            <span className={NEWS_BADGE}>Résultats Publiés</span>
+            <h4 className={NEWS_TITLE}>
               Évaluation du Tronc Commun S1 disponible
             </h4>
-            <p className="text-xs text-slate-400">
+            <p className={NEWS_SUBTITLE}>
               Consultez vos notes individuelles, coefficients et moyennes
               globales.
             </p>
           </div>
-          <button
-            onClick={() => setActiveTab("notes")}
-            className="bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold px-4 py-2.5 rounded-xl shadow-lg shadow-blue-600/30 transition-all whitespace-nowrap"
-          >
+          <button onClick={() => setActiveTab("notes")} className={NEWS_BUTTON}>
             Voir le résultat →
           </button>
         </div>
       </div>
 
-      {/* General announcements filtered by target */}
       <div>
-        <h3 className="text-lg font-bold text-white mb-4">
-          Annonces Générales
-        </h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <h3 className={SUBSECTION_TITLE}>Annonces Générales</h3>
+        <div className={GRID_TWO_COLS}>
           {announcements
             .filter(
               (ann) =>
@@ -68,20 +82,18 @@ const StudentHome = ({
             .map((ann) => (
               <div
                 key={ann.id}
-                className={`p-5 rounded-2xl border transition-all ${
+                className={
                   ann.urgent
-                    ? "bg-red-950/20 border-red-800/50"
-                    : "bg-slate-900 border-slate-800"
-                }`}
+                    ? ANNOUNCEMENT_CARD_URGENT
+                    : ANNOUNCEMENT_CARD_NORMAL
+                }
               >
                 {ann.urgent && (
-                  <span className="bg-red-600 text-white text-[10px] font-bold px-2 py-0.5 rounded uppercase tracking-wider mb-2 inline-block">
-                    Urgent
-                  </span>
+                  <span className={ANNOUNCEMENT_BADGE_URGENT}>Urgent</span>
                 )}
-                <h4 className="font-bold text-white text-sm">{ann.title}</h4>
-                <p className="text-slate-400 text-xs mt-2">{ann.context}</p>
-                <span className="text-[10px] text-slate-500 block mt-4">
+                <h4 className={ANNOUNCEMENT_TITLE}>{ann.title}</h4>
+                <p className={ANNOUNCEMENT_CONTEXT}>{ann.context}</p>
+                <span className={ANNOUNCEMENT_DATE}>
                   {ann.date || "Récemment"}
                 </span>
               </div>
@@ -89,24 +101,17 @@ const StudentHome = ({
         </div>
       </div>
 
-      {/* Student discipline history & remarks preview */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div className="bg-slate-900 border border-slate-800 p-6 rounded-2xl">
-          <h4 className="font-bold text-white text-base mb-3">
-            Historique Présences / Absences
-          </h4>
-          <div className="space-y-2">
+      <div className={PREVIEW_GRID}>
+        <div className={PREVIEW_BOX}>
+          <h4 className={PREVIEW_TITLE}>Historique Présences / Absences</h4>
+          <div className={PREVIEW_LIST}>
             {historiques
               .filter((h) => h.studentId === currentUser?.id)
               .slice(0, 2)
               .map((h) => (
                 <div
                   key={h.id}
-                  className={`p-3 rounded-xl border text-xs ${
-                    h.isRed
-                      ? "bg-red-950/20 border-red-800/40 text-red-200"
-                      : "bg-slate-950 border-slate-800 text-slate-300"
-                  }`}
+                  className={h.isRed ? PREVIEW_ITEM_RED : PREVIEW_ITEM_NORMAL}
                 >
                   <span className="font-bold">{h.type}</span> ({h.detail}) —{" "}
                   {h.raison}
@@ -115,22 +120,16 @@ const StudentHome = ({
           </div>
         </div>
 
-        <div className="bg-slate-900 border border-slate-800 p-6 rounded-2xl">
-          <h4 className="font-bold text-white text-base mb-3">
-            Remarques Récentes
-          </h4>
-          <div className="space-y-2">
+        <div className={PREVIEW_BOX}>
+          <h4 className={PREVIEW_TITLE}>Remarques Récentes</h4>
+          <div className={PREVIEW_LIST}>
             {remarques
               .filter((r) => r.studentId === currentUser?.id)
               .slice(0, 2)
               .map((r) => (
                 <div
                   key={r.id}
-                  className={`p-3 rounded-xl border text-xs ${
-                    r.isRed
-                      ? "bg-red-950/20 border-red-800/40 text-red-200"
-                      : "bg-slate-950 border-slate-800 text-slate-300"
-                  }`}
+                  className={r.isRed ? PREVIEW_ITEM_RED : PREVIEW_ITEM_NORMAL}
                 >
                   <span className="font-bold">{r.type}</span> — {r.raison}
                 </div>
