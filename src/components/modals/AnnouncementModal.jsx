@@ -36,10 +36,10 @@ export const AnnouncementModal = ({
           <h3 className={MODAL_TITLE}>Publish New Announcement</h3>
 
           <div>
-            <label className={FIELD_LABEL}>Announcement Title</label>
+            <label className={FIELD_LABEL}>Announcement title</label>
             <input
               type="text"
-              placeholder="e.g. End of term schedule"
+              placeholder="Titre"
               onChange={(e) => handleInputChange("title", e.target.value)}
               className={TEXT_INPUT}
               required
@@ -47,10 +47,10 @@ export const AnnouncementModal = ({
           </div>
 
           <div>
-            <label className={FIELD_LABEL}>Context / Description</label>
+            <label className={FIELD_LABEL}>Description</label>
             <textarea
               rows="3"
-              placeholder="Enter announcement details here..."
+              placeholder="Description..."
               onChange={(e) => handleInputChange("context", e.target.value)}
               className={TEXTAREA_INPUT}
               required
@@ -64,7 +64,7 @@ export const AnnouncementModal = ({
                 onChange={(e) => handleInputChange("cible", e.target.value)}
                 className={SELECT_INPUT}
               >
-                <option value="tout">All</option>
+                <option value="tout">Tout</option>
                 <option value="Seconde">Seconde</option>
                 <option value="Première">Première</option>
                 <option value="Terminale">Terminale</option>
