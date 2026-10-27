@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import {
   CONTAINER_WRAPPER,
   HEADER_SECTION,
@@ -34,10 +34,8 @@ export const StudentGrades = ({
     <div className={CONTAINER_WRAPPER}>
       <div className={HEADER_SECTION}>
         <div>
-          <h2 className={HEADER_TITLE}>Résultats & Notes d'Examens</h2>
-          <p className={HEADER_SUBTITLE}>
-            Bulletins détaillés et moyennes annuelles
-          </p>
+          <h2 className={HEADER_TITLE}>Résultats d'examens</h2>
+          <p className={HEADER_SUBTITLE}>Bulletins</p>
         </div>
         <div className={HEADER_ACTIONS}>
           <select
@@ -45,8 +43,8 @@ export const StudentGrades = ({
             onChange={(e) => setSelectedExamFilter(e.target.value)}
             className={SELECT_INPUT}
           >
-            <option value="Trimestre 1">Trimestre 1</option>
-            <option value="Examen Blanc">Examen Blanc</option>
+            <option value="Examen Blanc">Semi-trimestriel 1</option>
+            <option value="Trimestre 1">Trimestrel 1</option>
           </select>
           <button
             onClick={() => handleSimulateExport(`Examen_${selectedExamFilter}`)}

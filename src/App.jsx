@@ -1,11 +1,10 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import Sidebar from "./components/layout/Sidebar";
 import Topbar from "./components/layout/Topbar";
 import AppRouter from "./pages/AppRouter";
 import Toast from "./components/common/Toast";
 import Login from "./components/auth/Login";
 
-// Modals
 import UserModal from "./components/modals/UserModal";
 import AnnouncementModal from "./components/modals/AnnouncementModal";
 import SubjectModal from "./components/modals/SubjectModal";
@@ -13,7 +12,6 @@ import GradeSessionModal from "./components/modals/GradeSessionModal";
 import PointageModal from "./components/modals/PointageModal";
 import HistoryRemarkModal from "./components/modals/HistoryRemarkModal";
 
-// API Services
 import { getCurrentUserProfile, logoutUser } from "./services/authService";
 import {
   createStudent,
@@ -74,7 +72,6 @@ const App = () => {
     setTimeout(() => setToastMessage(""), 4000);
   };
 
-  // Fetch initial data from server when user is authenticated
   useEffect(() => {
     const fetchAppData = async () => {
       try {
@@ -88,9 +85,9 @@ const App = () => {
           ] = await Promise.all([
             getAllSubjects().catch(() => []),
             getAllAnnouncements().catch(() => []),
-            Promise.resolve([]), // userService si dispo
-            Promise.resolve([]), // gradeService si dispo
-            getDailyAttendance().catch(() => []), // <-- Ici on branche le vrai service de pointage !
+            Promise.resolve([]),
+            Promise.resolve([]),
+            getDailyAttendance().catch(() => []),
           ]);
 
           setSubjects(subjectsData);
@@ -126,7 +123,6 @@ const App = () => {
     }
   };
 
-  // API Modal Handlers
   const handleCreateUser = async (e) => {
     e.preventDefault();
     try {
@@ -379,7 +375,6 @@ const App = () => {
     ["prof", "admin", "secretaire"].includes(u.role),
   );
 
-  // If no user is authenticated, render the Login screen
   if (!currentUser) {
     return (
       <>
@@ -395,7 +390,6 @@ const App = () => {
 
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 flex font-sans relative">
-      {/* FIXED SIDEBAR */}
       <Sidebar
         currentUser={currentUser}
         activeTab={activeTab}
@@ -405,14 +399,12 @@ const App = () => {
         handleLogout={handleLogout}
       />
 
-      {/* FIXED TOPBAR */}
       <Topbar
         currentUser={currentUser}
         activeTab={activeTab}
         handleLogout={handleLogout}
       />
 
-      {/* MAIN CONTENT AREA */}
       <div className="flex-1 ml-64 pt-20 flex flex-col min-w-0">
         <main className="flex-1 overflow-y-auto p-6 md:p-8 bg-slate-950">
           <AppRouter
@@ -449,7 +441,6 @@ const App = () => {
         </main>
       </div>
 
-      {/* MODALS */}
       <UserModal
         isOpen={activeModal === "user"}
         onClose={() => setActiveModal(null)}
@@ -504,7 +495,6 @@ const App = () => {
         targetStudent={targetStudent}
       />
 
-      {/* TOAST NOTIFICATIONS */}
       <Toast message={toastMessage} />
     </div>
   );

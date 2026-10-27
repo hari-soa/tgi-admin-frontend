@@ -1,4 +1,3 @@
-import React from "react";
 import {
   MODAL_BACKDROP,
   MODAL_CONTAINER,
@@ -80,13 +79,13 @@ export const AnnouncementModal = ({
                 className={SELECT_INPUT}
               >
                 <option value="false">Normal</option>
-                <option value="true">Urgent (Red)</option>
+                <option value="true">Urgent</option>
               </select>
             </div>
           </div>
 
           <button type="submit" className={SUBMIT_BUTTON}>
-            Publish Immediately
+            Publish
           </button>
         </form>
       </div>

@@ -1,4 +1,3 @@
-import React from "react";
 import {
   CONTAINER_WRAPPER,
   HEADER_TITLE,
@@ -20,7 +19,7 @@ export const StaffList = ({ staffUsers, setActiveTab }) => {
   return (
     <div className={CONTAINER_WRAPPER}>
       <div>
-        <h2 className={HEADER_TITLE}>Liste du Personnel & Équipe Éducative</h2>
+        <h2 className={HEADER_TITLE}>Liste du Personnel</h2>
         <p className={HEADER_SUBTITLE}>
           Enseignants, administration et secrétariat
         </p>
@@ -38,7 +37,7 @@ export const StaffList = ({ staffUsers, setActiveTab }) => {
                 />
                 <div>
                   <h3 className={STAFF_NAME}>
-                    {staff.prenom} {staff.nom}
+                    {staff.nom} {staff.prenom}
                   </h3>
                   <span className={ROLE_BADGE}>{staff.role}</span>
                 </div>

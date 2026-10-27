@@ -1,4 +1,3 @@
-import React from "react";
 import {
   CONTAINER_WRAPPER,
   BANNER_CONTAINER,
@@ -31,7 +30,7 @@ export const SecretaryDashboard = ({
   return (
     <div className={CONTAINER_WRAPPER}>
       <div className={BANNER_CONTAINER}>
-        <span className={BANNER_TAG}>Secrétariat Pédagogique</span>
+        <span className={BANNER_TAG}>Secrétariat </span>
         <h2 className={BANNER_TITLE}>Espace de Gestion des Notes</h2>
         <p className={BANNER_DESCRIPTION}>
           Complétez la saisie des notes initiée par l'administrateur et
@@ -40,12 +39,10 @@ export const SecretaryDashboard = ({
       </div>
 
       <div className={SECTION_CONTAINER}>
-        <h3 className={SECTION_TITLE}>
-          Sessions de Notes en Attente de Saisie
-        </h3>
+        <h3 className={SECTION_TITLE}>Sessions de notes en attente</h3>
         <div className={SESSIONS_LIST}>
           {pendingOrDraftSessions.length === 0 ? (
-            <p className={EMPTY_TEXT}>Aucune session en attente de saisie.</p>
+            <p className={EMPTY_TEXT}>Aucune session en attente.</p>
           ) : (
             pendingOrDraftSessions.map((session) => (
               <div key={session.id} className={SESSION_CARD}>

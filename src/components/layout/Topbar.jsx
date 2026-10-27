@@ -1,4 +1,3 @@
-import React from "react";
 import {
   TOPBAR_CONTAINER,
   TITLE_CONTAINER,
@@ -20,7 +19,7 @@ export const Topbar = ({ currentUser, activeTab }) => {
       <div className={TITLE_CONTAINER}>
         <h1 className={TITLE_TEXT}>
           {activeTab === "dashboard"
-            ? "Tableau de bord"
+            ? "Dashboard"
             : activeTab === "accueil"
               ? "Accueil"
               : activeTab.replace("_", " ")}
@@ -35,9 +34,7 @@ export const Topbar = ({ currentUser, activeTab }) => {
             className={PROFILE_IMAGE}
           />
           <div className={PROFILE_TEXT_CONTAINER}>
-            <p className={PROFILE_NAME}>
-              {currentUser?.prenom} {currentUser?.nom}
-            </p>
+            <p className={PROFILE_NAME}>{currentUser?.prenom}</p>
             <div className={PROFILE_META}>
               <span className={ROLE_BADGE}>{currentUser?.role}</span>
               <span

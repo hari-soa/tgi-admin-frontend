@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { loginUser, getCurrentUserProfile } from "../../services/authService";
 import logoImage from "../../assets/logo-tgi.jpg";
 import {
@@ -97,7 +97,7 @@ export const Login = ({ setCurrentUser, showToast }) => {
 
           <form onSubmit={handleLoginSubmit} className={FORM_CONTAINER}>
             <div>
-              <label className={LABEL_TEXT}>Email</label>
+              <label className={LABEL_TEXT}>E-mail</label>
               <input
                 type="email"
                 required
@@ -184,7 +184,7 @@ export const Login = ({ setCurrentUser, showToast }) => {
       </div>
 
       <footer className={FOOTER_CONTAINER}>
-        © 2026 TGI. All rights reserved.
+        © 2026 TGI - Technologie Générale Industriel. All rights reserved.
       </footer>
     </div>
   );

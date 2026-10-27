@@ -1,4 +1,3 @@
-import React from "react";
 import {
   MODAL_BACKDROP,
   MODAL_CONTAINER,
@@ -48,7 +47,7 @@ export const HistoryRemarkModal = ({
                 onChange={(e) => handleInputChange("type", e.target.value)}
                 className={SELECT_INPUT}
               >
-                <option value="Absence">Absence (Red)</option>
+                <option value="Absence">Absence</option>
                 <option value="Retard">Late Arrival</option>
                 <option value="Infirmerie">Infirmary Visit</option>
                 <option value="Permission de sortie">Exit Permit</option>
@@ -56,7 +55,7 @@ export const HistoryRemarkModal = ({
             </div>
 
             <div>
-              <label className={FIELD_LABEL}>Details (Duration, Time)</label>
+              <label className={FIELD_LABEL}>Details</label>
               <input
                 type="text"
                 placeholder="e.g. 08:00 - 10:00 or 15 mins"
@@ -93,7 +92,7 @@ export const HistoryRemarkModal = ({
                 onChange={(e) => handleInputChange("type", e.target.value)}
                 className={SELECT_INPUT}
               >
-                <option value="Avertissement">Warning (Red)</option>
+                <option value="Avertissement">Warning</option>
                 <option value="Encouragement">Encouragement</option>
                 <option value="Académique">Academic</option>
                 <option value="Autre">Other</option>

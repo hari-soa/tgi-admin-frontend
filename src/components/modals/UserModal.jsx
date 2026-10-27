@@ -1,4 +1,3 @@
-import React from "react";
 import {
   MODAL_BACKDROP,
   MODAL_CONTAINER,
@@ -128,7 +127,7 @@ export const UserModal = ({
 
           <div className={GRID_TWO_COLS}>
             <div>
-              <label className={FIELD_LABEL}>Email Address</label>
+              <label className={FIELD_LABEL}>Email</label>
               <input
                 type="email"
                 placeholder="user@st-exupery.edu"
@@ -138,7 +137,7 @@ export const UserModal = ({
               />
             </div>
             <div>
-              <label className={FIELD_LABEL}>Contact Phone</label>
+              <label className={FIELD_LABEL}>Contact</label>
               <input
                 type="text"
                 placeholder="+33 6 00 00 00 00"

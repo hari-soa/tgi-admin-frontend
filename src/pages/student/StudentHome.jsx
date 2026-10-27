@@ -1,4 +1,3 @@
-import React from "react";
 import { extractClassNum } from "../../utils/helpers";
 import {
   CONTAINER_WRAPPER,
@@ -41,7 +40,7 @@ export const StudentHome = ({
       <div className={BANNER_CONTAINER}>
         <span className={BANNER_TAG}>Espace Scolaire Élève</span>
         <h2 className={BANNER_TITLE}>
-          Bonjour, {currentUser?.prenom} {currentUser?.nom}
+          Bonjour, {currentUser?.nom} {currentUser?.prenom}
         </h2>
         <p className={BANNER_DESCRIPTION}>
           {currentUser?.role === "ancien"
@@ -56,14 +55,11 @@ export const StudentHome = ({
         <h3 className={SECTION_TITLE}>Actualité des Examens</h3>
         <div className={NEWS_CARD}>
           <div>
-            <span className={NEWS_BADGE}>Résultats Publiés</span>
+            <span className={NEWS_BADGE}>Résultats disponibles</span>
             <h4 className={NEWS_TITLE}>
               Évaluation du Tronc Commun S1 disponible
             </h4>
-            <p className={NEWS_SUBTITLE}>
-              Consultez vos notes individuelles, coefficients et moyennes
-              globales.
-            </p>
+            <p className={NEWS_SUBTITLE}>Consultez vos notes</p>
           </div>
           <button onClick={() => setActiveTab("notes")} className={NEWS_BUTTON}>
             Voir le résultat →
