@@ -36,7 +36,7 @@ export const AnnouncementModal = ({
           <h3 className={MODAL_TITLE}>Publish New Announcement</h3>
 
           <div>
-            <label className={FIELD_LABEL}>Announcement title</label>
+            <label className={FIELD_LABEL}>Announcement Title</label>
             <input
               type="text"
               placeholder="Titre"
