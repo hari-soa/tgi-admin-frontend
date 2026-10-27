@@ -5,13 +5,12 @@ import {
   FORM_CONTAINER,
   MODAL_TITLE,
   GRID_TWO_COLS,
+  FIELD_GROUP,
   FIELD_LABEL,
-  FIELD_LABEL_MUTED,
   TEXT_INPUT,
   SELECT_INPUT,
-  MATRICULE_BOX,
-  MATRICULE_TITLE,
-  MATRICULE_INPUT,
+  SUB_CONTAINER,
+  SUB_TITLE,
   SUBMIT_BUTTON,
 } from "../../styles/UserModalStyles";
 
@@ -28,9 +27,8 @@ export const UserModal = ({
     setFormState({ ...formState, [field]: value });
   };
 
-  const selectedRole = formState?.role || "student";
-  const isStudentOrAlumni =
-    selectedRole === "student" || selectedRole === "ancien";
+  const currentRole = formState?.role || "student";
+  const isStudent = currentRole === "student";
 
   return (
     <div className={MODAL_BACKDROP}>
@@ -43,21 +41,23 @@ export const UserModal = ({
           <h3 className={MODAL_TITLE}>Create New User</h3>
 
           <div className={GRID_TWO_COLS}>
-            <div>
+            <div className={FIELD_GROUP}>
               <label className={FIELD_LABEL}>Last Name</label>
               <input
                 type="text"
-                placeholder="e.g. Doe"
+                placeholder="Nom"
+                value={formState?.nom || ""}
                 onChange={(e) => handleInputChange("nom", e.target.value)}
                 className={TEXT_INPUT}
                 required
               />
             </div>
-            <div>
+            <div className={FIELD_GROUP}>
               <label className={FIELD_LABEL}>First Name</label>
               <input
                 type="text"
-                placeholder="e.g. John"
+                placeholder="Prénom(s)"
+                value={formState?.prenom || ""}
                 onChange={(e) => handleInputChange("prenom", e.target.value)}
                 className={TEXT_INPUT}
                 required
@@ -66,111 +66,172 @@ export const UserModal = ({
           </div>
 
           <div className={GRID_TWO_COLS}>
-            <div>
+            <div className={FIELD_GROUP}>
               <label className={FIELD_LABEL}>Gender</label>
               <select
+                value={formState?.genre || "Masculin"}
                 onChange={(e) => handleInputChange("genre", e.target.value)}
                 className={SELECT_INPUT}
               >
-                <option value="male">Male</option>
-                <option value="female">Female</option>
+                <option value="Masculin">Masculin</option>
+                <option value="Féminin">Féminin</option>
               </select>
             </div>
-            <div>
+            <div className={FIELD_GROUP}>
               <label className={FIELD_LABEL}>Role</label>
               <select
+                value={currentRole}
                 onChange={(e) => handleInputChange("role", e.target.value)}
                 className={SELECT_INPUT}
               >
                 <option value="student">Student</option>
                 <option value="prof">Professor</option>
-                <option value="secretaire">Secretary</option>
-                <option value="ancien">Alumni</option>
+                <option value="secrétaire">Secretary</option>
+                <option value="admin">Admin</option>
               </select>
             </div>
           </div>
 
-          <div className={MATRICULE_BOX}>
-            <p className={MATRICULE_TITLE}>
-              Mandatory Matricule Generation (
-              {isStudentOrAlumni ? "TGI-YYNNN" : "PRF-YYNNN"})
-            </p>
-            <div className={GRID_TWO_COLS}>
-              <div>
-                <label className={FIELD_LABEL_MUTED}>
-                  Entry Year (e.g. 25)
-                </label>
-                <input
-                  type="text"
-                  placeholder="25"
-                  onChange={(e) =>
-                    handleInputChange("anneeEntree", e.target.value)
-                  }
-                  className={MATRICULE_INPUT}
-                />
+          {isStudent ? (
+            <div className={SUB_CONTAINER}>
+              <span className={SUB_TITLE}>
+                Student Academic - Personal Details
+              </span>
+
+              <div className={GRID_TWO_COLS}>
+                <div className={FIELD_GROUP}>
+                  <label className={FIELD_LABEL}>Entry Year</label>
+                  <input
+                    type="text"
+                    placeholder="Année d'entrée"
+                    value={formState?.entryYear || ""}
+                    onChange={(e) =>
+                      handleInputChange("entryYear", e.target.value)
+                    }
+                    className={TEXT_INPUT}
+                    required
+                  />
+                </div>
+                <div className={FIELD_GROUP}>
+                  <label className={FIELD_LABEL}>Class Number</label>
+                  <input
+                    type="text"
+                    placeholder="n°01"
+                    value={formState?.classNum || ""}
+                    onChange={(e) =>
+                      handleInputChange("classNum", e.target.value)
+                    }
+                    className={TEXT_INPUT}
+                    required
+                  />
+                </div>
               </div>
-              <div>
-                <label className={FIELD_LABEL_MUTED}>
-                  Class Number (e.g. 020)
-                </label>
+
+              <div className={GRID_TWO_COLS}>
+                <div className={FIELD_GROUP}>
+                  <label className={FIELD_LABEL}>Class</label>
+                  <select
+                    value={formState?.classe || "Seconde"}
+                    onChange={(e) =>
+                      handleInputChange("classe", e.target.value)
+                    }
+                    className={SELECT_INPUT}
+                  >
+                    <option value="Seconde">Seconde</option>
+                    <option value="Première">Première</option>
+                    <option value="Terminale">Terminale</option>
+                  </select>
+                </div>
+                <div className={FIELD_GROUP}>
+                  <label className={FIELD_LABEL}>Date of Birth</label>
+                  <input
+                    type="text"
+                    placeholder="DD/MM/YYYY"
+                    value={formState?.dateNaissance || ""}
+                    onChange={(e) =>
+                      handleInputChange("dateNaissance", e.target.value)
+                    }
+                    className={TEXT_INPUT}
+                    required
+                  />
+                </div>
+              </div>
+
+              <div className={GRID_TWO_COLS}>
+                <div className={FIELD_GROUP}>
+                  <label className={FIELD_LABEL}>Place of Birth</label>
+                  <input
+                    type="text"
+                    placeholder="Lieu de naissance"
+                    value={formState?.lieuNaissance || ""}
+                    onChange={(e) =>
+                      handleInputChange("lieuNaissance", e.target.value)
+                    }
+                    className={TEXT_INPUT}
+                    required
+                  />
+                </div>
+                <div className={FIELD_GROUP}>
+                  <label className={FIELD_LABEL}>Address</label>
+                  <input
+                    type="text"
+                    placeholder="Adresse"
+                    value={formState?.adresse || ""}
+                    onChange={(e) =>
+                      handleInputChange("adresse", e.target.value)
+                    }
+                    className={TEXT_INPUT}
+                    required
+                  />
+                </div>
+              </div>
+            </div>
+          ) : (
+            <div className={SUB_CONTAINER}>
+              <span className={SUB_TITLE}>Admin Matricule</span>
+              <div className={FIELD_GROUP}>
+                <label className={FIELD_LABEL}>Matricule</label>
                 <input
                   type="text"
-                  placeholder="020"
-                  onChange={(e) =>
-                    handleInputChange("numInClass", e.target.value)
+                  placeholder={
+                    currentRole === "admin"
+                      ? "ADM-001"
+                      : currentRole === "prof"
+                        ? "PRF-001"
+                        : "SEC-001"
                   }
-                  className={MATRICULE_INPUT}
+                  value={formState?.matricule || ""}
+                  onChange={(e) =>
+                    handleInputChange("matricule", e.target.value)
+                  }
+                  className={TEXT_INPUT}
+                  required
                 />
               </div>
             </div>
-          </div>
+          )}
 
           <div className={GRID_TWO_COLS}>
-            <div>
+            <div className={FIELD_GROUP}>
               <label className={FIELD_LABEL}>Email</label>
               <input
                 type="email"
-                placeholder="user@st-exupery.edu"
+                placeholder="user@gmail.com"
+                value={formState?.email || ""}
                 onChange={(e) => handleInputChange("email", e.target.value)}
                 className={TEXT_INPUT}
                 required
               />
             </div>
-            <div>
+            <div className={FIELD_GROUP}>
               <label className={FIELD_LABEL}>Contact</label>
               <input
                 type="text"
-                placeholder="+33 6 00 00 00 00"
+                placeholder="+261 34 00 000 00"
+                value={formState?.contact || ""}
                 onChange={(e) => handleInputChange("contact", e.target.value)}
                 className={TEXT_INPUT}
                 required
-              />
-            </div>
-          </div>
-
-          <div className={GRID_TWO_COLS}>
-            {isStudentOrAlumni && (
-              <div>
-                <label className={FIELD_LABEL}>Class</label>
-                <select
-                  onChange={(e) => handleInputChange("classe", e.target.value)}
-                  className={SELECT_INPUT}
-                >
-                  <option value="Seconde">Seconde</option>
-                  <option value="Première">Première</option>
-                  <option value="Terminale">Terminale</option>
-                </select>
-              </div>
-            )}
-            <div className={isStudentOrAlumni ? "" : "col-span-2"}>
-              <label className={FIELD_LABEL}>Place of Birth</label>
-              <input
-                type="text"
-                placeholder="Paris"
-                onChange={(e) =>
-                  handleInputChange("lieuNaissance", e.target.value)
-                }
-                className={TEXT_INPUT}
               />
             </div>
           </div>
