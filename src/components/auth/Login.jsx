@@ -36,37 +36,10 @@ export const Login = ({ setCurrentUser, showToast }) => {
     e.preventDefault();
     setError("");
 
-    const adminEmailEnv = import.meta.env.VITE_ADMIN_EMAIL;
-    const adminPasswordEnv = import.meta.env.VITE_ADMIN_PASSWORD;
-
-    if (email === adminEmailEnv && password === adminPasswordEnv) {
-      const superAdminUser = {
-        id: 0,
-        matricule: "ADM-00001",
-        nom: "Super",
-        prenom: "Admin",
-        role: "ADMIN",
-        email: adminEmailEnv,
-        contact: "+33 6 00 00 00 00",
-        genre: "male",
-        statut: "active",
-        photo:
-          "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&auto=format&fit=crop&q=80",
-      };
-      setCurrentUser(superAdminUser);
-      if (showToast) showToast("Welcome back, Super Admin !");
-      return;
-    }
-
     try {
-      const authResult = await loginUser(email, password);
-
-      const token = authResult?.token || authResult?.data?.token;
-      if (token) {
-        localStorage.setItem("token", token);
-      }
-
+      await loginUser(email, password);
       const userProfile = await getCurrentUserProfile();
+
       if (userProfile && userProfile.statut === "desactive") {
         setError(
           "This account has been disabled. Please contact the administrator.",
@@ -81,7 +54,7 @@ export const Login = ({ setCurrentUser, showToast }) => {
         );
       }
     } catch (err) {
-      setError(err.message || "Invalid email or matricule.");
+      setError(err.message || "Invalid email or password.");
     }
   };
 
