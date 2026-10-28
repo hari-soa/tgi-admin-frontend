@@ -59,9 +59,14 @@ export const Login = ({ setCurrentUser, showToast }) => {
     }
 
     try {
-      await loginUser(email, password);
-      const userProfile = await getCurrentUserProfile();
+      const authResult = await loginUser(email, password);
 
+      const token = authResult?.token || authResult?.data?.token;
+      if (token) {
+        localStorage.setItem("token", token);
+      }
+
+      const userProfile = await getCurrentUserProfile();
       if (userProfile && userProfile.statut === "desactive") {
         setError(
           "This account has been disabled. Please contact the administrator.",
