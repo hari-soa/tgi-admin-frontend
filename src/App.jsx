@@ -105,7 +105,7 @@ const App = () => {
         ] = await Promise.all([
           getAllSubjects().catch(() => []),
           getAllAnnouncements().catch(() => []),
-          Promise.resolve([]),
+          getAllUsers().catch(() => []),
           Promise.resolve([]),
           getDailyAttendance().catch(() => []),
         ]);
@@ -165,14 +165,54 @@ const App = () => {
   const handleCreateUser = async (e) => {
     e.preventDefault();
     try {
-      const payload = { ...formState };
+      // Nettoyage ou conversion des types (numbers, etc.) requis par les schémas Zod
+      const basePayload = {
+        firstName: formState.firstName || formState.prenom || "",
+        lastName: formState.lastName || formState.nom || "",
+        password: formState.password || "password123", // Mot de passe par défaut si non renseigné
+        contactNumber:
+          formState.contactNumber || formState.telephone || "0340000000",
+        email: formState.email || undefined,
+        profilePictureUrl: formState.profilePictureUrl || undefined,
+      };
+
+      let payload;
       let response;
 
-      if (payload.role === "student" || payload.role === "ancien") {
+      if (formState.role === "student" || formState.role === "ancien") {
+        payload = {
+          ...basePayload,
+          classRollNumber: parseInt(
+            formState.classRollNumber || formState.numero || 1,
+          ),
+          classGroup: (
+            formState.classGroup ||
+            formState.classe ||
+            "SECONDE"
+          ).toUpperCase(),
+          dateOfBirth: formState.dateOfBirth || "2005-01-01",
+          gender: (formState.gender || "MALE").toUpperCase(),
+          address: formState.address || "Antananarivo",
+          parentsEmail: formState.parentsEmail || "parent@gmail.com",
+          parentsContactNumber: formState.parentsContactNumber || "0330000000",
+          entryYear: parseInt(formState.entryYear || 2024),
+          graduationYear: formState.graduationYear
+            ? parseInt(formState.graduationYear)
+            : undefined,
+          comments: formState.comments || undefined,
+        };
         response = await createStudent(payload);
-      } else if (payload.role === "secretaire") {
+      } else if (formState.role === "secretaire") {
+        payload = {
+          ...basePayload,
+          department: formState.department || "Scolarité",
+        };
         response = await createSecretary(payload);
       } else {
+        payload = {
+          ...basePayload,
+          role: formState.role || "ADMIN",
+        };
         response = await createAdministrator(payload);
       }
 
