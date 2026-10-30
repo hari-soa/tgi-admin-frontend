@@ -190,9 +190,18 @@ const App = () => {
     try {
       const payload = {
         title: formState.title || "Official Announcement",
-        context: formState.context || "Details...",
-        urgent: formState.urgent === true || formState.urgent === "true",
-        cible: formState.cible || "tout",
+        content:
+          formState.content ||
+          formState.context ||
+          "Detailed announcement content here...",
+        targetScope:
+          formState.targetScope ||
+          (formState.cible && formState.cible !== "tout" ? "CLASS" : "ALL"),
+        priority:
+          formState.priority || (formState.urgent ? "URGENT" : "NORMAL"),
+        targetClasses:
+          formState.targetClasses ||
+          (formState.classe ? [formState.classe.toUpperCase()] : []),
       };
 
       const response = await createAnnouncement(payload);
