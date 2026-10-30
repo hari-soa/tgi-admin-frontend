@@ -209,10 +209,16 @@ const App = () => {
     e.preventDefault();
     try {
       const payload = {
-        nom: formState.nom || "New Subject",
-        coeff: parseInt(formState.coeff) || 2,
-        prof: formState.prof || "",
-        classe: formState.classe || "Seconde",
+        name: formState.name || formState.nom || "New Subject",
+        coefficient: parseFloat(formState.coefficient || formState.coeff) || 2,
+        description: formState.description || "",
+        assignments: [
+          {
+            classGroup: formState.classGroup || formState.classe || "Seconde",
+            teacherId:
+              formState.teacherId || formState.prof || "default-teacher-id",
+          },
+        ],
       };
 
       const response = await createSubject(payload);
