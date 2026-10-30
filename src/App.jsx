@@ -165,47 +165,44 @@ const App = () => {
   const handleCreateUser = async (e) => {
     e.preventDefault();
     try {
-      // Nettoyage ou conversion des types (numbers, etc.) requis par les schémas Zod
       const basePayload = {
-        firstName: formState.firstName || formState.prenom || "",
-        lastName: formState.lastName || formState.nom || "",
-        password: formState.password || "password123", // Mot de passe par défaut si non renseigné
+        firstName: formState.firstName,
+        lastName: formState.lastName,
+        password: formState.password,
         contactNumber:
-          formState.contactNumber || formState.telephone || "0340000000",
-        email: formState.email || undefined,
-        profilePictureUrl: formState.profilePictureUrl || undefined,
+          formState.contactNumber,
+        email: formState.email,
+        profilePictureUrl: formState.profilePictureUrl,
       };
 
       let payload;
       let response;
 
-      if (formState.role === "student" || formState.role === "ancien") {
+      if (formState.role === "student" || formState.role === "alumni") {
         payload = {
           ...basePayload,
           classRollNumber: parseInt(
-            formState.classRollNumber || formState.numero || 1,
+            formState.classRollNumber,
           ),
           classGroup: (
-            formState.classGroup ||
-            formState.classe ||
-            "SECONDE"
+            formState.classGroup
           ).toUpperCase(),
-          dateOfBirth: formState.dateOfBirth || "2005-01-01",
-          gender: (formState.gender || "MALE").toUpperCase(),
-          address: formState.address || "Antananarivo",
-          parentsEmail: formState.parentsEmail || "parent@gmail.com",
-          parentsContactNumber: formState.parentsContactNumber || "0330000000",
-          entryYear: parseInt(formState.entryYear || 2024),
+          dateOfBirth: formState.dateOfBirth,
+          gender: (formState.gender).toUpperCase(),
+          address: formState.address,
+          parentsEmail: formState.parentsEmail,
+          parentsContactNumber: formState.parentsContactNumber,
+          entryYear: parseInt(formState.entryYear),
           graduationYear: formState.graduationYear
             ? parseInt(formState.graduationYear)
             : undefined,
-          comments: formState.comments || undefined,
+          comments: formState.comments,
         };
         response = await createStudent(payload);
       } else if (formState.role === "secretaire") {
         payload = {
           ...basePayload,
-          department: formState.department || "Scolarité",
+          department: formState.department,
         };
         response = await createSecretary(payload);
       } else {
@@ -229,19 +226,15 @@ const App = () => {
     e.preventDefault();
     try {
       const payload = {
-        title: formState.title || "Official Announcement",
+        title: formState.title,
         content:
-          formState.content ||
-          formState.context ||
-          "Detailed announcement content here...",
+          formState.content,
         targetScope:
-          formState.targetScope ||
-          (formState.cible && formState.cible !== "tout" ? "CLASS" : "ALL"),
+          formState.targetScope,
         priority:
-          formState.priority || (formState.urgent ? "URGENT" : "NORMAL"),
+          formState.priority,
         targetClasses:
-          formState.targetClasses ||
-          (formState.classe ? [formState.classe.toUpperCase()] : []),
+          formState.targetClasses,
       };
 
       const response = await createAnnouncement(payload);
@@ -258,14 +251,14 @@ const App = () => {
     e.preventDefault();
     try {
       const payload = {
-        name: formState.name || formState.nom || "New Subject",
-        coefficient: parseFloat(formState.coefficient || formState.coeff) || 2,
-        description: formState.description || "",
+        name: formState.name,
+        coefficient: parseFloat(formState.coefficient),
+        description: formState.description,
         assignments: [
           {
-            classGroup: formState.classGroup || formState.classe || "Seconde",
+            classGroup: formState.classGroup",
             teacherId:
-              formState.teacherId || formState.prof || "default-teacher-id",
+              formState.teacherId,
           },
         ],
       };
@@ -284,8 +277,8 @@ const App = () => {
     e.preventDefault();
     try {
       const payload = {
-        matiere: formState.matiere || subjects[0]?.nom || "Mathematics",
-        classe: formState.classe || "Terminale",
+        matiere: formState.matiere,
+        classe: formState.classe,
       };
 
       const response = await submitGradeSession(payload);
@@ -302,10 +295,10 @@ const App = () => {
     e.preventDefault();
     try {
       const payload = {
-        profName: formState.profName || "",
-        matiere: formState.matiere || "Mathematics",
-        classe: formState.classe || "Terminale",
-        jour: formState.jour || "Monday 08:00 - 10:00",
+        profName: formState.profName,
+        matiere: formState.matiere,
+        classe: formState.classe,
+        jour: formState.jour,
       };
 
       const response = await createAttendanceSlot(payload);
@@ -324,9 +317,9 @@ const App = () => {
     try {
       const payload = {
         studentId: targetStudent.id,
-        type: formState.type || "Absence",
-        detail: formState.detail || "08:00 - 10:00",
-        raison: formState.raison || "Unjustified",
+        type: formState.type,
+        detail: formState.detail,
+        raison: formState.raison,
       };
 
       const response = await createHistoryRecord(payload);
@@ -345,8 +338,8 @@ const App = () => {
     try {
       const payload = {
         studentId: targetStudent.id,
-        type: formState.type || "Warning",
-        raison: formState.raison || "Inappropriate behavior",
+        type: formState.type,
+        raison: formState.raison,
       };
 
       const response = await createRemarkRecord(payload);
