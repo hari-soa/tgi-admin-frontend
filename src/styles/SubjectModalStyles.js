@@ -8,7 +8,7 @@ export const FORM_CONTAINER = "space-y-4 text-xs";
 export const MODAL_TITLE = "text-base font-bold text-white mb-2";
 export const FIELD_LABEL = "block text-slate-400 mb-1";
 export const TEXT_INPUT =
-  "w-full bg-slate-950 border border-slate-800 rounded-lg p-2 text-white focus:outline-none focus:border-blue-500";
+  "w-full bg-slate-950 border border-slate-800 rounded-lg p-2 text-white focus:outline-none focus:border-blue-500 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none";
 export const SELECT_INPUT =
   "w-full bg-slate-950 border border-slate-800 rounded-lg p-2 text-white focus:outline-none focus:border-blue-500";
 export const GRID_TWO_COLS = "grid grid-cols-2 gap-3";

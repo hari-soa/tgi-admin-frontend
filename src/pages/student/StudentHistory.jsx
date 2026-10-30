@@ -1,4 +1,3 @@
-import React from "react";
 import {
   CONTAINER_WRAPPER,
   HEADER_TITLE,
@@ -28,9 +27,7 @@ export const StudentHistory = ({ currentUser, historiques, remarques }) => {
       </div>
 
       <div>
-        <h3 className={SECTION_TITLE}>
-          Historique (Absences, Retards, Infirmerie, Sorties)
-        </h3>
+        <h3 className={SECTION_TITLE}>Historiques</h3>
         <div className={LIST_CONTAINER}>
           {historiques
             .filter((h) => h.studentId === currentUser?.id)
@@ -62,9 +59,7 @@ export const StudentHistory = ({ currentUser, historiques, remarques }) => {
       </div>
 
       <div>
-        <h3 className={SECTION_TITLE}>
-          Remarques (Avertissement, Académique, Encouragement)
-        </h3>
+        <h3 className={SECTION_TITLE}>Remarques</h3>
         <div className={LIST_CONTAINER}>
           {remarques
             .filter((r) => r.studentId === currentUser?.id)

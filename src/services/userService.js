@@ -37,3 +37,8 @@ export const deactivateStudent = async (studentId) => {
     method: "DELETE",
   });
 };
+
+export const getAllUsers = async () => {
+  const response = await apiFetch("/users");
+  return response?.data || response;
+};

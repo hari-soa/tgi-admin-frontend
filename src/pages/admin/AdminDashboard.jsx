@@ -1,4 +1,3 @@
-import React from "react";
 import {
   CONTAINER_WRAPPER,
   BANNER_CONTAINER,
@@ -43,7 +42,7 @@ export const AdminDashboard = ({
   return (
     <div className={CONTAINER_WRAPPER}>
       <div className={BANNER_CONTAINER}>
-        <span className={BANNER_TAG}>Panneau de Contrôle Administrateur</span>
+        <span className={BANNER_TAG}>Panneau de contrôle - Admin</span>
         <h2 className={BANNER_TITLE}>TGI - Technologie Générale Industriel</h2>
         <p className={BANNER_MOTTO}>"Miorim-paka hanasoa olona"</p>
 
@@ -83,11 +82,11 @@ export const AdminDashboard = ({
 
       <div className={STATS_GRID}>
         <div className={STAT_CARD}>
-          <span className={STAT_LABEL_BLUE}>Utilisateurs Totaux</span>
+          <span className={STAT_LABEL_BLUE}>Utilisateurs</span>
           <p className={STAT_VALUE}>{users.length}</p>
         </div>
         <div className={STAT_CARD}>
-          <span className={STAT_LABEL_EMERALD}>Matières Enseignées</span>
+          <span className={STAT_LABEL_EMERALD}>Matières totales</span>
           <p className={STAT_VALUE}>{subjects.length}</p>
         </div>
         <div className={STAT_CARD}>
@@ -95,18 +94,16 @@ export const AdminDashboard = ({
           <p className={STAT_VALUE}>{gradeSessions.length}</p>
         </div>
         <div className={STAT_CARD}>
-          <span className={STAT_LABEL_CYAN}>Annonces Actives</span>
+          <span className={STAT_LABEL_CYAN}>Annonces</span>
           <p className={STAT_VALUE}>{announcements.length}</p>
         </div>
       </div>
 
       <div className={SECTION_CONTAINER}>
-        <h3 className={SECTION_TITLE}>Notes en attente de validation</h3>
+        <h3 className={SECTION_TITLE}>Notes en cours de validation</h3>
         <div className={PENDING_LIST_CONTAINER}>
           {pendingSessions.length === 0 ? (
-            <p className={EMPTY_TEXT}>
-              Aucune session en attente de validation.
-            </p>
+            <p className={EMPTY_TEXT}>Aucune session en cours de validation.</p>
           ) : (
             pendingSessions.map((session) => (
               <div key={session.id} className={PENDING_ITEM_CARD}>

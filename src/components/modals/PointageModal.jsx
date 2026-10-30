@@ -1,4 +1,3 @@
-import React from "react";
 import {
   MODAL_BACKDROP,
   MODAL_CONTAINER,
@@ -48,8 +47,8 @@ export const PointageModal = ({
             >
               <option value="">Select a professor...</option>
               {professorList.map((p) => (
-                <option key={p.id} value={`${p.prenom} ${p.nom}`}>
-                  {p.prenom} {p.nom}
+                <option key={p.id} value={`${p.nom} ${p.prenom}`}>
+                  {p.nom} {p.prenom}
                 </option>
               ))}
             </select>

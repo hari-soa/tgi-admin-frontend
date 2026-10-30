@@ -1,11 +1,10 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import Sidebar from "./components/layout/Sidebar";
 import Topbar from "./components/layout/Topbar";
 import AppRouter from "./pages/AppRouter";
 import Toast from "./components/common/Toast";
 import Login from "./components/auth/Login";
 
-// Modals
 import UserModal from "./components/modals/UserModal";
 import AnnouncementModal from "./components/modals/AnnouncementModal";
 import SubjectModal from "./components/modals/SubjectModal";
@@ -13,7 +12,6 @@ import GradeSessionModal from "./components/modals/GradeSessionModal";
 import PointageModal from "./components/modals/PointageModal";
 import HistoryRemarkModal from "./components/modals/HistoryRemarkModal";
 
-// API Services
 import { getCurrentUserProfile, logoutUser } from "./services/authService";
 import {
   createStudent,
@@ -50,6 +48,7 @@ import {
 
 const App = () => {
   const [currentUser, setCurrentUser] = useState(null);
+  const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("dashboard");
 
   const [users, setUsers] = useState([]);
@@ -74,31 +73,48 @@ const App = () => {
     setTimeout(() => setToastMessage(""), 4000);
   };
 
-  // Fetch initial data from server when user is authenticated
+  useEffect(() => {
+    const initAuth = async () => {
+      const token = localStorage.getItem("token");
+      if (token) {
+        try {
+          const userProfile = await getCurrentUserProfile();
+          setCurrentUser(userProfile);
+        } catch (err) {
+          console.error("Session expired or invalid token", err);
+          localStorage.removeItem("token");
+          setCurrentUser(null);
+        }
+      }
+      setLoading(false);
+    };
+
+    initAuth();
+  }, []);
+
   useEffect(() => {
     const fetchAppData = async () => {
+      if (!currentUser) return;
       try {
-        if (currentUser) {
-          const [
-            subjectsData,
-            announcementsData,
-            usersData,
-            gradeSessionsData,
-            pointagesData,
-          ] = await Promise.all([
-            getAllSubjects().catch(() => []),
-            getAllAnnouncements().catch(() => []),
-            Promise.resolve([]), // userService si dispo
-            Promise.resolve([]), // gradeService si dispo
-            getDailyAttendance().catch(() => []), // <-- Ici on branche le vrai service de pointage !
-          ]);
+        const [
+          subjectsData,
+          announcementsData,
+          usersData,
+          gradeSessionsData,
+          pointagesData,
+        ] = await Promise.all([
+          getAllSubjects().catch(() => []),
+          getAllAnnouncements().catch(() => []),
+          getAllUsers().catch(() => []),
+          Promise.resolve([]),
+          getDailyAttendance().catch(() => []),
+        ]);
 
-          setSubjects(subjectsData);
-          setAnnouncements(announcementsData);
-          setUsers(usersData);
-          setGradeSessions(gradeSessionsData);
-          setPointages(pointagesData);
-        }
+        setSubjects(subjectsData);
+        setAnnouncements(announcementsData);
+        setUsers(usersData);
+        setGradeSessions(gradeSessionsData);
+        setPointages(pointagesData);
       } catch (error) {
         showToast("Error loading application data from server");
       }
@@ -106,6 +122,26 @@ const App = () => {
 
     fetchAppData();
   }, [currentUser]);
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-screen bg-slate-950 text-slate-100 font-sans">
+        <div className="text-center">
+          <div className="w-10 h-10 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p>Chargement de Collège Saint Michel...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!currentUser) {
+    return (
+      <>
+        <Login setCurrentUser={setCurrentUser} showToast={showToast} />
+        <Toast message={toastMessage} />
+      </>
+    );
+  }
 
   const handleLogout = () => {
     logoutUser();
@@ -126,18 +162,57 @@ const App = () => {
     }
   };
 
-  // API Modal Handlers
   const handleCreateUser = async (e) => {
     e.preventDefault();
     try {
-      const payload = { ...formState };
+      // Nettoyage ou conversion des types (numbers, etc.) requis par les schémas Zod
+      const basePayload = {
+        firstName: formState.firstName || formState.prenom || "",
+        lastName: formState.lastName || formState.nom || "",
+        password: formState.password || "password123", // Mot de passe par défaut si non renseigné
+        contactNumber:
+          formState.contactNumber || formState.telephone || "0340000000",
+        email: formState.email || undefined,
+        profilePictureUrl: formState.profilePictureUrl || undefined,
+      };
+
+      let payload;
       let response;
 
-      if (payload.role === "student" || payload.role === "ancien") {
+      if (formState.role === "student" || formState.role === "ancien") {
+        payload = {
+          ...basePayload,
+          classRollNumber: parseInt(
+            formState.classRollNumber || formState.numero || 1,
+          ),
+          classGroup: (
+            formState.classGroup ||
+            formState.classe ||
+            "SECONDE"
+          ).toUpperCase(),
+          dateOfBirth: formState.dateOfBirth || "2005-01-01",
+          gender: (formState.gender || "MALE").toUpperCase(),
+          address: formState.address || "Antananarivo",
+          parentsEmail: formState.parentsEmail || "parent@gmail.com",
+          parentsContactNumber: formState.parentsContactNumber || "0330000000",
+          entryYear: parseInt(formState.entryYear || 2024),
+          graduationYear: formState.graduationYear
+            ? parseInt(formState.graduationYear)
+            : undefined,
+          comments: formState.comments || undefined,
+        };
         response = await createStudent(payload);
-      } else if (payload.role === "secretaire") {
+      } else if (formState.role === "secretaire") {
+        payload = {
+          ...basePayload,
+          department: formState.department || "Scolarité",
+        };
         response = await createSecretary(payload);
       } else {
+        payload = {
+          ...basePayload,
+          role: formState.role || "ADMIN",
+        };
         response = await createAdministrator(payload);
       }
 
@@ -155,9 +230,18 @@ const App = () => {
     try {
       const payload = {
         title: formState.title || "Official Announcement",
-        context: formState.context || "Details...",
-        urgent: formState.urgent === true || formState.urgent === "true",
-        cible: formState.cible || "tout",
+        content:
+          formState.content ||
+          formState.context ||
+          "Detailed announcement content here...",
+        targetScope:
+          formState.targetScope ||
+          (formState.cible && formState.cible !== "tout" ? "CLASS" : "ALL"),
+        priority:
+          formState.priority || (formState.urgent ? "URGENT" : "NORMAL"),
+        targetClasses:
+          formState.targetClasses ||
+          (formState.classe ? [formState.classe.toUpperCase()] : []),
       };
 
       const response = await createAnnouncement(payload);
@@ -174,10 +258,16 @@ const App = () => {
     e.preventDefault();
     try {
       const payload = {
-        nom: formState.nom || "New Subject",
-        coeff: parseInt(formState.coeff) || 2,
-        prof: formState.prof || "",
-        classe: formState.classe || "Seconde",
+        name: formState.name || formState.nom || "New Subject",
+        coefficient: parseFloat(formState.coefficient || formState.coeff) || 2,
+        description: formState.description || "",
+        assignments: [
+          {
+            classGroup: formState.classGroup || formState.classe || "Seconde",
+            teacherId:
+              formState.teacherId || formState.prof || "default-teacher-id",
+          },
+        ],
       };
 
       const response = await createSubject(payload);
@@ -379,7 +469,6 @@ const App = () => {
     ["prof", "admin", "secretaire"].includes(u.role),
   );
 
-  // If no user is authenticated, render the Login screen
   if (!currentUser) {
     return (
       <>
@@ -395,7 +484,6 @@ const App = () => {
 
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 flex font-sans relative">
-      {/* FIXED SIDEBAR */}
       <Sidebar
         currentUser={currentUser}
         activeTab={activeTab}
@@ -405,14 +493,12 @@ const App = () => {
         handleLogout={handleLogout}
       />
 
-      {/* FIXED TOPBAR */}
       <Topbar
         currentUser={currentUser}
         activeTab={activeTab}
         handleLogout={handleLogout}
       />
 
-      {/* MAIN CONTENT AREA */}
       <div className="flex-1 ml-64 pt-20 flex flex-col min-w-0">
         <main className="flex-1 overflow-y-auto p-6 md:p-8 bg-slate-950">
           <AppRouter
@@ -449,7 +535,6 @@ const App = () => {
         </main>
       </div>
 
-      {/* MODALS */}
       <UserModal
         isOpen={activeModal === "user"}
         onClose={() => setActiveModal(null)}
@@ -504,7 +589,6 @@ const App = () => {
         targetStudent={targetStudent}
       />
 
-      {/* TOAST NOTIFICATIONS */}
       <Toast message={toastMessage} />
     </div>
   );

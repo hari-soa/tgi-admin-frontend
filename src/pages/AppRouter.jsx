@@ -1,4 +1,3 @@
-import React from "react";
 import StudentHome from "./student/StudentHome";
 import StudentGrades from "./student/StudentGrades";
 import StudentHistory from "./student/StudentHistory";
@@ -76,7 +75,6 @@ const AppRouter = ({
     }
   }
 
-  // Secretary Views
   if (userRole === "secretaire" || userRole === "secretary") {
     if (activeTab === "dashboard") {
       return (
@@ -101,7 +99,6 @@ const AppRouter = ({
     }
   }
 
-  // Admin Views
   if (userRole === "admin") {
     if (activeTab === "dashboard") {
       return (
@@ -136,7 +133,6 @@ const AppRouter = ({
     }
   }
 
-  // Shared Views (All roles)
   if (activeTab === "pointage") {
     return (
       <AdminPointage

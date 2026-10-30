@@ -1,4 +1,3 @@
-import React from "react";
 import {
   MODAL_BACKDROP,
   MODAL_CONTAINER,
@@ -44,7 +43,8 @@ export const SubjectModal = ({
             <label className={FIELD_LABEL}>Subject Name</label>
             <input
               type="text"
-              placeholder="e.g. Mathematics"
+              placeholder="Matière"
+              value={formState?.nom || ""}
               onChange={(e) => handleInputChange("nom", e.target.value)}
               className={TEXT_INPUT}
               required
@@ -56,7 +56,9 @@ export const SubjectModal = ({
               <label className={FIELD_LABEL}>Coefficient</label>
               <input
                 type="number"
-                defaultValue="2"
+                min="1"
+                placeholder="1"
+                value={formState?.coeff || ""}
                 onChange={(e) => handleInputChange("coeff", e.target.value)}
                 className={TEXT_INPUT}
                 required
@@ -65,6 +67,7 @@ export const SubjectModal = ({
             <div>
               <label className={FIELD_LABEL}>Associated Class</label>
               <select
+                value={formState?.classe || "Seconde"}
                 onChange={(e) => handleInputChange("classe", e.target.value)}
                 className={SELECT_INPUT}
               >
@@ -78,13 +81,14 @@ export const SubjectModal = ({
           <div>
             <label className={FIELD_LABEL}>Responsible Professor</label>
             <select
+              value={formState?.prof || ""}
               onChange={(e) => handleInputChange("prof", e.target.value)}
               className={SELECT_INPUT}
             >
               <option value="">Select a professor...</option>
               {professorList.map((p) => (
-                <option key={p.id} value={`${p.prenom} ${p.nom}`}>
-                  {p.prenom} {p.nom}
+                <option key={p.id} value={`${p.nom} ${p.prenom}`}>
+                  {p.nom} {p.prenom}
                 </option>
               ))}
             </select>

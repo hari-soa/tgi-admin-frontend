@@ -1,4 +1,3 @@
-import React from "react";
 import {
   CONTAINER_WRAPPER,
   HEADER_SECTION,
@@ -44,16 +43,14 @@ export const AdminPointage = ({
       <div className={HEADER_SECTION}>
         <div>
           <h2 className={HEADER_TITLE}>Registre du Pointage Enseignants</h2>
-          <p className={HEADER_SUBTITLE}>
-            Suivi de présence aux cours fixés selon l'emploi du temps
-          </p>
+          <p className={HEADER_SUBTITLE}>Suivi de présence</p>
         </div>
         {currentUser?.role === "admin" && (
           <button
             onClick={() => setActiveModal("pointage")}
             className={NEW_POINTAGE_BUTTON}
           >
-            + Nouveau Pointage Fixe
+            + Nouveau Pointage
           </button>
         )}
       </div>

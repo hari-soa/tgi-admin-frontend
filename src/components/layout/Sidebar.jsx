@@ -1,4 +1,3 @@
-import React from "react";
 import logoImage from "../../assets/logo-tgi.jpg";
 import {
   SIDEBAR_CONTAINER,

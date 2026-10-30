@@ -1,4 +1,3 @@
-import React from "react";
 import {
   MODAL_BACKDROP,
   MODAL_CONTAINER,
@@ -34,7 +33,7 @@ export const GradeSessionModal = ({
         </button>
 
         <form onSubmit={onSubmit} className={FORM_CONTAINER}>
-          <h3 className={MODAL_TITLE}>Create Grade Session (For Secretary)</h3>
+          <h3 className={MODAL_TITLE}>Create Grade Session</h3>
 
           <div>
             <label className={FIELD_LABEL}>Target Subject</label>

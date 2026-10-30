@@ -1,4 +1,3 @@
-import React from "react";
 import { extractClassNum } from "../../utils/helpers";
 import {
   CONTAINER_WRAPPER,
@@ -30,7 +29,7 @@ export const Profile = ({ currentUser }) => {
   return (
     <div className={CONTAINER_WRAPPER}>
       <div>
-        <h2 className={HEADER_TITLE}>Mon Profil Personnel</h2>
+        <h2 className={HEADER_TITLE}>Mon Profil</h2>
         <p className={HEADER_SUBTITLE}>
           Informations administratives enregistrées
         </p>
@@ -45,7 +44,7 @@ export const Profile = ({ currentUser }) => {
           />
           <div className={USER_INFO_BOX}>
             <h3 className={USER_NAME}>
-              {currentUser.prenom} {currentUser.nom}
+              {currentUser.nom} {currentUser.prenom}
             </h3>
             <p className={USER_MATRICULE}>
               Matricule : {currentUser.matricule || "N/A"}
@@ -75,7 +74,7 @@ export const Profile = ({ currentUser }) => {
             </p>
           </div>
           <div>
-            <label className={FIELD_LABEL}>Contact / Téléphone</label>
+            <label className={FIELD_LABEL}>Contact</label>
             <p className={FIELD_VALUE}>
               {currentUser.contact || "Non renseigné"}
             </p>
@@ -118,7 +117,7 @@ export const Profile = ({ currentUser }) => {
                 </p>
               </div>
               <div className={ADDRESS_GRID_SPAN}>
-                <label className={FIELD_LABEL}>Adresse Résidentielle</label>
+                <label className={FIELD_LABEL}>Adresse</label>
                 <p className={FIELD_VALUE}>
                   {currentUser.adresse || "Non renseignée"}
                 </p>

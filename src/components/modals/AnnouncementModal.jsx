@@ -1,4 +1,3 @@
-import React from "react";
 import {
   MODAL_BACKDROP,
   MODAL_CONTAINER,
@@ -40,7 +39,7 @@ export const AnnouncementModal = ({
             <label className={FIELD_LABEL}>Announcement Title</label>
             <input
               type="text"
-              placeholder="e.g. End of term schedule"
+              placeholder="Titre"
               onChange={(e) => handleInputChange("title", e.target.value)}
               className={TEXT_INPUT}
               required
@@ -48,10 +47,10 @@ export const AnnouncementModal = ({
           </div>
 
           <div>
-            <label className={FIELD_LABEL}>Context / Description</label>
+            <label className={FIELD_LABEL}>Description</label>
             <textarea
               rows="3"
-              placeholder="Enter announcement details here..."
+              placeholder="Description..."
               onChange={(e) => handleInputChange("context", e.target.value)}
               className={TEXTAREA_INPUT}
               required
@@ -65,7 +64,7 @@ export const AnnouncementModal = ({
                 onChange={(e) => handleInputChange("cible", e.target.value)}
                 className={SELECT_INPUT}
               >
-                <option value="tout">All</option>
+                <option value="tout">Tout</option>
                 <option value="Seconde">Seconde</option>
                 <option value="Première">Première</option>
                 <option value="Terminale">Terminale</option>
@@ -80,13 +79,13 @@ export const AnnouncementModal = ({
                 className={SELECT_INPUT}
               >
                 <option value="false">Normal</option>
-                <option value="true">Urgent (Red)</option>
+                <option value="true">Urgent</option>
               </select>
             </div>
           </div>
 
           <button type="submit" className={SUBMIT_BUTTON}>
-            Publish Immediately
+            Publish
           </button>
         </form>
       </div>

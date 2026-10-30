@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { loginUser, getCurrentUserProfile } from "../../services/authService";
 import logoImage from "../../assets/logo-tgi.jpg";
 import {
@@ -36,28 +36,6 @@ export const Login = ({ setCurrentUser, showToast }) => {
     e.preventDefault();
     setError("");
 
-    const adminEmailEnv = import.meta.env.VITE_ADMIN_EMAIL;
-    const adminPasswordEnv = import.meta.env.VITE_ADMIN_PASSWORD;
-
-    if (email === adminEmailEnv && password === adminPasswordEnv) {
-      const superAdminUser = {
-        id: 0,
-        matricule: "ADM-00001",
-        nom: "Super",
-        prenom: "Admin",
-        role: "ADMIN",
-        email: adminEmailEnv,
-        contact: "+33 6 00 00 00 00",
-        genre: "male",
-        statut: "active",
-        photo:
-          "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&auto=format&fit=crop&q=80",
-      };
-      setCurrentUser(superAdminUser);
-      if (showToast) showToast("Welcome back, Super Admin !");
-      return;
-    }
-
     try {
       await loginUser(email, password);
       const userProfile = await getCurrentUserProfile();
@@ -76,7 +54,7 @@ export const Login = ({ setCurrentUser, showToast }) => {
         );
       }
     } catch (err) {
-      setError(err.message || "Invalid email or matricule.");
+      setError(err.message || "Invalid email or password.");
     }
   };
 
@@ -97,7 +75,7 @@ export const Login = ({ setCurrentUser, showToast }) => {
 
           <form onSubmit={handleLoginSubmit} className={FORM_CONTAINER}>
             <div>
-              <label className={LABEL_TEXT}>Email</label>
+              <label className={LABEL_TEXT}>E-mail</label>
               <input
                 type="email"
                 required
@@ -184,7 +162,7 @@ export const Login = ({ setCurrentUser, showToast }) => {
       </div>
 
       <footer className={FOOTER_CONTAINER}>
-        © 2026 TGI. All rights reserved.
+        © 2026 TGI - Technologie Générale Industriel. All rights reserved.
       </footer>
     </div>
   );

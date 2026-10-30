@@ -1,4 +1,3 @@
-import React from "react";
 import { extractClassNum } from "../../utils/helpers";
 import {
   CONTAINER_WRAPPER,
@@ -54,10 +53,8 @@ export const SecretaryGrades = ({
   return (
     <div className={CONTAINER_WRAPPER}>
       <div>
-        <h2 className={HEADER_TITLE}>Saisie & Suivi des Sessions de Notes</h2>
-        <p className={HEADER_SUBTITLE}>
-          Gestion des enregistrements de notes par matière et par classe
-        </p>
+        <h2 className={HEADER_TITLE}>Suivi des Sessions de Notes</h2>
+        <p className={HEADER_SUBTITLE}>Gestion des enregistrements de notes</p>
       </div>
 
       {activeGradeSession ? (
@@ -156,7 +153,7 @@ export const SecretaryGrades = ({
               }
               className={SUBMIT_BUTTON}
             >
-              Envoyer à l'Admin pour validation
+              Envoyer à l'Admin
             </button>
           </div>
         </div>

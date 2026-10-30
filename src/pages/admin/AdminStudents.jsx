@@ -1,4 +1,3 @@
-import React from "react";
 import { extractClassNum } from "../../utils/helpers";
 import {
   CONTAINER_WRAPPER,
@@ -68,9 +67,7 @@ export const AdminStudents = ({
       <div className={HEADER_SECTION}>
         <div>
           <h2 className={HEADER_TITLE}>Gestion de la Liste des Étudiants</h2>
-          <p className={HEADER_SUBTITLE}>
-            Vue globale, filtrage et modification des dossiers
-          </p>
+          <p className={HEADER_SUBTITLE}>Vue globale</p>
         </div>
         <div className={HEADER_ACTIONS}>
           <select
@@ -78,11 +75,11 @@ export const AdminStudents = ({
             onChange={(e) => setSelectedStudentFilter(e.target.value)}
             className={FILTER_SELECT}
           >
-            <option value="tout">Toutes les classes</option>
+            <option value="tout">Tout</option>
             <option value="Seconde">Seconde</option>
             <option value="Première">Première</option>
             <option value="Terminale">Terminale</option>
-            <option value="ancien">Anciens élèves</option>
+            <option value="ancien">Anciens</option>
           </select>
           <button
             onClick={() => setActiveModal("user")}
