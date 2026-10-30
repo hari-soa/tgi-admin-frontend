@@ -48,6 +48,7 @@ import {
 
 const App = () => {
   const [currentUser, setCurrentUser] = useState(null);
+  const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("dashboard");
 
   const [users, setUsers] = useState([]);
@@ -73,29 +74,47 @@ const App = () => {
   };
 
   useEffect(() => {
-    const fetchAppData = async () => {
-      try {
-        if (currentUser) {
-          const [
-            subjectsData,
-            announcementsData,
-            usersData,
-            gradeSessionsData,
-            pointagesData,
-          ] = await Promise.all([
-            getAllSubjects().catch(() => []),
-            getAllAnnouncements().catch(() => []),
-            Promise.resolve([]),
-            Promise.resolve([]),
-            getDailyAttendance().catch(() => []),
-          ]);
-
-          setSubjects(subjectsData);
-          setAnnouncements(announcementsData);
-          setUsers(usersData);
-          setGradeSessions(gradeSessionsData);
-          setPointages(pointagesData);
+    const initAuth = async () => {
+      const token = localStorage.getItem("token");
+      if (token) {
+        try {
+          const userProfile = await getCurrentUserProfile();
+          setCurrentUser(userProfile);
+        } catch (err) {
+          console.error("Session expired or invalid token", err);
+          localStorage.removeItem("token");
+          setCurrentUser(null);
         }
+      }
+      setLoading(false);
+    };
+
+    initAuth();
+  }, []);
+
+  useEffect(() => {
+    const fetchAppData = async () => {
+      if (!currentUser) return;
+      try {
+        const [
+          subjectsData,
+          announcementsData,
+          usersData,
+          gradeSessionsData,
+          pointagesData,
+        ] = await Promise.all([
+          getAllSubjects().catch(() => []),
+          getAllAnnouncements().catch(() => []),
+          Promise.resolve([]),
+          Promise.resolve([]),
+          getDailyAttendance().catch(() => []),
+        ]);
+
+        setSubjects(subjectsData);
+        setAnnouncements(announcementsData);
+        setUsers(usersData);
+        setGradeSessions(gradeSessionsData);
+        setPointages(pointagesData);
       } catch (error) {
         showToast("Error loading application data from server");
       }
@@ -103,6 +122,26 @@ const App = () => {
 
     fetchAppData();
   }, [currentUser]);
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-screen bg-slate-950 text-slate-100 font-sans">
+        <div className="text-center">
+          <div className="w-10 h-10 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p>Chargement de Collège Saint Michel...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!currentUser) {
+    return (
+      <>
+        <Login setCurrentUser={setCurrentUser} showToast={showToast} />
+        <Toast message={toastMessage} />
+      </>
+    );
+  }
 
   const handleLogout = () => {
     logoutUser();
