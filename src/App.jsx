@@ -125,7 +125,7 @@ const App = () => {
         setGradeSessions(gradeSessionsData);
         setPointages(pointagesData);
       } catch (error) {
-        console.error("Détail de l'erreur de chargement :", error);
+        console.error("Error loading application data details:", error);
         showToast("Error loading application data from server");
       }
     };
@@ -215,24 +215,34 @@ const App = () => {
       setUsers([...users, response?.data?.user || response || basePayload]);
       setActiveModal(null);
       setFormState({});
-      showToast("Utilisateur créé avec succès sur le serveur !");
+      showToast("User created successfully on the server!");
     } catch (error) {
-      showToast(`Erreur : ${error.message}`);
+      showToast(`Error: ${error.message}`);
     }
   };
 
   const handleUpdateUser = async (userId, updatedData) => {
+    const previousUsers = [...users];
+    const previousTarget = targetStudent ? { ...targetStudent } : null;
+
+    // Instant UI update
+    setUsers(
+      users.map((u) => (u.id === userId ? { ...u, ...updatedData } : u)),
+    );
+    if (targetStudent?.id === userId) {
+      setTargetStudent({ ...targetStudent, ...updatedData });
+    }
+
+    showToast("Profile updated successfully!");
+
     try {
       await updateUser(userId, updatedData);
-      setUsers(
-        users.map((u) => (u.id === userId ? { ...u, ...updatedData } : u)),
-      );
-      if (targetStudent?.id === userId) {
-        setTargetStudent({ ...targetStudent, ...updatedData });
-      }
-      showToast("Profil mis à jour avec succès !");
     } catch (error) {
-      showToast(`Erreur lors de la mise à jour : ${error.message}`);
+      setUsers(previousUsers);
+      if (targetStudent?.id === userId) {
+        setTargetStudent(previousTarget);
+      }
+      showToast(`Failed to save changes to server: ${error.message}`);
     }
   };
 
@@ -424,24 +434,36 @@ const App = () => {
           return p;
         }),
       );
-      showToast(`Pointage updated: ${status.toUpperCase()}`);
+      showToast(`Attendance updated: ${status.toUpperCase()}`);
     } catch (error) {
       showToast(`Error: ${error.message}`);
     }
   };
 
   const toggleUserStatus = async (userId) => {
-    try {
-      const targetUser = users.find((u) => u.id === userId);
-      const newStatus = targetUser?.isActive !== false ? false : true;
-      await updateUser(userId, { isActive: newStatus });
+    const previousUsers = [...users];
+    const targetUser = users.find((u) => u.id === userId);
+    if (!targetUser) return;
 
-      setUsers(
-        users.map((u) => (u.id === userId ? { ...u, isActive: newStatus } : u)),
-      );
-      showToast("User status updated");
+    const newStatus = targetUser.isActive !== false ? false : true;
+
+    setUsers(
+      users.map((u) => (u.id === userId ? { ...u, isActive: newStatus } : u)),
+    );
+    if (targetStudent?.id === userId) {
+      setTargetStudent({ ...targetStudent, isActive: newStatus });
+    }
+
+    showToast(`User status updated to: ${newStatus ? "ACTIVE" : "INACTIVE"}`);
+
+    try {
+      await updateUser(userId, { isActive: newStatus });
     } catch (error) {
-      showToast(`Error: ${error.message}`);
+      setUsers(previousUsers);
+      if (targetStudent?.id === userId) {
+        setTargetStudent(targetUser);
+      }
+      showToast(`Status update reverted: ${error.message}`);
     }
   };
 
@@ -449,7 +471,7 @@ const App = () => {
     try {
       await deactivateStudent(userId);
       setUsers(users.filter((u) => u.id !== userId));
-      showToast("User deleted/deactivated");
+      showToast("User deleted/deactivated successfully");
     } catch (error) {
       showToast(`Error: ${error.message}`);
     }
