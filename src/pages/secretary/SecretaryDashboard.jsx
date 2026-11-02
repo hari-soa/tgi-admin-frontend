@@ -24,7 +24,9 @@ export const SecretaryDashboard = ({
 }) => {
   const pendingOrDraftSessions = gradeSessions.filter(
     (session) =>
-      session.statut === "attente_saisie" || session.statut === "brouillon",
+      session.statut === "attente_saisie" ||
+      session.statut === "brouillon" ||
+      session.status === "DRAFT",
   );
 
   return (
@@ -48,14 +50,19 @@ export const SecretaryDashboard = ({
               <div key={session.id} className={SESSION_CARD}>
                 <div>
                   <div className={CARD_HEADER_ROW}>
-                    <span className={SUBJECT_TITLE}>{session.matiere}</span>
-                    <span className={CLASS_BADGE}>{session.classe}</span>
+                    <span className={SUBJECT_TITLE}>
+                      {session.matiere || session.subjectName}
+                    </span>
+                    <span className={CLASS_BADGE}>
+                      {session.classe || session.classGroup}
+                    </span>
                     <span className={STATUS_BADGE}>
                       {session.statut === "brouillon" ? "Brouillon" : "Nouveau"}
                     </span>
                   </div>
                   <p className={CARD_META}>
-                    Créé par Admin le : {session.dateCreation || "Récemment"}
+                    Créé par Admin le :{" "}
+                    {session.dateCreation || session.createdAt || "Récemment"}
                   </p>
                 </div>
                 <button

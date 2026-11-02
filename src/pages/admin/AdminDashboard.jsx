@@ -36,7 +36,8 @@ export const AdminDashboard = ({
   handleAdminValidateSession,
 }) => {
   const pendingSessions = gradeSessions.filter(
-    (session) => session.statut === "attente_validation",
+    (session) =>
+      session.status === "DRAFT" || session.statut === "attente_validation",
   );
 
   return (
@@ -113,7 +114,8 @@ export const AdminDashboard = ({
                 <div>
                   <div className={ITEM_HEADER}>
                     <h4 className={ITEM_TITLE}>
-                      {session.matiere} ({session.classe})
+                      {session.matiere || session.subjectName} (
+                      {session.classe || session.classGroup})
                     </h4>
                     <span className={BADGE_VALIDATION}>Validation requise</span>
                   </div>

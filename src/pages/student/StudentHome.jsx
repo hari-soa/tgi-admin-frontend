@@ -40,12 +40,12 @@ export const StudentHome = ({
       <div className={BANNER_CONTAINER}>
         <span className={BANNER_TAG}>Espace Scolaire Élève</span>
         <h2 className={BANNER_TITLE}>
-          Bonjour, {currentUser?.nom} {currentUser?.prenom}
+          Bonjour, {currentUser?.lastName} {currentUser?.firstName}
         </h2>
         <p className={BANNER_DESCRIPTION}>
-          {currentUser?.role === "ancien"
-            ? `Dossier d'Ancien Élève — Année de sortie : ${currentUser.anneeSortie}`
-            : `Classe : ${currentUser?.classe || "N/A"} • Matricule : ${
+          {currentUser?.role === "ANCIEN" || currentUser?.role === "ancien"
+            ? `Dossier d'Ancien Élève — Année de sortie : ${currentUser.graduationYear || currentUser.anneeSortie}`
+            : `Classe : ${currentUser?.classGroup || currentUser?.classe || "N/A"} | Matricule : ${
                 currentUser?.matricule || "N/A"
               } (${extractClassNum(currentUser?.matricule)})`}
         </p>
@@ -73,24 +73,29 @@ export const StudentHome = ({
           {announcements
             .filter(
               (ann) =>
-                ann.cible === "tout" || ann.cible === currentUser?.classe,
+                ann.targetScope === "ALL" ||
+                ann.cible === "tout" ||
+                ann.targetScope === currentUser?.classGroup ||
+                ann.cible === currentUser?.classe,
             )
             .map((ann) => (
               <div
                 key={ann.id}
                 className={
-                  ann.urgent
+                  ann.priority === "URGENT" || ann.urgent
                     ? ANNOUNCEMENT_CARD_URGENT
                     : ANNOUNCEMENT_CARD_NORMAL
                 }
               >
-                {ann.urgent && (
+                {(ann.priority === "URGENT" || ann.urgent) && (
                   <span className={ANNOUNCEMENT_BADGE_URGENT}>Urgent</span>
                 )}
                 <h4 className={ANNOUNCEMENT_TITLE}>{ann.title}</h4>
-                <p className={ANNOUNCEMENT_CONTEXT}>{ann.context}</p>
+                <p className={ANNOUNCEMENT_CONTEXT}>
+                  {ann.content || ann.context}
+                </p>
                 <span className={ANNOUNCEMENT_DATE}>
-                  {ann.date || "Récemment"}
+                  {ann.createdAt || ann.date || "Récemment"}
                 </span>
               </div>
             ))}
@@ -109,8 +114,8 @@ export const StudentHome = ({
                   key={h.id}
                   className={h.isRed ? PREVIEW_ITEM_RED : PREVIEW_ITEM_NORMAL}
                 >
-                  <span className="font-bold">{h.type}</span> ({h.detail}) —{" "}
-                  {h.raison}
+                  <span className="font-bold">{h.type}</span> (
+                  {h.detail || h.reason}) — {h.raison || h.reason}
                 </div>
               ))}
           </div>
@@ -127,7 +132,8 @@ export const StudentHome = ({
                   key={r.id}
                   className={r.isRed ? PREVIEW_ITEM_RED : PREVIEW_ITEM_NORMAL}
                 >
-                  <span className="font-bold">{r.type}</span> — {r.raison}
+                  <span className="font-bold">{r.type || r.category}</span> —{" "}
+                  {r.raison || r.content}
                 </div>
               ))}
           </div>
