@@ -15,7 +15,13 @@ import {
   ACTION_BUTTON,
 } from "../../styles/StaffListStyles";
 
-export const StaffList = ({ staffUsers, setActiveTab }) => {
+export const StaffList = ({
+  staffUsers,
+  setTargetStudent,
+  toggleUserStatus,
+  deleteUser,
+  setActiveTab,
+}) => {
   return (
     <div className={CONTAINER_WRAPPER}>
       <div>
@@ -58,19 +64,43 @@ export const StaffList = ({ staffUsers, setActiveTab }) => {
                     {staff.gender || "Non spécifié"}
                   </span>
                 </p>
+                <p>
+                  <span className={META_LABEL}>Statut :</span>{" "}
+                  <button
+                    onClick={() => toggleUserStatus(staff.id)}
+                    className={`px-2 py-0.5 rounded text-xs font-bold ${
+                      staff.isActive !== false
+                        ? "bg-emerald-600 text-white"
+                        : "bg-red-600 text-white"
+                    }`}
+                  >
+                    {staff.isActive !== false ? "ACTIVE" : "INACTIF"}
+                  </button>
+                </p>
               </div>
             </div>
 
-            {staff.role === "TEACHER" && (
-              <div className={ACTION_CONTAINER}>
-                <button
-                  onClick={() => setActiveTab("pointage")}
-                  className={ACTION_BUTTON}
-                >
-                  Voir le pointage →
-                </button>
-              </div>
-            )}
+            <div
+              className={ACTION_CONTAINER}
+              style={{ display: "flex", gap: "8px", marginTop: "12px" }}
+            >
+              <button
+                onClick={() => {
+                  setTargetStudent(staff); // Stocke le membre du staff sélectionné
+                  setActiveTab("profil"); // Bascule vers l'onglet Profil
+                }}
+                className={ACTION_BUTTON}
+                style={{ flex: 1 }}
+              >
+                Voir / Modifier le profil →
+              </button>
+              <button
+                onClick={() => deleteUser(staff.id)}
+                className="px-3 py-2 bg-red-900/40 text-red-400 rounded hover:bg-red-900/60 text-xs font-bold"
+              >
+                Supprimer
+              </button>
+            </div>
           </div>
         ))}
       </div>

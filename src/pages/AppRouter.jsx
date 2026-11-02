@@ -39,11 +39,19 @@ const AppRouter = ({
   handleTogglePointage,
   handleSimulateExport,
   setCurrentUser,
+  onUpdateUser, // <-- Ajout de la prop de mise à jour utilisateur
 }) => {
   const userRole = currentUser?.role?.toUpperCase() || "";
+  const isAdmin = userRole === "ADMIN";
 
   if (activeTab === "profil") {
-    return <Profile currentUser={currentUser} />;
+    return (
+      <Profile
+        currentUser={targetStudent || currentUser} // Permet à l'admin de voir/modifier la fiche sélectionnée ou son propre profil
+        onUpdateUser={onUpdateUser}
+        isAdmin={isAdmin}
+      />
+    );
   }
   if (activeTab === "annonces") {
     return (
@@ -65,7 +73,15 @@ const AppRouter = ({
     );
   }
   if (activeTab === "personnel") {
-    return <StaffList staffUsers={staffUsers} setActiveTab={setActiveTab} />;
+    return (
+      <StaffList
+        staffUsers={staffUsers}
+        setTargetStudent={setTargetStudent}
+        toggleUserStatus={toggleUserStatus}
+        deleteUser={deleteUser}
+        setActiveTab={setActiveTab} // <-- Indispensable pour rediriger vers le profil
+      />
+    );
   }
 
   if (userRole === "STUDENT" || userRole === "ANCIEN") {
@@ -124,7 +140,7 @@ const AppRouter = ({
     }
   }
 
-  if (userRole === "ADMIN") {
+  if (isAdmin) {
     if (activeTab === "dashboard") {
       return (
         <AdminDashboard

@@ -213,6 +213,21 @@ const App = () => {
     }
   };
 
+  const handleUpdateUser = async (userId, updatedData) => {
+    try {
+      await updateUser(userId, updatedData);
+      setUsers(
+        users.map((u) => (u.id === userId ? { ...u, ...updatedData } : u)),
+      );
+      if (targetStudent?.id === userId) {
+        setTargetStudent({ ...targetStudent, ...updatedData });
+      }
+      showToast("Profil mis à jour avec succès !");
+    } catch (error) {
+      showToast(`Erreur lors de la mise à jour : ${error.message}`);
+    }
+  };
+
   const handleCreateAnnouncement = async (e) => {
     e.preventDefault();
     try {

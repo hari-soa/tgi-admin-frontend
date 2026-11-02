@@ -45,7 +45,6 @@ import {
   STATUS_BUTTON_INACTIVE,
   TABLE_ACTIONS_CELL,
   PROFILE_VIEW_BUTTON,
-  DELETE_BUTTON,
 } from "../../styles/AdminStudentsStyles";
 
 export const AdminStudents = ({
@@ -56,7 +55,6 @@ export const AdminStudents = ({
   setTargetStudent,
   setActiveModal,
   toggleUserStatus,
-  deleteUser,
   setCurrentUser,
   setActiveTab,
   historiques,
@@ -156,16 +154,19 @@ export const AdminStudents = ({
               </span>
             </div>
             <div>
-              <span className={META_LABEL}>Statut :</span>{" "}
-              <span
-                className={
-                  targetStudent.isActive !== false
-                    ? STATUS_ACTIVE
-                    : STATUS_INACTIVE
-                }
-              >
-                {targetStudent.isActive !== false ? "ACTIVE" : "INACTIF"}
-              </span>
+              <span className={META_LABEL}>Statut (Désactivation) :</span>{" "}
+              <label className="relative inline-flex items-center cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={targetStudent.isActive !== false}
+                  onChange={() => toggleUserStatus(targetStudent.id)}
+                  className="sr-only peer"
+                />
+                <div className="w-11 h-6 bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-600"></div>
+                <span className="ml-3 text-xs font-medium text-slate-300">
+                  {targetStudent.isActive !== false ? "Actif" : "Inactif"}
+                </span>
+              </label>
             </div>
           </div>
 
@@ -230,7 +231,7 @@ export const AdminStudents = ({
                   <th className="p-4">Matricule</th>
                   <th className="p-4">Classe / Num</th>
                   <th className="p-4">Genre</th>
-                  <th className="p-4">Statut</th>
+                  <th className="p-4">Statut (Actif / Inactif)</th>
                   <th className="p-4 text-right">Actions</th>
                 </tr>
               </thead>
@@ -264,16 +265,19 @@ export const AdminStudents = ({
                     </td>
                     <td className="p-4 capitalize">{student.gender}</td>
                     <td className="p-4">
-                      <button
-                        onClick={() => toggleUserStatus(student.id)}
-                        className={
-                          student.isActive !== false
-                            ? STATUS_BUTTON_ACTIVE
-                            : STATUS_BUTTON_INACTIVE
-                        }
-                      >
-                        {student.isActive !== false ? "ACTIVE" : "INACTIF"}
-                      </button>
+                      {/* Checkbox / Switch interactif de désactivation */}
+                      <label className="relative inline-flex items-center cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={student.isActive !== false}
+                          onChange={() => toggleUserStatus(student.id)}
+                          className="sr-only peer"
+                        />
+                        <div className="w-11 h-6 bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-600"></div>
+                        <span className="ml-3 text-xs font-bold text-slate-300">
+                          {student.isActive !== false ? "ACTIF" : "INACTIF"}
+                        </span>
+                      </label>
                     </td>
                     <td className={TABLE_ACTIONS_CELL}>
                       <button
@@ -281,12 +285,6 @@ export const AdminStudents = ({
                         className={PROFILE_VIEW_BUTTON}
                       >
                         Voir le profil
-                      </button>
-                      <button
-                        onClick={() => deleteUser(student.id)}
-                        className={DELETE_BUTTON}
-                      >
-                        Supprimer
                       </button>
                     </td>
                   </tr>
