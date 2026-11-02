@@ -47,12 +47,16 @@ const AppRouter = ({
   if (activeTab === "profil") {
     return (
       <Profile
-        currentUser={currentUser} // Uniquement le profil personnel connecté
+        currentUser={targetStudent || currentUser}
         onUpdateUser={onUpdateUser}
         isAdmin={isAdmin}
+        isThirdPartyView={
+          !!targetStudent && targetStudent.id !== currentUser.id
+        }
       />
     );
   }
+
   if (activeTab === "annonces") {
     return (
       <Announcements
@@ -81,6 +85,7 @@ const AppRouter = ({
         deleteUser={deleteUser}
         onUpdateUser={onUpdateUser}
         isAdmin={isAdmin}
+        setActiveTab={setActiveTab}
       />
     );
   }

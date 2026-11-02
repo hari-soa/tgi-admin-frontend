@@ -165,6 +165,7 @@ const App = () => {
     const found = users.find((u) => u.role === role);
     if (found) {
       setCurrentUser(found);
+      setTargetStudent(null);
       if (
         role === "ADMIN" ||
         role === "SECRETARY" ||
@@ -225,7 +226,6 @@ const App = () => {
     const previousUsers = [...users];
     const previousTarget = targetStudent ? { ...targetStudent } : null;
 
-    // Instant UI update
     setUsers(
       users.map((u) => (u.id === userId ? { ...u, ...updatedData } : u)),
     );
@@ -471,6 +471,9 @@ const App = () => {
     try {
       await deactivateStudent(userId);
       setUsers(users.filter((u) => u.id !== userId));
+      if (targetStudent?.id === userId) {
+        setTargetStudent(null);
+      }
       showToast("User deleted/deactivated successfully");
     } catch (error) {
       showToast(`Error: ${error.message}`);
