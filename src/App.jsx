@@ -169,8 +169,7 @@ const App = () => {
         firstName: formState.firstName,
         lastName: formState.lastName,
         password: formState.password,
-        contactNumber:
-          formState.contactNumber,
+        contactNumber: formState.contactNumber,
         email: formState.email,
         profilePictureUrl: formState.profilePictureUrl,
       };
@@ -181,14 +180,10 @@ const App = () => {
       if (formState.role === "student" || formState.role === "alumni") {
         payload = {
           ...basePayload,
-          classRollNumber: parseInt(
-            formState.classRollNumber,
-          ),
-          classGroup: (
-            formState.classGroup
-          ).toUpperCase(),
+          classRollNumber: parseInt(formState.classRollNumber),
+          classGroup: formState.classGroup.toUpperCase(),
           dateOfBirth: formState.dateOfBirth,
-          gender: (formState.gender).toUpperCase(),
+          gender: formState.gender.toUpperCase(),
           address: formState.address,
           parentsEmail: formState.parentsEmail,
           parentsContactNumber: formState.parentsContactNumber,
@@ -227,14 +222,10 @@ const App = () => {
     try {
       const payload = {
         title: formState.title,
-        content:
-          formState.content,
-        targetScope:
-          formState.targetScope,
-        priority:
-          formState.priority,
-        targetClasses:
-          formState.targetClasses,
+        content: formState.content,
+        targetScope: formState.targetScope,
+        priority: formState.priority,
+        targetClasses: formState.targetClasses,
       };
 
       const response = await createAnnouncement(payload);
@@ -256,9 +247,8 @@ const App = () => {
         description: formState.description,
         assignments: [
           {
-            classGroup: formState.classGroup",
-            teacherId:
-              formState.teacherId,
+            classGroup: formState.classGroup,
+            teacherId: formState.teacherId,
           },
         ],
       };
