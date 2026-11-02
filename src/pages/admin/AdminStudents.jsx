@@ -76,9 +76,9 @@ export const AdminStudents = ({
             className={FILTER_SELECT}
           >
             <option value="tout">Tout</option>
-            <option value="Seconde">Seconde</option>
-            <option value="Première">Première</option>
-            <option value="Terminale">Terminale</option>
+            <option value="SECONDE">Seconde</option>
+            <option value="PREMIERE">Première</option>
+            <option value="TERMINALE">Terminale</option>
             <option value="ancien">Anciens</option>
           </select>
           <button
@@ -95,22 +95,22 @@ export const AdminStudents = ({
           <div className={PROFILE_HEADER}>
             <div className={PROFILE_INFO_CONTAINER}>
               <img
-                src={targetStudent.photo}
+                src={targetStudent.profilePictureUrl || "/default-avatar.png"}
                 alt="target"
                 className={PROFILE_AVATAR}
               />
               <div>
                 <h3 className={PROFILE_NAME}>
-                  {targetStudent.prenom} {targetStudent.nom}
+                  {targetStudent.lastName} {targetStudent.firstName}
                 </h3>
                 <p className={PROFILE_MATRICULE}>
                   Matricule : {targetStudent.matricule} •{" "}
                   {extractClassNum(targetStudent.matricule)}
                 </p>
                 <p className={PROFILE_CLASS_INFO}>
-                  {targetStudent.role === "ancien"
-                    ? `Ancien élève (${targetStudent.anneeSortie})`
-                    : `Classe : ${targetStudent.classe}`}
+                  {targetStudent.role === "ANCIEN"
+                    ? `Ancien élève (${targetStudent.graduationYear})`
+                    : `Classe : ${targetStudent.classGroup || "N/A"}`}
                 </p>
               </div>
             </div>
@@ -126,37 +126,45 @@ export const AdminStudents = ({
             <div>
               <span className={META_LABEL}>Genre :</span>{" "}
               <span className={META_VALUE_CAPITALIZE}>
-                {targetStudent.genre}
+                {targetStudent.gender}
               </span>
             </div>
             <div>
               <span className={META_LABEL}>Email :</span>{" "}
-              <span className={META_VALUE_WHITE}>{targetStudent.email}</span>
+              <span className={META_VALUE_WHITE}>
+                {targetStudent.email || "Non renseigné"}
+              </span>
             </div>
             <div>
               <span className={META_LABEL}>Contact :</span>{" "}
-              <span className={META_VALUE_WHITE}>{targetStudent.contact}</span>
+              <span className={META_VALUE_WHITE}>
+                {targetStudent.contactNumber || "Non renseigné"}
+              </span>
             </div>
             <div>
-              <span className={META_LABEL}>Date/Lieu Naiss. :</span>{" "}
+              <span className={META_LABEL}>Date de Naissance :</span>{" "}
               <span className={META_VALUE_WHITE}>
-                {targetStudent.dateNaissance} ({targetStudent.lieuNaissance})
+                {targetStudent.dateOfBirth
+                  ? new Date(targetStudent.dateOfBirth).toLocaleDateString()
+                  : "N/A"}
               </span>
             </div>
             <div>
               <span className={META_LABEL}>Adresse :</span>{" "}
-              <span className={META_VALUE_WHITE}>{targetStudent.adresse}</span>
+              <span className={META_VALUE_WHITE}>
+                {targetStudent.address || "Non renseignée"}
+              </span>
             </div>
             <div>
               <span className={META_LABEL}>Statut :</span>{" "}
               <span
                 className={
-                  targetStudent.statut === "active"
+                  targetStudent.isActive !== false
                     ? STATUS_ACTIVE
                     : STATUS_INACTIVE
                 }
               >
-                {targetStudent.statut}
+                {targetStudent.isActive !== false ? "ACTIVE" : "INACTIF"}
               </span>
             </div>
           </div>
@@ -193,7 +201,7 @@ export const AdminStudents = ({
                 .map((h) => (
                   <div key={h.id} className={SUB_SECTION_ITEM}>
                     <span className={ITEM_LABEL_BLUE}>{h.type}</span> —{" "}
-                    {h.raison} ({h.date})
+                    {h.reason || h.raison} ({h.startDate || h.date})
                   </div>
                 ))}
             </div>
@@ -203,8 +211,10 @@ export const AdminStudents = ({
                 .filter((r) => r.studentId === targetStudent.id)
                 .map((r) => (
                   <div key={r.id} className={SUB_SECTION_ITEM}>
-                    <span className={ITEM_LABEL_EMERALD}>{r.type}</span> —{" "}
-                    {r.raison} ({r.date})
+                    <span className={ITEM_LABEL_EMERALD}>
+                      {r.category || r.type}
+                    </span>{" "}
+                    — {r.content || r.raison}
                   </div>
                 ))}
             </div>
@@ -229,40 +239,40 @@ export const AdminStudents = ({
                   <tr key={student.id} className={TABLE_ROW}>
                     <td className={TABLE_CELL_STUDENT}>
                       <img
-                        src={student.photo}
+                        src={student.profilePictureUrl || "/default-avatar.png"}
                         alt="avatar"
                         className={TABLE_AVATAR}
                       />
                       <span>
-                        {student.nom} {student.prenom}
+                        {student.lastName} {student.firstName}
                       </span>
                     </td>
                     <td className={TABLE_CELL_MATRICULE}>
                       {student.matricule}
                     </td>
                     <td className={TABLE_CELL_DEFAULT}>
-                      {student.role === "ancien" ? (
+                      {student.role === "ANCIEN" ? (
                         <span className={ALUMNI_TEXT}>
-                          Ancien ({student.anneeSortie})
+                          Ancien ({student.graduationYear})
                         </span>
                       ) : (
                         <span>
-                          {student.classe} ({extractClassNum(student.matricule)}
-                          )
+                          {student.classGroup || "N/A"} (N°
+                          {student.classRollNumber || "—"})
                         </span>
                       )}
                     </td>
-                    <td className="p-4 capitalize">{student.genre}</td>
+                    <td className="p-4 capitalize">{student.gender}</td>
                     <td className="p-4">
                       <button
                         onClick={() => toggleUserStatus(student.id)}
                         className={
-                          student.statut === "active"
+                          student.isActive !== false
                             ? STATUS_BUTTON_ACTIVE
                             : STATUS_BUTTON_INACTIVE
                         }
                       >
-                        {student.statut.toUpperCase()}
+                        {student.isActive !== false ? "ACTIVE" : "INACTIF"}
                       </button>
                     </td>
                     <td className={TABLE_ACTIONS_CELL}>

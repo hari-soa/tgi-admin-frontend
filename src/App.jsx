@@ -18,6 +18,7 @@ import {
   createStudent,
   createAdministrator,
   createSecretary,
+  createTeacher,
   deactivateStudent,
   updateUser,
 } from "./services/userService";
@@ -156,10 +157,16 @@ const App = () => {
     const found = users.find((u) => u.role === role);
     if (found) {
       setCurrentUser(found);
-      if (role === "admin" || role === "secretaire") setActiveTab("dashboard");
+      if (
+        role === "ADMIN" ||
+        role === "SECRETARY" ||
+        role === "admin" ||
+        role === "secretaire"
+      )
+        setActiveTab("dashboard");
       else setActiveTab("accueil");
       showToast(
-        `Logged in as ${found.prenom} ${found.nom} (${role.toUpperCase()})`,
+        `Logged in as ${found.firstName || found.prenom} ${found.lastName || found.nom} (${role.toUpperCase()})`,
       );
     }
   };
@@ -167,13 +174,14 @@ const App = () => {
   const handleCreateUser = async (e) => {
     e.preventDefault();
     try {
-      const role = formState.role.toUpperCase();
+      const role = (formState.role || "STUDENT").toUpperCase();
+      const gender = (formState.gender || "MALE").toUpperCase();
 
       const basePayload = {
         firstName: formState.firstName,
         lastName: formState.lastName,
         matricule: formState.matricule,
-        gender: formState.gender,
+        gender: gender,
       };
 
       let response;
@@ -182,7 +190,7 @@ const App = () => {
         const payload = {
           ...basePayload,
           classRollNumber: parseInt(formState.classRollNumber, 10),
-          classGroup: formState.classGroup,
+          classGroup: (formState.classGroup || "SECONDE").toUpperCase(),
         };
         response = await createStudent(payload);
       } else if (role === "SECRETARY") {
@@ -196,10 +204,10 @@ const App = () => {
         });
       }
 
-      setUsers([...users, response?.data?.user || basePayload]);
+      setUsers([...users, response?.data?.user || response || basePayload]);
       setActiveModal(null);
       setFormState({});
-      showToast("User created successfully !");
+      showToast("Utilisateur créé avec succès sur le serveur !");
     } catch (error) {
       showToast(`Erreur : ${error.message}`);
     }
@@ -402,12 +410,11 @@ const App = () => {
   const toggleUserStatus = async (userId) => {
     try {
       const targetUser = users.find((u) => u.id === userId);
-      const newStatus =
-        targetUser?.statut === "active" ? "desactive" : "active";
-      await updateUser(userId, { statut: newStatus });
+      const newStatus = targetUser?.isActive !== false ? false : true;
+      await updateUser(userId, { isActive: newStatus });
 
       setUsers(
-        users.map((u) => (u.id === userId ? { ...u, statut: newStatus } : u)),
+        users.map((u) => (u.id === userId ? { ...u, isActive: newStatus } : u)),
       );
       showToast("User status updated");
     } catch (error) {
@@ -430,15 +437,21 @@ const App = () => {
   };
 
   const studentUsers = users.filter((u) => {
-    if (u.role !== "student" && u.role !== "ancien") return false;
+    const role = (u.role || "").toUpperCase();
+    if (role !== "STUDENT" && role !== "ANCIEN") return false;
     if (selectedStudentFilter === "tout") return true;
-    if (selectedStudentFilter === "ancien") return u.role === "ancien";
-    return u.classe?.toLowerCase() === selectedStudentFilter.toLowerCase();
+    if (selectedStudentFilter === "ancien") return role === "ANCIEN";
+    return (
+      (u.classGroup || "").toUpperCase() === selectedStudentFilter.toUpperCase()
+    );
   });
 
-  const staffUsers = users.filter((u) =>
-    ["prof", "admin", "secretaire"].includes(u.role),
-  );
+  const staffUsers = users.filter((u) => {
+    const role = (u.role || "").toUpperCase();
+    return ["TEACHER", "ADMIN", "SECRETARY", "PROF", "SECRETAIRE"].includes(
+      role,
+    );
+  });
 
   if (!currentUser) {
     return (
