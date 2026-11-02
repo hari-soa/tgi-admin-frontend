@@ -51,7 +51,14 @@ import {
 const App = () => {
   const [currentUser, setCurrentUser] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState("dashboard");
+
+  const [activeTab, setActiveTab] = useState(() => {
+    return localStorage.getItem("activeTab") || "dashboard";
+  });
+
+  useEffect(() => {
+    localStorage.setItem("activeTab", activeTab);
+  }, [activeTab]);
 
   const [users, setUsers] = useState([]);
   const [announcements, setAnnouncements] = useState([]);
@@ -131,7 +138,7 @@ const App = () => {
       <div className="flex items-center justify-center h-screen bg-slate-950 text-slate-100 font-sans">
         <div className="text-center">
           <div className="w-10 h-10 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p>Chargement de Collège Saint Michel...</p>
+          <p>Loading...</p>
         </div>
       </div>
     );
@@ -150,6 +157,7 @@ const App = () => {
     logoutUser();
     setCurrentUser(null);
     setTargetStudent(null);
+    localStorage.removeItem("activeTab");
     showToast("Logged out successfully");
   };
 
@@ -530,6 +538,7 @@ const App = () => {
             handleSimulateExport={handleSimulateExport}
             setCurrentUser={setCurrentUser}
             handleLogout={handleLogout}
+            onUpdateUser={handleUpdateUser}
           />
         </main>
       </div>
