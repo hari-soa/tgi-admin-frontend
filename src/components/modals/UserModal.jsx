@@ -27,8 +27,8 @@ export const UserModal = ({
     setFormState({ ...formState, [field]: value });
   };
 
-  const currentRole = formState?.role || "student";
-  const isStudent = currentRole === "student";
+  const currentRole = formState?.role || "STUDENT";
+  const isStudent = currentRole === "STUDENT";
 
   return (
     <div className={MODAL_BACKDROP}>
@@ -46,8 +46,8 @@ export const UserModal = ({
               <input
                 type="text"
                 placeholder="Nom"
-                value={formState?.nom || ""}
-                onChange={(e) => handleInputChange("nom", e.target.value)}
+                value={formState?.lastName || ""}
+                onChange={(e) => handleInputChange("lastName", e.target.value)}
                 className={TEXT_INPUT}
                 required
               />
@@ -57,8 +57,8 @@ export const UserModal = ({
               <input
                 type="text"
                 placeholder="Prénom(s)"
-                value={formState?.prenom || ""}
-                onChange={(e) => handleInputChange("prenom", e.target.value)}
+                value={formState?.firstName || ""}
+                onChange={(e) => handleInputChange("firstName", e.target.value)}
                 className={TEXT_INPUT}
                 required
               />
@@ -69,12 +69,12 @@ export const UserModal = ({
             <div className={FIELD_GROUP}>
               <label className={FIELD_LABEL}>Gender</label>
               <select
-                value={formState?.genre || "Masculin"}
-                onChange={(e) => handleInputChange("genre", e.target.value)}
+                value={formState?.gender || "MALE"}
+                onChange={(e) => handleInputChange("gender", e.target.value)}
                 className={SELECT_INPUT}
               >
-                <option value="Masculin">Masculin</option>
-                <option value="Féminin">Féminin</option>
+                <option value="MALE">Masculin</option>
+                <option value="FEMALE">Féminin</option>
               </select>
             </div>
             <div className={FIELD_GROUP}>
@@ -84,10 +84,10 @@ export const UserModal = ({
                 onChange={(e) => handleInputChange("role", e.target.value)}
                 className={SELECT_INPUT}
               >
-                <option value="student">Student</option>
-                <option value="prof">Professor</option>
-                <option value="secrétaire">Secretary</option>
-                <option value="admin">Admin</option>
+                <option value="STUDENT">Student</option>
+                <option value="TEACHER">Professor</option>
+                <option value="SECRETARY">Secretary</option>
+                <option value="ADMIN">Admin</option>
               </select>
             </div>
           </div>
@@ -95,31 +95,34 @@ export const UserModal = ({
           {isStudent ? (
             <div className={SUB_CONTAINER}>
               <span className={SUB_TITLE}>
-                Student Academic - Personal Details
+                Student Academic & Personal Details
               </span>
 
               <div className={GRID_TWO_COLS}>
                 <div className={FIELD_GROUP}>
                   <label className={FIELD_LABEL}>Entry Year</label>
                   <input
-                    type="text"
-                    placeholder="Année d'entrée"
+                    type="number"
+                    placeholder="2026"
                     value={formState?.entryYear || ""}
                     onChange={(e) =>
-                      handleInputChange("entryYear", e.target.value)
+                      handleInputChange("entryYear", Number(e.target.value))
                     }
                     className={TEXT_INPUT}
                     required
                   />
                 </div>
                 <div className={FIELD_GROUP}>
-                  <label className={FIELD_LABEL}>Class Number</label>
+                  <label className={FIELD_LABEL}>Class Roll Number</label>
                   <input
-                    type="text"
-                    placeholder="n°01"
-                    value={formState?.classNum || ""}
+                    type="number"
+                    placeholder="1"
+                    value={formState?.classRollNumber || ""}
                     onChange={(e) =>
-                      handleInputChange("classNum", e.target.value)
+                      handleInputChange(
+                        "classRollNumber",
+                        Number(e.target.value),
+                      )
                     }
                     className={TEXT_INPUT}
                     required
@@ -129,27 +132,26 @@ export const UserModal = ({
 
               <div className={GRID_TWO_COLS}>
                 <div className={FIELD_GROUP}>
-                  <label className={FIELD_LABEL}>Class</label>
+                  <label className={FIELD_LABEL}>Class Group</label>
                   <select
-                    value={formState?.classe || "Seconde"}
+                    value={formState?.classGroup || "SECONDE"}
                     onChange={(e) =>
-                      handleInputChange("classe", e.target.value)
+                      handleInputChange("classGroup", e.target.value)
                     }
                     className={SELECT_INPUT}
                   >
-                    <option value="Seconde">Seconde</option>
-                    <option value="Première">Première</option>
-                    <option value="Terminale">Terminale</option>
+                    <option value="SECONDE">Seconde</option>
+                    <option value="PREMIERE">Première</option>
+                    <option value="TERMINALE">Terminale</option>
                   </select>
                 </div>
                 <div className={FIELD_GROUP}>
                   <label className={FIELD_LABEL}>Date of Birth</label>
                   <input
-                    type="text"
-                    placeholder="DD/MM/YYYY"
-                    value={formState?.dateNaissance || ""}
+                    type="date"
+                    value={formState?.dateOfBirth || ""}
                     onChange={(e) =>
-                      handleInputChange("dateNaissance", e.target.value)
+                      handleInputChange("dateOfBirth", e.target.value)
                     }
                     className={TEXT_INPUT}
                     required
@@ -159,55 +161,80 @@ export const UserModal = ({
 
               <div className={GRID_TWO_COLS}>
                 <div className={FIELD_GROUP}>
-                  <label className={FIELD_LABEL}>Place of Birth</label>
+                  <label className={FIELD_LABEL}>Parents Email</label>
                   <input
-                    type="text"
-                    placeholder="Lieu de naissance"
-                    value={formState?.lieuNaissance || ""}
+                    type="email"
+                    placeholder="parents@gmail.com"
+                    value={formState?.parentsEmail || ""}
                     onChange={(e) =>
-                      handleInputChange("lieuNaissance", e.target.value)
+                      handleInputChange("parentsEmail", e.target.value)
                     }
                     className={TEXT_INPUT}
                     required
                   />
                 </div>
                 <div className={FIELD_GROUP}>
-                  <label className={FIELD_LABEL}>Address</label>
+                  <label className={FIELD_LABEL}>Parents Contact</label>
                   <input
                     type="text"
-                    placeholder="Adresse"
-                    value={formState?.adresse || ""}
+                    placeholder="+261 34..."
+                    value={formState?.parentsContactNumber || ""}
                     onChange={(e) =>
-                      handleInputChange("adresse", e.target.value)
+                      handleInputChange("parentsContactNumber", e.target.value)
                     }
                     className={TEXT_INPUT}
                     required
                   />
                 </div>
               </div>
-            </div>
-          ) : (
-            <div className={SUB_CONTAINER}>
-              <span className={SUB_TITLE}>Admin Matricule</span>
+
               <div className={FIELD_GROUP}>
-                <label className={FIELD_LABEL}>Matricule</label>
+                <label className={FIELD_LABEL}>Address</label>
                 <input
                   type="text"
-                  placeholder={
-                    currentRole === "admin"
-                      ? "ADM-001"
-                      : currentRole === "prof"
-                        ? "PRF-001"
-                        : "SEC-001"
-                  }
-                  value={formState?.matricule || ""}
+                  placeholder="Adresse complète"
+                  value={formState?.address || ""}
+                  onChange={(e) => handleInputChange("address", e.target.value)}
+                  className={TEXT_INPUT}
+                  required
+                />
+              </div>
+            </div>
+          ) : currentRole === "TEACHER" ? (
+            <div className={SUB_CONTAINER}>
+              <span className={SUB_TITLE}>Teacher Details</span>
+              <div className={FIELD_GROUP}>
+                <label className={FIELD_LABEL}>
+                  Subject IDs (comma separated)
+                </label>
+                <input
+                  type="text"
+                  placeholder="subj_math_1, subj_phys_2"
+                  value={formState?.subjectIds?.join(", ") || ""}
                   onChange={(e) =>
-                    handleInputChange("matricule", e.target.value)
+                    handleInputChange(
+                      "subjectIds",
+                      e.target.value.split(",").map((s) => s.trim()),
+                    )
                   }
                   className={TEXT_INPUT}
                   required
                 />
               </div>
+            </div>
+          ) : null}
+
+          {currentRole !== "TEACHER" && (
+            <div className={FIELD_GROUP}>
+              <label className={FIELD_LABEL}>Password (min 8 chars)</label>
+              <input
+                type="password"
+                placeholder="••••••••"
+                value={formState?.password || ""}
+                onChange={(e) => handleInputChange("password", e.target.value)}
+                className={TEXT_INPUT}
+                required
+              />
             </div>
           )}
 
@@ -220,7 +247,6 @@ export const UserModal = ({
                 value={formState?.email || ""}
                 onChange={(e) => handleInputChange("email", e.target.value)}
                 className={TEXT_INPUT}
-                required
               />
             </div>
             <div className={FIELD_GROUP}>
@@ -228,8 +254,10 @@ export const UserModal = ({
               <input
                 type="text"
                 placeholder="+261 34 00 000 00"
-                value={formState?.contact || ""}
-                onChange={(e) => handleInputChange("contact", e.target.value)}
+                value={formState?.contactNumber || ""}
+                onChange={(e) =>
+                  handleInputChange("contactNumber", e.target.value)
+                }
                 className={TEXT_INPUT}
                 required
               />

@@ -1,4 +1,3 @@
-import { extractClassNum } from "../../utils/helpers";
 import {
   CONTAINER_WRAPPER,
   HEADER_TITLE,
@@ -23,8 +22,7 @@ import {
 export const Profile = ({ currentUser }) => {
   if (!currentUser) return null;
 
-  const isStudentOrAlumni =
-    currentUser.role === "student" || currentUser.role === "ancien";
+  const isStudent = currentUser.role === "STUDENT";
 
   return (
     <div className={CONTAINER_WRAPPER}>
@@ -38,13 +36,13 @@ export const Profile = ({ currentUser }) => {
       <div className={CARD_BOX}>
         <div className={USER_HEADER_SECTION}>
           <img
-            src={currentUser.photo || "/default-avatar.png"}
+            src={currentUser.profilePictureUrl || "/default-avatar.png"}
             alt="profile"
             className={PROFILE_IMAGE}
           />
           <div className={USER_INFO_BOX}>
             <h3 className={USER_NAME}>
-              {currentUser.nom} {currentUser.prenom}
+              {currentUser.lastName} {currentUser.firstName}
             </h3>
             <p className={USER_MATRICULE}>
               Matricule : {currentUser.matricule || "N/A"}
@@ -53,14 +51,12 @@ export const Profile = ({ currentUser }) => {
               <span className={ROLE_BADGE}>{currentUser.role}</span>
               <span
                 className={
-                  currentUser.statut === "active"
+                  currentUser.isActive !== false
                     ? STATUS_ACTIVE_BADGE
                     : STATUS_INACTIVE_BADGE
                 }
               >
-                {currentUser.statut
-                  ? currentUser.statut.toUpperCase()
-                  : "INACTIF"}
+                {currentUser.isActive !== false ? "ACTIVE" : "INACTIF"}
               </span>
             </div>
           </div>
@@ -76,50 +72,41 @@ export const Profile = ({ currentUser }) => {
           <div>
             <label className={FIELD_LABEL}>Contact</label>
             <p className={FIELD_VALUE}>
-              {currentUser.contact || "Non renseigné"}
+              {currentUser.contactNumber || "Non renseigné"}
             </p>
           </div>
           <div>
             <label className={FIELD_LABEL}>Genre</label>
             <p className={FIELD_VALUE_CAPITALIZE}>
-              {currentUser.genre || "Non spécifié"}
+              {currentUser.gender || "Non spécifié"}
             </p>
           </div>
 
-          {isStudentOrAlumni && (
+          {isStudent && (
             <>
               <div>
-                <label className={FIELD_LABEL}>Année d'Entrée / Sortie</label>
+                <label className={FIELD_LABEL}>Année d'Entrée</label>
+                <p className={FIELD_VALUE}>{currentUser.entryYear || "N/A"}</p>
+              </div>
+              <div>
+                <label className={FIELD_LABEL}>Classe & Rôle / Numéro</label>
                 <p className={FIELD_VALUE}>
-                  {currentUser.anneeEntree || "N/A"}{" "}
-                  {currentUser.anneeSortie
-                    ? `— Sortie en ${currentUser.anneeSortie}`
-                    : ""}
+                  {currentUser.classGroup || "Non assignée"} (N°
+                  {currentUser.classRollNumber || "N/A"})
                 </p>
               </div>
               <div>
-                <label className={FIELD_LABEL}>Classe & Numéro en classe</label>
+                <label className={FIELD_LABEL}>Date de Naissance</label>
                 <p className={FIELD_VALUE}>
-                  {currentUser.role === "ancien"
-                    ? "Sans classe (Alumni)"
-                    : `${currentUser.classe || "Non assignée"} (${extractClassNum(
-                        currentUser.matricule,
-                      )})`}
-                </p>
-              </div>
-              <div>
-                <label className={FIELD_LABEL}>Date & Lieu de Naissance</label>
-                <p className={FIELD_VALUE}>
-                  {currentUser.dateNaissance || "N/A"}{" "}
-                  {currentUser.lieuNaissance
-                    ? `(${currentUser.lieuNaissance})`
-                    : ""}
+                  {currentUser.dateOfBirth
+                    ? new Date(currentUser.dateOfBirth).toLocaleDateString()
+                    : "N/A"}
                 </p>
               </div>
               <div className={ADDRESS_GRID_SPAN}>
                 <label className={FIELD_LABEL}>Adresse</label>
                 <p className={FIELD_VALUE}>
-                  {currentUser.adresse || "Non renseignée"}
+                  {currentUser.address || "Non renseignée"}
                 </p>
               </div>
             </>
