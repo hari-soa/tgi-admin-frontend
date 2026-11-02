@@ -45,8 +45,8 @@ export const updateUser = async (userId, userData) => {
   });
 };
 
-export const deactivateStudent = async (studentId) => {
-  return await apiFetch(`/users/students/${studentId}/deactivate`, {
-    method: "PATCH",
+export const deleteUser = async (userId) => {
+  return await apiFetch(`/users/${userId}`, {
+    method: "DELETE",
   });
 };

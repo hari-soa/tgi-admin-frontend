@@ -19,7 +19,7 @@ import {
   createAdministrator,
   createSecretary,
   createTeacher,
-  deactivateStudent,
+  deleteUser as apiDeleteUser,
   updateUser,
 } from "./services/userService";
 import {
@@ -468,14 +468,21 @@ const App = () => {
   };
 
   const deleteUser = async (userId) => {
+    const previousUsers = [...users];
+
+    // Mise à jour optimiste de l'UI
+    setUsers(users.filter((u) => u.id !== userId));
+    if (targetStudent?.id === userId) {
+      setTargetStudent(null);
+    }
+    showToast("User deleted successfully");
+
     try {
-      await deactivateStudent(userId);
-      setUsers(users.filter((u) => u.id !== userId));
-      if (targetStudent?.id === userId) {
-        setTargetStudent(null);
-      }
-      showToast("User deleted/deactivated successfully");
+      // Appel réel vers le backend PostgreSQL via l'alias
+      await apiDeleteUser(userId);
     } catch (error) {
+      // En cas d'erreur, on restaure l'état
+      setUsers(previousUsers);
       showToast(`Error: ${error.message}`);
     }
   };
