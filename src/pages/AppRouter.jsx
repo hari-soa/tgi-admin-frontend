@@ -40,10 +40,35 @@ const AppRouter = ({
   handleSimulateExport,
   setCurrentUser,
 }) => {
-  const userRole = currentUser?.role?.toLowerCase() || "";
+  const userRole = currentUser?.role?.toUpperCase() || "";
 
-  // Student Views
-  if (userRole === "student" || userRole === "ancien") {
+  if (activeTab === "profil") {
+    return <Profile currentUser={currentUser} />;
+  }
+  if (activeTab === "annonces") {
+    return (
+      <Announcements
+        currentUser={currentUser}
+        announcements={announcements}
+        setActiveModal={setActiveModal}
+      />
+    );
+  }
+  if (activeTab === "pointage") {
+    return (
+      <AdminPointage
+        currentUser={currentUser}
+        pointages={pointages}
+        handleTogglePointage={handleTogglePointage}
+        setActiveModal={setActiveModal}
+      />
+    );
+  }
+  if (activeTab === "personnel") {
+    return <StaffList staffUsers={staffUsers} setActiveTab={setActiveTab} />;
+  }
+
+  if (userRole === "STUDENT" || userRole === "ANCIEN") {
     if (activeTab === "accueil") {
       return (
         <StudentHome
@@ -75,7 +100,7 @@ const AppRouter = ({
     }
   }
 
-  if (userRole === "secretaire" || userRole === "secretary") {
+  if (userRole === "SECRETARY" || userRole === "SECRETAIRE") {
     if (activeTab === "dashboard") {
       return (
         <SecretaryDashboard
@@ -99,7 +124,7 @@ const AppRouter = ({
     }
   }
 
-  if (userRole === "admin") {
+  if (userRole === "ADMIN") {
     if (activeTab === "dashboard") {
       return (
         <AdminDashboard
@@ -131,32 +156,6 @@ const AppRouter = ({
         />
       );
     }
-  }
-
-  if (activeTab === "pointage") {
-    return (
-      <AdminPointage
-        currentUser={currentUser}
-        pointages={pointages}
-        handleTogglePointage={handleTogglePointage}
-        setActiveModal={setActiveModal}
-      />
-    );
-  }
-  if (activeTab === "personnel") {
-    return <StaffList staffUsers={staffUsers} setActiveTab={setActiveTab} />;
-  }
-  if (activeTab === "annonces") {
-    return (
-      <Announcements
-        currentUser={currentUser}
-        announcements={announcements}
-        setActiveModal={setActiveModal}
-      />
-    );
-  }
-  if (activeTab === "profil") {
-    return <Profile currentUser={currentUser} />;
   }
 
   return <div className="text-white p-8">View not found.</div>;
