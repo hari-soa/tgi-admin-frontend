@@ -165,55 +165,41 @@ const App = () => {
   const handleCreateUser = async (e) => {
     e.preventDefault();
     try {
+      const role = formState.role.toUpperCase();
+
       const basePayload = {
         firstName: formState.firstName,
         lastName: formState.lastName,
-        password: formState.password,
-        contactNumber: formState.contactNumber,
-        email: formState.email,
-        profilePictureUrl: formState.profilePictureUrl,
+        matricule: formState.matricule,
+        gender: formState.gender,
       };
 
-      let payload;
       let response;
 
-      if (formState.role === "student" || formState.role === "alumni") {
-        payload = {
+      if (role === "STUDENT") {
+        const payload = {
           ...basePayload,
-          classRollNumber: parseInt(formState.classRollNumber),
-          classGroup: formState.classGroup.toUpperCase(),
-          dateOfBirth: formState.dateOfBirth,
-          gender: formState.gender.toUpperCase(),
-          address: formState.address,
-          parentsEmail: formState.parentsEmail,
-          parentsContactNumber: formState.parentsContactNumber,
-          entryYear: parseInt(formState.entryYear),
-          graduationYear: formState.graduationYear
-            ? parseInt(formState.graduationYear)
-            : undefined,
-          comments: formState.comments,
+          classRollNumber: parseInt(formState.classRollNumber, 10),
+          classGroup: formState.classGroup,
         };
         response = await createStudent(payload);
-      } else if (formState.role === "secretaire") {
-        payload = {
-          ...basePayload,
-          department: formState.department,
-        };
-        response = await createSecretary(payload);
+      } else if (role === "SECRETARY") {
+        response = await createSecretary(basePayload);
+      } else if (role === "TEACHER") {
+        response = await createTeacher(basePayload);
       } else {
-        payload = {
+        response = await createAdministrator({
           ...basePayload,
-          role: formState.role || "ADMIN",
-        };
-        response = await createAdministrator(payload);
+          role: role,
+        });
       }
 
-      setUsers([...users, response || payload]);
+      setUsers([...users, response?.data?.user || basePayload]);
       setActiveModal(null);
       setFormState({});
-      showToast("User created successfully on server!");
+      showToast("User created successfully !");
     } catch (error) {
-      showToast(`Error: ${error.message}`);
+      showToast(`Erreur : ${error.message}`);
     }
   };
 
