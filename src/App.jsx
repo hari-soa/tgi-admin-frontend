@@ -478,10 +478,8 @@ const App = () => {
     showToast("User deleted successfully");
 
     try {
-      // Appel réel vers le backend PostgreSQL via l'alias
       await apiDeleteUser(userId);
     } catch (error) {
-      // En cas d'erreur, on restaure l'état
       setUsers(previousUsers);
       showToast(`Error: ${error.message}`);
     }
