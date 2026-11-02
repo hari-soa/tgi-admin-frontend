@@ -42,8 +42,11 @@ export const AdminDashboard = ({
   return (
     <div className={CONTAINER_WRAPPER}>
       <div className={BANNER_CONTAINER}>
-        <span className={BANNER_TAG}>Panneau de contrôle - Admin</span>
-        <h2 className={BANNER_TITLE}>TGI - Technologie Générale Industriel</h2>
+        <span className={BANNER_TAG}>
+          Panneau de contrôle - Admin{" "}
+          {currentUser?.firstName ? `(${currentUser.firstName})` : ""}
+        </span>
+        <h2 className={BANNER_TITLE}>Collège Saint Michel Amparibe</h2>
         <p className={BANNER_MOTTO}>"Miorim-paka hanasoa olona"</p>
 
         <div className={ACTIONS_CONTAINER}>
