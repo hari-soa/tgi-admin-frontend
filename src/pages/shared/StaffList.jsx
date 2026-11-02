@@ -31,13 +31,13 @@ export const StaffList = ({ staffUsers, setActiveTab }) => {
             <div>
               <div className={CARD_HEADER}>
                 <img
-                  src={staff.photo || "/default-avatar.png"}
+                  src={staff.profilePictureUrl || "/default-avatar.png"}
                   alt="staff"
                   className={STAFF_AVATAR}
                 />
                 <div>
                   <h3 className={STAFF_NAME}>
-                    {staff.nom} {staff.prenom}
+                    {staff.lastName} {staff.firstName}
                   </h3>
                   <span className={ROLE_BADGE}>{staff.role}</span>
                 </div>
@@ -50,18 +50,18 @@ export const StaffList = ({ staffUsers, setActiveTab }) => {
                 </p>
                 <p>
                   <span className={META_LABEL}>Contact :</span>{" "}
-                  {staff.contact || "Non renseigné"}
+                  {staff.contactNumber || "Non renseigné"}
                 </p>
                 <p>
                   <span className={META_LABEL}>Genre :</span>{" "}
                   <span className={META_CAPITALIZE}>
-                    {staff.genre || "Non spécifié"}
+                    {staff.gender || "Non spécifié"}
                   </span>
                 </p>
               </div>
             </div>
 
-            {staff.role === "prof" && (
+            {staff.role === "TEACHER" && (
               <div className={ACTION_CONTAINER}>
                 <button
                   onClick={() => setActiveTab("pointage")}
