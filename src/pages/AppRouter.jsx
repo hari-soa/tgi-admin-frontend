@@ -39,7 +39,7 @@ const AppRouter = ({
   handleTogglePointage,
   handleSimulateExport,
   setCurrentUser,
-  onUpdateUser, // <-- Ajout de la prop de mise à jour utilisateur
+  onUpdateUser,
 }) => {
   const userRole = currentUser?.role?.toUpperCase() || "";
   const isAdmin = userRole === "ADMIN";
@@ -47,7 +47,7 @@ const AppRouter = ({
   if (activeTab === "profil") {
     return (
       <Profile
-        currentUser={targetStudent || currentUser} // Permet à l'admin de voir/modifier la fiche sélectionnée ou son propre profil
+        currentUser={currentUser} // Uniquement le profil personnel connecté
         onUpdateUser={onUpdateUser}
         isAdmin={isAdmin}
       />
@@ -76,10 +76,11 @@ const AppRouter = ({
     return (
       <StaffList
         staffUsers={staffUsers}
+        targetStudent={targetStudent}
         setTargetStudent={setTargetStudent}
-        toggleUserStatus={toggleUserStatus}
         deleteUser={deleteUser}
-        setActiveTab={setActiveTab} // <-- Indispensable pour rediriger vers le profil
+        onUpdateUser={onUpdateUser}
+        isAdmin={isAdmin}
       />
     );
   }

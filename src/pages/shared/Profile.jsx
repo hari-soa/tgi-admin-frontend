@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   CONTAINER_WRAPPER,
   HEADER_TITLE,
@@ -26,10 +26,17 @@ export const Profile = ({ currentUser, onUpdateUser, isAdmin }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState({ ...currentUser });
 
-  const isStudent = currentUser.role === "STUDENT";
+  useEffect(() => {
+    setFormData({ ...currentUser });
+  }, [currentUser]);
+
+  const userRole = (currentUser.role || "").toUpperCase();
+  const isStudent = userRole === "STUDENT" || userRole === "ANCIEN";
+  const isTeacher = userRole === "TEACHER" || userRole === "PROF";
+  const isSecretary = userRole === "SECRETARY" || userRole === "SECRETAIRE";
 
   const handleChange = (field, value) => {
-    setFormData({ ...formData, [field]: value });
+    setFormData((prev) => ({ ...prev, [field]: value }));
   };
 
   const handleImageUpload = (e) => {
@@ -37,7 +44,7 @@ export const Profile = ({ currentUser, onUpdateUser, isAdmin }) => {
     if (file && file.type.startsWith("image/")) {
       const reader = new FileReader();
       reader.onloadend = () => {
-        setFormData({ ...formData, profilePictureUrl: reader.result });
+        setFormData((prev) => ({ ...prev, profilePictureUrl: reader.result }));
       };
       reader.readAsDataURL(file);
     }
@@ -199,6 +206,36 @@ export const Profile = ({ currentUser, onUpdateUser, isAdmin }) => {
                   </div>
                 </>
               )}
+
+              {isTeacher && (
+                <div>
+                  <label className={FIELD_LABEL}>
+                    Classe Titulaire / Spécialité
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.homeroomClass || ""}
+                    onChange={(e) =>
+                      handleChange("homeroomClass", e.target.value)
+                    }
+                    className="w-full bg-slate-900 border border-slate-700 p-2 rounded text-white text-sm"
+                    placeholder="Ex: Terminale C / Mathématiques"
+                  />
+                </div>
+              )}
+
+              {isSecretary && (
+                <div>
+                  <label className={FIELD_LABEL}>Département / Service</label>
+                  <input
+                    type="text"
+                    value={formData.department || ""}
+                    onChange={(e) => handleChange("department", e.target.value)}
+                    className="w-full bg-slate-900 border border-slate-700 p-2 rounded text-white text-sm"
+                    placeholder="Ex: Administration & Scolarité"
+                  />
+                </div>
+              )}
             </div>
 
             <div className="flex justify-end gap-3 mt-6">
@@ -297,6 +334,26 @@ export const Profile = ({ currentUser, onUpdateUser, isAdmin }) => {
                     </p>
                   </div>
                 </>
+              )}
+
+              {isTeacher && (
+                <div>
+                  <label className={FIELD_LABEL}>
+                    Classe Titulaire / Spécialité
+                  </label>
+                  <p className={FIELD_VALUE}>
+                    {currentUser.homeroomClass || "Non renseignée"}
+                  </p>
+                </div>
+              )}
+
+              {isSecretary && (
+                <div>
+                  <label className={FIELD_LABEL}>Département</label>
+                  <p className={FIELD_VALUE}>
+                    {currentUser.department || "Non renseigné"}
+                  </p>
+                </div>
               )}
             </div>
           </>
