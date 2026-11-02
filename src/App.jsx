@@ -14,6 +14,7 @@ import HistoryRemarkModal from "./components/modals/HistoryRemarkModal";
 
 import { getCurrentUserProfile, logoutUser } from "./services/authService";
 import {
+  getAllUsers,
   createStudent,
   createAdministrator,
   createSecretary,
@@ -116,6 +117,7 @@ const App = () => {
         setGradeSessions(gradeSessionsData);
         setPointages(pointagesData);
       } catch (error) {
+        console.error("Détail de l'erreur de chargement :", error);
         showToast("Error loading application data from server");
       }
     };
