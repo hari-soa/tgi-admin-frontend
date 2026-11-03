@@ -22,7 +22,7 @@ export const Announcements = ({
   announcements = [],
   setActiveModal,
   onDeleteAnnouncement,
-  onSelectAnnouncementToEdit, // Fonction pour charger l'annonce à modifier dans le formulaire
+  onSelectAnnouncementToEdit,
 }) => {
   const validAnnouncements = Array.isArray(announcements)
     ? announcements
@@ -42,7 +42,12 @@ export const Announcements = ({
         {isAdmin && (
           <button
             onClick={() => {
-              if (onSelectAnnouncementToEdit) onSelectAnnouncementToEdit(null); // Mode création (vide)
+              if (onSelectAnnouncementToEdit) {
+                onSelectAnnouncementToEdit({
+                  targetScope: "ALL",
+                  priority: "NORMAL",
+                });
+              }
               setActiveModal("announcement");
             }}
             className={BROADCAST_BUTTON}
@@ -58,53 +63,56 @@ export const Announcements = ({
           return (
             <div
               key={ann.id}
-              className={`${isUrgent ? CARD_URGENT : CARD_NORMAL} relative group`}
+              className={`${isUrgent ? CARD_URGENT : CARD_NORMAL} flex flex-col justify-between`}
             >
-              {isAdmin && (
-                <div className="absolute top-4 right-4 flex items-center space-x-2">
-                  {onSelectAnnouncementToEdit && (
-                    <button
-                      onClick={() => {
-                        onSelectAnnouncementToEdit(ann); // Charge les données de l'annonce dans le state du formulaire
-                        setActiveModal("announcement");
-                      }}
-                      className="text-slate-400 hover:text-blue-400 transition-colors p-1"
-                      title="Modifier l'annonce"
-                    >
-                      ✏️
-                    </button>
-                  )}
-                  {onDeleteAnnouncement && (
-                    <button
-                      onClick={() => onDeleteAnnouncement(ann.id)}
-                      className="text-slate-400 hover:text-red-400 transition-colors p-1"
-                      title="Supprimer l'annonce"
-                    >
-                      🗑️
-                    </button>
-                  )}
+              <div>
+                <div className={CARD_HEADER}>
+                  <span className={isUrgent ? BADGE_URGENT : BADGE_NORMAL}>
+                    {isUrgent ? "Urgent" : "Général"}
+                  </span>
+                  <span className={DATE_TEXT}>
+                    {ann.createdAt
+                      ? new Date(ann.createdAt).toLocaleDateString()
+                      : "Récemment"}
+                  </span>
                 </div>
-              )}
-
-              <div className={CARD_HEADER}>
-                <span className={isUrgent ? BADGE_URGENT : BADGE_NORMAL}>
-                  {isUrgent ? "Urgent" : "Général"}
-                </span>
-                <span className={DATE_TEXT}>
-                  {ann.createdAt
-                    ? new Date(ann.createdAt).toLocaleDateString()
-                    : "Récemment"}
-                </span>
+                <h3 className={TITLE_TEXT}>{ann.title}</h3>
+                <p className={CONTEXT_TEXT}>{ann.content}</p>
               </div>
-              <h3 className={TITLE_TEXT}>{ann.title}</h3>
-              <p className={CONTEXT_TEXT}>{ann.content}</p>
-              <span className={FOOTER_META}>
-                Cible :{" "}
-                <span className={TARGET_TEXT}>
-                  {ann.targetScope || "ALL"}
-                  {ann.targetValue ? ` (${ann.targetValue})` : ""}
+
+              <div className="mt-4 pt-4 border-t border-slate-800/80 flex items-center justify-between">
+                <span className={FOOTER_META}>
+                  Cible :{" "}
+                  <span className={TARGET_TEXT}>
+                    {ann.targetScope || "ALL"}
+                    {ann.targetValue ? ` (${ann.targetValue})` : ""}
+                  </span>
                 </span>
-              </span>
+
+                {isAdmin && (
+                  <div className="flex items-center space-x-2">
+                    {onSelectAnnouncementToEdit && (
+                      <button
+                        onClick={() => {
+                          onSelectAnnouncementToEdit(ann);
+                          setActiveModal("announcement");
+                        }}
+                        className="px-2.5 py-1 bg-slate-800 hover:bg-slate-700 text-blue-400 text-xs font-medium rounded transition-colors"
+                      >
+                        Modifier
+                      </button>
+                    )}
+                    {onDeleteAnnouncement && (
+                      <button
+                        onClick={() => onDeleteAnnouncement(ann.id)}
+                        className="px-2.5 py-1 bg-slate-800 hover:bg-slate-700 text-red-400 text-xs font-medium rounded transition-colors"
+                      >
+                        Supprimer
+                      </button>
+                    )}
+                  </div>
+                )}
+              </div>
             </div>
           );
         })}

@@ -248,47 +248,57 @@ const App = () => {
     }
   };
 
-  const handleCreateAnnouncement = async (e) => {
+  const handleFormSubmitAnnouncement = async (e) => {
     e.preventDefault();
     try {
       const payload = {
         title: formState.title,
         content: formState.content,
-        targetScope: formState.targetScope,
-        priority: formState.priority,
+        targetScope: formState.targetScope || "ALL",
+        priority: formState.priority || "NORMAL",
         targetClasses: formState.targetClasses,
       };
 
-      const response = await createAnnouncement(payload);
-      setAnnouncements([response || payload, ...announcements]);
+      const list = Array.isArray(announcements)
+        ? announcements
+        : announcements?.announcements ||
+          announcements?.data?.announcements ||
+          [];
+
+      if (formState.id) {
+        const response = await updateAnnouncement(formState.id, payload);
+        const updated = response?.data?.announcement ||
+          response || { id: formState.id, ...payload };
+
+        setAnnouncements(
+          list.map((a) => (a.id === formState.id ? { ...a, ...updated } : a)),
+        );
+        showToast("Announcement updated successfully!");
+      } else {
+        const response = await createAnnouncement(payload);
+        const created = response?.data?.announcement || response || payload;
+
+        setAnnouncements([created, ...list]);
+        showToast("Announcement published successfully!");
+      }
+
       setActiveModal(null);
       setFormState({});
-      showToast("Announcement published successfully!");
     } catch (error) {
       showToast(`Error: ${error.message}`);
     }
   };
 
-  const handleUpdateAnnouncement = async (announcementId, updatedData) => {
-    const previousAnnouncements = [...announcements];
-    setAnnouncements(
-      announcements.map((a) =>
-        a.id === announcementId ? { ...a, ...updatedData } : a,
-      ),
-    );
-    showToast("Announcement updated successfully!");
-
-    try {
-      await updateAnnouncement(announcementId, updatedData);
-    } catch (error) {
-      setAnnouncements(previousAnnouncements);
-      showToast(`Failed to update announcement: ${error.message}`);
-    }
-  };
-
   const handleDeleteAnnouncement = async (announcementId) => {
-    const previousAnnouncements = [...announcements];
-    setAnnouncements(announcements.filter((a) => a.id !== announcementId));
+    const list = Array.isArray(announcements)
+      ? announcements
+      : announcements?.announcements ||
+        announcements?.data?.announcements ||
+        [];
+
+    const previousAnnouncements = [...list];
+
+    setAnnouncements(list.filter((a) => a.id !== announcementId));
     showToast("Announcement deleted successfully!");
 
     try {
@@ -502,7 +512,6 @@ const App = () => {
   const deleteUser = async (userId) => {
     const previousUsers = [...users];
 
-    // Mise à jour optimiste de l'UI
     setUsers(users.filter((u) => u.id !== userId));
     if (targetStudent?.id === userId) {
       setTargetStudent(null);
@@ -602,7 +611,7 @@ const App = () => {
             handleLogout={handleLogout}
             onUpdateUser={handleUpdateUser}
             onDeleteAnnouncement={handleDeleteAnnouncement}
-            onSelectAnnouncementToEdit={setSelectedAnnouncement}
+            onSelectAnnouncementToEdit={setFormState}
           />
         </main>
       </div>
@@ -617,7 +626,7 @@ const App = () => {
       <AnnouncementModal
         isOpen={activeModal === "announcement"}
         onClose={() => setActiveModal(null)}
-        onSubmit={handleCreateAnnouncement}
+        onSubmit={handleFormSubmitAnnouncement}
         formState={formState}
         setFormState={setFormState}
       />
