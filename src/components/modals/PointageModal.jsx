@@ -1,4 +1,3 @@
-import { useState, useEffect } from "react";
 import {
   MODAL_BACKDROP,
   MODAL_CONTAINER,
@@ -27,42 +26,101 @@ export const PointageModal = ({
     setFormState({ ...formState, [field]: value });
   };
 
-  // Filtrage robuste des professeurs
+  const subjectsArray = Array.isArray(subjects)
+    ? subjects
+    : subjects?.subjects || subjects?.data?.subjects || [];
+
+  const flattenedAssignments = [];
+  subjectsArray.forEach((subject) => {
+    if (subject.assignments && subject.assignments.length > 0) {
+      subject.assignments.forEach((assignment) => {
+        flattenedAssignments.push({
+          subjectId: subject.id,
+          subjectName: subject.name,
+          classGroup: (assignment.classGroup || "").toUpperCase(),
+          teacherId: assignment.teacherId,
+        });
+      });
+    }
+  });
+
   const professorList = (staffUsers || []).filter((s) => {
     const role = (s.role || "").toUpperCase();
     return role === "TEACHER" || role === "PROF";
   });
 
-  // Extraction et aplatissement des matières pour gérer le filtrage par classe
-  const subjectsArray = Array.isArray(subjects)
-    ? subjects
-    : subjects?.subjects || subjects?.data?.subjects || [];
+  const selectedTeacherId = formState.teacherId || "";
+  const selectedClass = (formState.targetClass || "").toUpperCase();
+  const selectedSubjectId = formState.subjectId || "";
 
-  const flattenedSubjects = [];
-  subjectsArray.forEach((subject) => {
-    if (subject.assignments && subject.assignments.length > 0) {
-      subject.assignments.forEach((assignment) => {
-        flattenedSubjects.push({
-          subjectId: subject.id,
-          name: subject.name,
-          classGroup: assignment.classGroup?.toUpperCase(),
-        });
-      });
-    } else {
-      flattenedSubjects.push({
-        subjectId: subject.id,
-        name: subject.name,
-        classGroup: "GÉNÉRAL",
-      });
+  const availableProfessors = professorList.filter((p) => {
+    if (selectedClass && selectedSubjectId) {
+      return flattenedAssignments.some(
+        (a) =>
+          a.teacherId === p.id &&
+          a.classGroup === selectedClass &&
+          a.subjectId === selectedSubjectId,
+      );
     }
+    if (selectedClass) {
+      return flattenedAssignments.some(
+        (a) => a.teacherId === p.id && a.classGroup === selectedClass,
+      );
+    }
+    if (selectedSubjectId) {
+      return flattenedAssignments.some(
+        (a) => a.teacherId === p.id && a.subjectId === selectedSubjectId,
+      );
+    }
+    return true;
   });
 
-  // Classe sélectionnée par défaut ou "SECONDE"
-  const selectedClass = (formState.targetClass || "SECONDE").toUpperCase();
+  const allClasses = ["SECONDE", "PREMIERE", "TERMINALE"];
+  const availableClasses = allClasses.filter((cls) => {
+    if (selectedTeacherId && selectedSubjectId) {
+      return flattenedAssignments.some(
+        (a) =>
+          a.classGroup === cls &&
+          a.teacherId === selectedTeacherId &&
+          a.subjectId === selectedSubjectId,
+      );
+    }
+    if (selectedTeacherId) {
+      return flattenedAssignments.some(
+        (a) => a.classGroup === cls && a.teacherId === selectedTeacherId,
+      );
+    }
+    if (selectedSubjectId) {
+      return flattenedAssignments.some(
+        (a) => a.classGroup === cls && a.subjectId === selectedSubjectId,
+      );
+    }
+    return true;
+  });
 
-  // Filtrer les matières par classe sélectionnée
-  const availableSubjects = flattenedSubjects.filter(
-    (s) => s.classGroup === selectedClass || s.classGroup === "GÉNÉRAL",
+  const availableSubjects = flattenedAssignments.filter((a) => {
+    if (selectedTeacherId && selectedClass) {
+      return (
+        a.teacherId === selectedTeacherId && a.classGroup === selectedClass
+      );
+    }
+    if (selectedTeacherId) {
+      return a.teacherId === selectedTeacherId;
+    }
+    if (selectedClass) {
+      return a.classGroup === selectedClass;
+    }
+    return true;
+  });
+
+  const uniqueSubjectsMap = new Map();
+  availableSubjects.forEach((sub) => {
+    if (!uniqueSubjectsMap.has(sub.subjectName)) {
+      uniqueSubjectsMap.set(sub.subjectName, sub.subjectId);
+    }
+  });
+  const uniqueSubjectsList = Array.from(uniqueSubjectsMap.entries()).map(
+    ([name, id]) => ({ id, name }),
   );
 
   const daysOfWeek = [
@@ -88,7 +146,6 @@ export const PointageModal = ({
               : "Créer un créneau de pointage"}
           </h3>
 
-          {/* PROFESSEUR */}
           <div>
             <label className={FIELD_LABEL}>Professeur</label>
             <select
@@ -98,7 +155,7 @@ export const PointageModal = ({
               required
             >
               <option value="">Sélectionner un professeur...</option>
-              {professorList.map((p) => (
+              {availableProfessors.map((p) => (
                 <option key={p.id} value={p.id}>
                   {p.firstName || p.nom} {p.lastName || p.prenom}
                 </option>
@@ -106,21 +163,23 @@ export const PointageModal = ({
             </select>
           </div>
 
-          {/* CLASSE & MATIÈRE DÉPENDANTE */}
           <div className={GRID_TWO_COLS}>
             <div>
               <label className={FIELD_LABEL}>Classe</label>
               <select
-                value={formState.targetClass || "SECONDE"}
+                value={formState.targetClass || ""}
                 onChange={(e) =>
                   handleInputChange("targetClass", e.target.value)
                 }
                 className={SELECT_INPUT}
                 required
               >
-                <option value="SECONDE">Seconde</option>
-                <option value="PREMIERE">Première</option>
-                <option value="TERMINALE">Terminale</option>
+                <option value="">Sélectionner une classe...</option>
+                {availableClasses.map((cls) => (
+                  <option key={cls} value={cls}>
+                    {cls.charAt(0) + cls.slice(1).toLowerCase()}
+                  </option>
+                ))}
               </select>
             </div>
 
@@ -133,8 +192,8 @@ export const PointageModal = ({
                 required
               >
                 <option value="">Sélectionner une matière...</option>
-                {availableSubjects.map((sub, idx) => (
-                  <option key={`${sub.subjectId}-${idx}`} value={sub.subjectId}>
+                {uniqueSubjectsList.map((sub) => (
+                  <option key={sub.id} value={sub.id}>
                     {sub.name}
                   </option>
                 ))}
@@ -142,38 +201,23 @@ export const PointageModal = ({
             </div>
           </div>
 
-          {/* JOUR & SALLE */}
-          <div className={GRID_TWO_COLS}>
-            <div>
-              <label className={FIELD_LABEL}>Jour de la semaine</label>
-              <select
-                value={formState.dayOfWeek || "MONDAY"}
-                onChange={(e) => handleInputChange("dayOfWeek", e.target.value)}
-                className={SELECT_INPUT}
-                required
-              >
-                {daysOfWeek.map((day) => (
-                  <option key={day.key} value={day.key}>
-                    {day.label}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <div>
-              <label className={FIELD_LABEL}>Salle de classe</label>
-              <input
-                type="text"
-                placeholder="ex: Salle 102"
-                value={formState.classroom || ""}
-                onChange={(e) => handleInputChange("classroom", e.target.value)}
-                className={TEXT_INPUT}
-                required
-              />
-            </div>
+          <div>
+            <label className={FIELD_LABEL}>Jour de la semaine</label>
+            <select
+              value={formState.dayOfWeek || "MONDAY"}
+              onChange={(e) => handleInputChange("dayOfWeek", e.target.value)}
+              className={SELECT_INPUT}
+              required
+            >
+              {daysOfWeek.map((day) => (
+                <option key={day.key} value={day.key}>
+                  {day.label}
+                </option>
+              ))}
+            </select>
           </div>
 
-          {/* HORAIRES SÉPARÉS (DÉBUT & FIN) */}
+          {/* HEURES DE DÉBUT & FIN */}
           <div className={GRID_TWO_COLS}>
             <div>
               <label className={FIELD_LABEL}>Heure de début</label>

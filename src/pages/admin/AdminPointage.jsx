@@ -36,6 +36,13 @@ export const AdminPointage = ({
     new Date().toISOString().split("T")[0],
   );
 
+  const pointagesList = Array.isArray(pointages)
+    ? pointages
+    : pointages?.data ||
+      pointages?.pointages ||
+      pointages?.data?.pointages ||
+      [];
+
   const getStatusBadgeClass = (status) => {
     if (status === "PRESENT") return STATUS_PRESENT;
     if (status === "LATE") return STATUS_LATE;
@@ -52,7 +59,6 @@ export const AdminPointage = ({
       dayOfWeek: slot.dayOfWeek || "MONDAY",
       startTime: slot.startTime,
       endTime: slot.endTime,
-      classroom: slot.classroom,
     });
     setActiveModal("pointage");
   };
@@ -88,17 +94,17 @@ export const AdminPointage = ({
       </div>
 
       <div className={GRID_CONTAINER}>
-        {(pointages || []).length === 0 ? (
+        {pointagesList.length === 0 ? (
           <p className="text-slate-400 col-span-full text-center py-8">
             Aucun créneau de pointage enregistré pour cette période.
           </p>
         ) : (
-          pointages.map((p) => (
+          pointagesList.map((p) => (
             <div key={p.slotId} className={CARD_BOX}>
               <div>
                 <div className={CARD_HEADER}>
                   <span className={DAY_TEXT}>
-                    {p.startTime} - {p.endTime} ({p.classroom})
+                    {p.startTime} - {p.endTime}
                   </span>
                   <span className={getStatusBadgeClass(p.status)}>
                     {p.status || "PENDING"}
