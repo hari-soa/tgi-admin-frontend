@@ -42,6 +42,8 @@ const AppRouter = ({
   onUpdateUser,
   onDeleteAnnouncement,
   onSelectAnnouncementToEdit,
+  setFormState,
+  onDeleteSubject,
 }) => {
   const userRole = currentUser?.role?.toUpperCase() || "";
   const isAdmin = userRole === "ADMIN";
@@ -161,10 +163,13 @@ const AppRouter = ({
           gradeSessions={gradeSessions}
           announcements={announcements}
           setActiveModal={setActiveModal}
+          setFormState={setFormState}
+          onDeleteSubject={onDeleteSubject}
           handleAdminValidateSession={handleAdminValidateSession}
         />
       );
     }
+
     if (activeTab === "etudiants") {
       return (
         <AdminStudents

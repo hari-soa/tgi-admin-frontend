@@ -25,7 +25,8 @@ import {
 import {
   getAllSubjects,
   createSubject,
-  deleteSubject,
+  updateSubject,
+  deleteSubject as apiDeleteSubject,
 } from "./services/subjectService";
 import {
   getAllAnnouncements,
@@ -309,28 +310,64 @@ const App = () => {
     }
   };
 
-  const handleCreateSubject = async (e) => {
+  const handleFormSubmitSubject = async (e) => {
     e.preventDefault();
     try {
       const payload = {
         name: formState.name,
         coefficient: parseFloat(formState.coefficient),
-        description: formState.description,
+        description: formState.description || undefined,
         assignments: [
           {
-            classGroup: formState.classGroup,
+            classGroup: (formState.classGroup || "SECONDE").toUpperCase(),
             teacherId: formState.teacherId,
           },
         ],
       };
 
-      const response = await createSubject(payload);
-      setSubjects([...subjects, response || payload]);
+      const list = Array.isArray(subjects)
+        ? subjects
+        : subjects?.subjects || subjects?.data?.subjects || [];
+
+      if (formState.id) {
+        const response = await updateSubject(formState.id, payload);
+        const updated = response?.data?.subject ||
+          response || { id: formState.id, ...payload };
+
+        setSubjects(
+          list.map((s) => (s.id === formState.id ? { ...s, ...updated } : s)),
+        );
+        showToast("Subject updated successfully!");
+      } else {
+        const response = await createSubject(payload);
+        const created = response?.data?.subject || response || payload;
+
+        setSubjects([created, ...list]);
+        showToast("Subject created successfully!");
+      }
+
       setActiveModal(null);
       setFormState({});
-      showToast("Subject created successfully!");
     } catch (error) {
       showToast(`Error: ${error.message}`);
+    }
+  };
+
+  const handleDeleteSubject = async (subjectId) => {
+    const list = Array.isArray(subjects)
+      ? subjects
+      : subjects?.subjects || subjects?.data?.subjects || [];
+
+    const previousSubjects = [...list];
+
+    setSubjects(list.filter((s) => s.id !== subjectId));
+    showToast("Subject deleted successfully!");
+
+    try {
+      await apiDeleteSubject(subjectId);
+    } catch (error) {
+      setSubjects(previousSubjects);
+      showToast(`Failed to delete subject: ${error.message}`);
     }
   };
 
@@ -612,6 +649,8 @@ const App = () => {
             onUpdateUser={handleUpdateUser}
             onDeleteAnnouncement={handleDeleteAnnouncement}
             onSelectAnnouncementToEdit={setFormState}
+            onDeleteSubject={handleDeleteSubject}
+            setFormState={setFormState}
           />
         </main>
       </div>
@@ -633,7 +672,7 @@ const App = () => {
       <SubjectModal
         isOpen={activeModal === "subject"}
         onClose={() => setActiveModal(null)}
-        onSubmit={handleCreateSubject}
+        onSubmit={handleFormSubmitSubject}
         formState={formState}
         setFormState={setFormState}
         staffUsers={staffUsers}
