@@ -43,6 +43,8 @@ import {
 } from "./services/gradeService";
 import {
   createAttendanceSlot,
+  updateAttendanceSlot,
+  deleteAttendanceSlot,
   getDailyAttendance,
   checkAttendance,
   updateAttendanceMotif,
@@ -108,6 +110,10 @@ const App = () => {
     const fetchAppData = async () => {
       if (!currentUser) return;
       try {
+        const todayStr = new Date().toISOString().split("T")[0];
+        const todayDay = new Date()
+          .toLocaleDateString("en-US", { weekday: "long" })
+          .toUpperCase();
         const [
           subjectsData,
           announcementsData,
@@ -119,7 +125,7 @@ const App = () => {
           getAllAnnouncements().catch(() => []),
           getAllUsers().catch(() => []),
           Promise.resolve([]),
-          getDailyAttendance().catch(() => []),
+          getDailyAttendance(todayDay, todayStr).catch(() => []),
         ]);
 
         setSubjects(subjectsData);
@@ -393,17 +399,64 @@ const App = () => {
     e.preventDefault();
     try {
       const payload = {
-        profName: formState.profName,
-        matiere: formState.matiere,
-        classe: formState.classe,
-        jour: formState.jour,
+        teacherId: formState.teacherId,
+        subjectId: formState.subjectId,
+        targetClass: (formState.targetClass || "SECONDE").toUpperCase(),
+        dayOfWeek: formState.dayOfWeek || "MONDAY",
+        startTime: formState.startTime,
+        endTime: formState.endTime,
+        classroom: formState.classroom,
       };
 
-      const response = await createAttendanceSlot(payload);
-      setPointages([...pointages, response || payload]);
+      if (formState.id) {
+        await updateAttendanceSlot(formState.id, payload);
+        showToast("Teacher attendance slot updated successfully!");
+      } else {
+        await createAttendanceSlot(payload);
+        showToast("Teacher attendance slot created successfully!");
+      }
+
+      const todayStr = new Date().toISOString().split("T")[0];
+      const todayDay = new Date()
+        .toLocaleDateString("en-US", { weekday: "LONG" })
+        .toUpperCase();
+      const freshPointages = await getDailyAttendance(todayDay, todayStr).catch(
+        () => [],
+      );
+      setPointages(freshPointages);
+
       setActiveModal(null);
       setFormState({});
-      showToast("Teacher attendance slot created successfully!");
+    } catch (error) {
+      showToast(`Error: ${error.message}`);
+    }
+  };
+
+  const handleDeleteSlot = async (slotId) => {
+    const previousPointages = [...pointages];
+    setPointages(pointages.filter((p) => p.slotId !== slotId));
+    showToast("Attendance slot deleted successfully!");
+
+    try {
+      await deleteAttendanceSlot(slotId);
+    } catch (error) {
+      setPointages(previousPointages);
+      showToast(`Failed to delete slot: ${error.message}`);
+    }
+  };
+
+  const handleTogglePointage = async (slotId, attendanceDate) => {
+    try {
+      await checkAttendance({ slotId, attendanceDate });
+      const todayDay = new Date(attendanceDate)
+        .toLocaleDateString("en-US", { weekday: "LONG" })
+        .toUpperCase();
+      const freshPointages = await getDailyAttendance(
+        todayDay,
+        attendanceDate,
+      ).catch(() => pointages);
+      setPointages(freshPointages);
+      showToast("Attendance checked and updated successfully!");
     } catch (error) {
       showToast(`Error: ${error.message}`);
     }
@@ -495,28 +548,6 @@ const App = () => {
     );
     setActiveGradeSession(null);
     showToast("Grades submitted to administrator for validation!");
-  };
-
-  const handleTogglePointage = async (
-    pointageId,
-    status,
-    retardMin = 0,
-    motif = "",
-  ) => {
-    try {
-      await checkAttendance({ slotId: pointageId, status, retardMin, motif });
-      setPointages(
-        pointages.map((p) => {
-          if (p.id === pointageId) {
-            return { ...p, status, retardMin, motif };
-          }
-          return p;
-        }),
-      );
-      showToast(`Attendance updated: ${status.toUpperCase()}`);
-    } catch (error) {
-      showToast(`Error: ${error.message}`);
-    }
   };
 
   const toggleUserStatus = async (userId) => {
@@ -650,6 +681,7 @@ const App = () => {
             onDeleteAnnouncement={handleDeleteAnnouncement}
             onSelectAnnouncementToEdit={setFormState}
             onDeleteSubject={handleDeleteSubject}
+            onDeleteSlot={handleDeleteSlot}
             setFormState={setFormState}
           />
         </main>
@@ -692,6 +724,7 @@ const App = () => {
         formState={formState}
         setFormState={setFormState}
         staffUsers={staffUsers}
+        subjects={subjects}
       />
       <HistoryRemarkModal
         isOpen={

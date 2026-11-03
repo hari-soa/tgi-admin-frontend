@@ -44,6 +44,7 @@ const AppRouter = ({
   onSelectAnnouncementToEdit,
   setFormState,
   onDeleteSubject,
+  onDeleteSlot,
 }) => {
   const userRole = currentUser?.role?.toUpperCase() || "";
   const isAdmin = userRole === "ADMIN";
@@ -80,6 +81,8 @@ const AppRouter = ({
         pointages={pointages}
         handleTogglePointage={handleTogglePointage}
         setActiveModal={setActiveModal}
+        setFormState={setFormState}
+        onDeleteSlot={onDeleteSlot}
       />
     );
   }

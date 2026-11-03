@@ -1,3 +1,4 @@
+import { useState, useEffect } from "react";
 import {
   MODAL_BACKDROP,
   MODAL_CONTAINER,
@@ -18,6 +19,7 @@ export const PointageModal = ({
   formState,
   setFormState,
   staffUsers,
+  subjects,
 }) => {
   if (!isOpen) return null;
 
@@ -25,9 +27,52 @@ export const PointageModal = ({
     setFormState({ ...formState, [field]: value });
   };
 
-  const professorList = staffUsers
-    ? staffUsers.filter((s) => s.role === "prof")
-    : [];
+  // Filtrage robuste des professeurs
+  const professorList = (staffUsers || []).filter((s) => {
+    const role = (s.role || "").toUpperCase();
+    return role === "TEACHER" || role === "PROF";
+  });
+
+  // Extraction et aplatissement des matières pour gérer le filtrage par classe
+  const subjectsArray = Array.isArray(subjects)
+    ? subjects
+    : subjects?.subjects || subjects?.data?.subjects || [];
+
+  const flattenedSubjects = [];
+  subjectsArray.forEach((subject) => {
+    if (subject.assignments && subject.assignments.length > 0) {
+      subject.assignments.forEach((assignment) => {
+        flattenedSubjects.push({
+          subjectId: subject.id,
+          name: subject.name,
+          classGroup: assignment.classGroup?.toUpperCase(),
+        });
+      });
+    } else {
+      flattenedSubjects.push({
+        subjectId: subject.id,
+        name: subject.name,
+        classGroup: "GÉNÉRAL",
+      });
+    }
+  });
+
+  // Classe sélectionnée par défaut ou "SECONDE"
+  const selectedClass = (formState.targetClass || "SECONDE").toUpperCase();
+
+  // Filtrer les matières par classe sélectionnée
+  const availableSubjects = flattenedSubjects.filter(
+    (s) => s.classGroup === selectedClass || s.classGroup === "GÉNÉRAL",
+  );
+
+  const daysOfWeek = [
+    { key: "MONDAY", label: "Lundi" },
+    { key: "TUESDAY", label: "Mardi" },
+    { key: "WEDNESDAY", label: "Mercredi" },
+    { key: "THURSDAY", label: "Jeudi" },
+    { key: "FRIDAY", label: "Vendredi" },
+    { key: "SATURDAY", label: "Samedi" },
+  ];
 
   return (
     <div className={MODAL_BACKDROP}>
@@ -37,62 +82,126 @@ export const PointageModal = ({
         </button>
 
         <form onSubmit={onSubmit} className={FORM_CONTAINER}>
-          <h3 className={MODAL_TITLE}>Create Schedule Pointage</h3>
+          <h3 className={MODAL_TITLE}>
+            {formState.id
+              ? "Modifier le créneau de pointage"
+              : "Créer un créneau de pointage"}
+          </h3>
 
+          {/* PROFESSEUR */}
           <div>
-            <label className={FIELD_LABEL}>Professor</label>
+            <label className={FIELD_LABEL}>Professeur</label>
             <select
-              onChange={(e) => handleInputChange("profName", e.target.value)}
+              value={formState.teacherId || ""}
+              onChange={(e) => handleInputChange("teacherId", e.target.value)}
               className={SELECT_INPUT}
+              required
             >
-              <option value="">Select a professor...</option>
+              <option value="">Sélectionner un professeur...</option>
               {professorList.map((p) => (
-                <option key={p.id} value={`${p.nom} ${p.prenom}`}>
-                  {p.nom} {p.prenom}
+                <option key={p.id} value={p.id}>
+                  {p.firstName || p.nom} {p.lastName || p.prenom}
                 </option>
               ))}
             </select>
           </div>
 
+          {/* CLASSE & MATIÈRE DÉPENDANTE */}
           <div className={GRID_TWO_COLS}>
             <div>
-              <label className={FIELD_LABEL}>Subject</label>
-              <input
-                type="text"
-                placeholder="e.g. Mathematics"
-                onChange={(e) => handleInputChange("matiere", e.target.value)}
-                className={TEXT_INPUT}
-                required
-              />
-            </div>
-            <div>
-              <label className={FIELD_LABEL}>Class</label>
+              <label className={FIELD_LABEL}>Classe</label>
               <select
-                onChange={(e) => handleInputChange("classe", e.target.value)}
+                value={formState.targetClass || "SECONDE"}
+                onChange={(e) =>
+                  handleInputChange("targetClass", e.target.value)
+                }
                 className={SELECT_INPUT}
+                required
               >
-                <option value="Terminale">Terminale</option>
-                <option value="Première">Première</option>
-                <option value="Seconde">Seconde</option>
+                <option value="SECONDE">Seconde</option>
+                <option value="PREMIERE">Première</option>
+                <option value="TERMINALE">Terminale</option>
+              </select>
+            </div>
+
+            <div>
+              <label className={FIELD_LABEL}>Matière</label>
+              <select
+                value={formState.subjectId || ""}
+                onChange={(e) => handleInputChange("subjectId", e.target.value)}
+                className={SELECT_INPUT}
+                required
+              >
+                <option value="">Sélectionner une matière...</option>
+                {availableSubjects.map((sub, idx) => (
+                  <option key={`${sub.subjectId}-${idx}`} value={sub.subjectId}>
+                    {sub.name}
+                  </option>
+                ))}
               </select>
             </div>
           </div>
 
-          <div>
-            <label className={FIELD_LABEL}>
-              Time Slot (e.g. Monday 08:00 - 10:00)
-            </label>
-            <input
-              type="text"
-              placeholder="Monday 08:00 - 10:00"
-              onChange={(e) => handleInputChange("jour", e.target.value)}
-              className={TEXT_INPUT}
-              required
-            />
+          {/* JOUR & SALLE */}
+          <div className={GRID_TWO_COLS}>
+            <div>
+              <label className={FIELD_LABEL}>Jour de la semaine</label>
+              <select
+                value={formState.dayOfWeek || "MONDAY"}
+                onChange={(e) => handleInputChange("dayOfWeek", e.target.value)}
+                className={SELECT_INPUT}
+                required
+              >
+                {daysOfWeek.map((day) => (
+                  <option key={day.key} value={day.key}>
+                    {day.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div>
+              <label className={FIELD_LABEL}>Salle de classe</label>
+              <input
+                type="text"
+                placeholder="ex: Salle 102"
+                value={formState.classroom || ""}
+                onChange={(e) => handleInputChange("classroom", e.target.value)}
+                className={TEXT_INPUT}
+                required
+              />
+            </div>
+          </div>
+
+          {/* HORAIRES SÉPARÉS (DÉBUT & FIN) */}
+          <div className={GRID_TWO_COLS}>
+            <div>
+              <label className={FIELD_LABEL}>Heure de début</label>
+              <input
+                type="time"
+                value={formState.startTime || "08:00"}
+                onChange={(e) => handleInputChange("startTime", e.target.value)}
+                className={TEXT_INPUT}
+                required
+              />
+            </div>
+
+            <div>
+              <label className={FIELD_LABEL}>Heure de fin</label>
+              <input
+                type="time"
+                value={formState.endTime || "10:00"}
+                onChange={(e) => handleInputChange("endTime", e.target.value)}
+                className={TEXT_INPUT}
+                required
+              />
+            </div>
           </div>
 
           <button type="submit" className={SUBMIT_BUTTON}>
-            Save Pointage Schedule
+            {formState.id
+              ? "Mettre à jour le créneau"
+              : "Enregistrer le créneau"}
           </button>
         </form>
       </div>
