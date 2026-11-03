@@ -40,6 +40,8 @@ const AppRouter = ({
   handleSimulateExport,
   setCurrentUser,
   onUpdateUser,
+  onDeleteAnnouncement,
+  onSelectAnnouncementToEdit,
 }) => {
   const userRole = currentUser?.role?.toUpperCase() || "";
   const isAdmin = userRole === "ADMIN";
@@ -63,9 +65,12 @@ const AppRouter = ({
         currentUser={currentUser}
         announcements={announcements}
         setActiveModal={setActiveModal}
+        onDeleteAnnouncement={onDeleteAnnouncement}
+        onSelectAnnouncementToEdit={onSelectAnnouncementToEdit}
       />
     );
   }
+
   if (activeTab === "pointage") {
     return (
       <AdminPointage

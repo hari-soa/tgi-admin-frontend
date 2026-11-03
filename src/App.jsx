@@ -30,7 +30,8 @@ import {
 import {
   getAllAnnouncements,
   createAnnouncement,
-  deleteAnnouncement,
+  updateAnnouncement,
+  deleteAnnouncement as apiDeleteAnnouncement,
 } from "./services/announcementService";
 import {
   createGrade,
@@ -74,6 +75,7 @@ const App = () => {
   const [toastMessage, setToastMessage] = useState("");
 
   const [targetStudent, setTargetStudent] = useState(null);
+  const [selectedAnnouncement, setSelectedAnnouncement] = useState(null);
   const [activeGradeSession, setActiveGradeSession] = useState(null);
   const [formState, setFormState] = useState({});
 
@@ -264,6 +266,36 @@ const App = () => {
       showToast("Announcement published successfully!");
     } catch (error) {
       showToast(`Error: ${error.message}`);
+    }
+  };
+
+  const handleUpdateAnnouncement = async (announcementId, updatedData) => {
+    const previousAnnouncements = [...announcements];
+    setAnnouncements(
+      announcements.map((a) =>
+        a.id === announcementId ? { ...a, ...updatedData } : a,
+      ),
+    );
+    showToast("Announcement updated successfully!");
+
+    try {
+      await updateAnnouncement(announcementId, updatedData);
+    } catch (error) {
+      setAnnouncements(previousAnnouncements);
+      showToast(`Failed to update announcement: ${error.message}`);
+    }
+  };
+
+  const handleDeleteAnnouncement = async (announcementId) => {
+    const previousAnnouncements = [...announcements];
+    setAnnouncements(announcements.filter((a) => a.id !== announcementId));
+    showToast("Announcement deleted successfully!");
+
+    try {
+      await apiDeleteAnnouncement(announcementId);
+    } catch (error) {
+      setAnnouncements(previousAnnouncements);
+      showToast(`Failed to delete announcement: ${error.message}`);
     }
   };
 
@@ -569,6 +601,8 @@ const App = () => {
             setCurrentUser={setCurrentUser}
             handleLogout={handleLogout}
             onUpdateUser={handleUpdateUser}
+            onDeleteAnnouncement={handleDeleteAnnouncement}
+            onSelectAnnouncementToEdit={setSelectedAnnouncement}
           />
         </main>
       </div>

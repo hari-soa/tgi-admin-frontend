@@ -25,6 +25,8 @@ export const AnnouncementModal = ({
     setFormState({ ...formState, [field]: value });
   };
 
+  const isEditing = Boolean(formState.id);
+
   return (
     <div className={MODAL_BACKDROP}>
       <div className={MODAL_CONTAINER}>
@@ -33,13 +35,16 @@ export const AnnouncementModal = ({
         </button>
 
         <form onSubmit={onSubmit} className={FORM_CONTAINER}>
-          <h3 className={MODAL_TITLE}>Publish New Announcement</h3>
+          <h3 className={MODAL_TITLE}>
+            {isEditing ? "Modifier l'annonce" : "Diffuser une nouvelle annonce"}
+          </h3>
 
           <div>
-            <label className={FIELD_LABEL}>Announcement Title</label>
+            <label className={FIELD_LABEL}>Titre de l'annonce</label>
             <input
               type="text"
-              placeholder="Titre"
+              placeholder="Titre..."
+              value={formState.title || ""}
               onChange={(e) => handleInputChange("title", e.target.value)}
               className={TEXT_INPUT}
               required
@@ -47,11 +52,12 @@ export const AnnouncementModal = ({
           </div>
 
           <div>
-            <label className={FIELD_LABEL}>Description</label>
+            <label className={FIELD_LABEL}>Contenu</label>
             <textarea
-              rows="3"
-              placeholder="Description..."
-              onChange={(e) => handleInputChange("context", e.target.value)}
+              rows="4"
+              placeholder="Contenu de l'annonce (minimum 10 caractères)..."
+              value={formState.content || ""}
+              onChange={(e) => handleInputChange("content", e.target.value)}
               className={TEXTAREA_INPUT}
               required
             ></textarea>
@@ -59,33 +65,59 @@ export const AnnouncementModal = ({
 
           <div className={GRID_TWO_COLS}>
             <div>
-              <label className={FIELD_LABEL}>Target Audience</label>
+              <label className={FIELD_LABEL}>Portée cible</label>
               <select
-                onChange={(e) => handleInputChange("cible", e.target.value)}
-                className={SELECT_INPUT}
-              >
-                <option value="tout">Tout</option>
-                <option value="Seconde">Seconde</option>
-                <option value="Première">Première</option>
-                <option value="Terminale">Terminale</option>
-              </select>
-            </div>
-            <div>
-              <label className={FIELD_LABEL}>Priority Level</label>
-              <select
+                value={formState.targetScope || "ALL"}
                 onChange={(e) =>
-                  handleInputChange("urgent", e.target.value === "true")
+                  handleInputChange("targetScope", e.target.value)
                 }
                 className={SELECT_INPUT}
               >
-                <option value="false">Normal</option>
-                <option value="true">Urgent</option>
+                <option value="ALL">Tout (ALL)</option>
+                <option value="CLASS">Par classe (CLASS)</option>
+              </select>
+            </div>
+
+            <div>
+              <label className={FIELD_LABEL}>Niveau de priorité</label>
+              <select
+                value={formState.priority || "NORMAL"}
+                onChange={(e) => handleInputChange("priority", e.target.value)}
+                className={SELECT_INPUT}
+              >
+                <option value="NORMAL">Normal</option>
+                <option value="URGENT">Urgent</option>
               </select>
             </div>
           </div>
 
+          {formState.targetScope === "CLASS" && (
+            <div>
+              <label className={FIELD_LABEL}>
+                Classes cibles (Séparées par des virgules ou sélection)
+              </label>
+              <input
+                type="text"
+                placeholder="SECONDE, PREMIERE..."
+                value={formState.targetClassesInput || ""}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  handleInputChange("targetClassesInput", val);
+                  handleInputChange(
+                    "targetClasses",
+                    val
+                      .split(",")
+                      .map((c) => c.trim().toUpperCase())
+                      .filter(Boolean),
+                  );
+                }}
+                className={TEXT_INPUT}
+              />
+            </div>
+          )}
+
           <button type="submit" className={SUBMIT_BUTTON}>
-            Publish
+            {isEditing ? "Enregistrer les modifications" : "Publier"}
           </button>
         </form>
       </div>
