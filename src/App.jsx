@@ -64,11 +64,19 @@ const App = () => {
     localStorage.setItem("activeTab", activeTab);
   }, [activeTab]);
 
+  const [gradeSessions, setGradeSessions] = useState(() => {
+    const saved = localStorage.getItem("gradeSessions");
+    return saved ? JSON.parse(saved) : [];
+  });
+
+  useEffect(() => {
+    localStorage.setItem("gradeSessions", JSON.stringify(gradeSessions));
+  }, [gradeSessions]);
+
   const [users, setUsers] = useState([]);
   const [announcements, setAnnouncements] = useState([]);
   const [subjects, setSubjects] = useState([]);
   const [examResults, setExamResults] = useState([]);
-  const [gradeSessions, setGradeSessions] = useState([]);
   const [historiques, setHistoriques] = useState([]);
   const [remarques, setRemarques] = useState([]);
   const [pointages, setPointages] = useState([]);
@@ -114,24 +122,18 @@ const App = () => {
         const todayDay = new Date()
           .toLocaleDateString("en-US", { weekday: "long" })
           .toUpperCase();
-        const [
-          subjectsData,
-          announcementsData,
-          usersData,
-          gradeSessionsData,
-          pointagesData,
-        ] = await Promise.all([
-          getAllSubjects().catch(() => []),
-          getAllAnnouncements().catch(() => []),
-          getAllUsers().catch(() => []),
-          Promise.resolve([]),
-          getDailyAttendance(todayDay, todayStr).catch(() => []),
-        ]);
+
+        const [subjectsData, announcementsData, usersData, pointagesData] =
+          await Promise.all([
+            getAllSubjects().catch(() => []),
+            getAllAnnouncements().catch(() => []),
+            getAllUsers().catch(() => []),
+            getDailyAttendance(todayDay, todayStr).catch(() => []),
+          ]);
 
         setSubjects(subjectsData);
         setAnnouncements(announcementsData);
         setUsers(usersData);
-        setGradeSessions(gradeSessionsData);
         setPointages(pointagesData);
       } catch (error) {
         console.error("Error loading application data details:", error);
@@ -380,17 +382,34 @@ const App = () => {
   const handleCreateGradeSession = async (e) => {
     e.preventDefault();
     try {
+      const subjectsArray = Array.isArray(subjects)
+        ? subjects
+        : subjects?.subjects || subjects?.data?.subjects || [];
+
+      const foundSubject = subjectsArray.find(
+        (s) => (s.id || s._id) === formState.subjectId,
+      );
+      const subjectName = foundSubject
+        ? foundSubject.name || foundSubject.nom
+        : "Matière";
+
       const payload = {
         id: Date.now().toString(),
         subjectId: formState.subjectId,
+        matiere: subjectName,
         classGroup: formState.classGroup,
+        classe: formState.classGroup,
         examType: formState.examType || "TRIMESTER",
         term: formState.term || "FIRST_TRIMESTER",
         statut: "brouillon",
         notesDraft: {},
+        dateCreation: new Date().toLocaleDateString(),
       };
 
-      setGradeSessions([payload, ...gradeSessions]);
+      const updatedSessions = [payload, ...gradeSessions];
+      setGradeSessions(updatedSessions);
+      localStorage.setItem("gradeSessions", JSON.stringify(updatedSessions));
+
       setActiveModal(null);
       setFormState({});
       showToast("Session de notes créée avec succès !");

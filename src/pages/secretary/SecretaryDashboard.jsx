@@ -22,12 +22,22 @@ export const SecretaryDashboard = ({
   setActiveGradeSession,
   setActiveTab,
 }) => {
-  const pendingOrDraftSessions = gradeSessions.filter(
-    (session) =>
-      session.statut === "attente_saisie" ||
-      session.statut === "brouillon" ||
-      session.status === "DRAFT",
-  );
+  // Sécurisation du tableau et élargissement du filtre pour ne pas rater les sessions
+  const sessionsList = Array.isArray(gradeSessions)
+    ? gradeSessions
+    : gradeSessions?.gradeSessions || gradeSessions?.data || [];
+
+  const pendingOrDraftSessions = sessionsList.filter((session) => {
+    const status = (session.statut || session.status || "").toLowerCase();
+    // Affiche tout ce qui n'est pas explicitement validé/clôturé
+    return (
+      status === "" ||
+      status === "brouillon" ||
+      status === "attente_saisie" ||
+      status === "draft" ||
+      status === "attente_validation"
+    );
+  });
 
   return (
     <div className={CONTAINER_WRAPPER}>
@@ -47,17 +57,22 @@ export const SecretaryDashboard = ({
             <p className={EMPTY_TEXT}>Aucune session en attente.</p>
           ) : (
             pendingOrDraftSessions.map((session) => (
-              <div key={session.id} className={SESSION_CARD}>
+              <div key={session.id || session._id} className={SESSION_CARD}>
                 <div>
                   <div className={CARD_HEADER_ROW}>
                     <span className={SUBJECT_TITLE}>
-                      {session.matiere || session.subjectName}
+                      {session.matiere ||
+                        session.subjectName ||
+                        session.subjectId ||
+                        "Matière non spécifiée"}
                     </span>
                     <span className={CLASS_BADGE}>
-                      {session.classe || session.classGroup}
+                      {session.classe || session.classGroup || "Classe"}
                     </span>
                     <span className={STATUS_BADGE}>
-                      {session.statut === "brouillon" ? "Brouillon" : "Nouveau"}
+                      {session.statut === "attente_validation"
+                        ? "En attente validation"
+                        : "Brouillon"}
                     </span>
                   </div>
                   <p className={CARD_META}>
