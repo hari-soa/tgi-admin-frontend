@@ -73,10 +73,18 @@ const App = () => {
     localStorage.setItem("gradeSessions", JSON.stringify(gradeSessions));
   }, [gradeSessions]);
 
+  const [examResults, setExamResults] = useState(() => {
+    const saved = localStorage.getItem("examResults");
+    return saved ? JSON.parse(saved) : [];
+  });
+
+  useEffect(() => {
+    localStorage.setItem("examResults", JSON.stringify(examResults));
+  }, [examResults]);
+
   const [users, setUsers] = useState([]);
   const [announcements, setAnnouncements] = useState([]);
   const [subjects, setSubjects] = useState([]);
-  const [examResults, setExamResults] = useState([]);
   const [historiques, setHistoriques] = useState([]);
   const [remarques, setRemarques] = useState([]);
   const [pointages, setPointages] = useState([]);
@@ -530,22 +538,46 @@ const App = () => {
     const session = gradeSessions.find((s) => s.id === sessionId);
     if (!session) return;
 
-    setGradeSessions(
-      gradeSessions.map((s) => {
-        if (s.id === sessionId) {
-          return {
-            ...s,
-            statut: "valide",
-            dateValidation: new Date()
-              .toISOString()
-              .replace("T", " ")
-              .substring(0, 16),
-          };
-        }
-        return s;
-      }),
-    );
-    showToast("Grade session validated and injected into student reports!");
+    const updatedSessions = gradeSessions.map((s) => {
+      if (s.id === sessionId) {
+        return {
+          ...s,
+          statut: "valide",
+          dateValidation: new Date()
+            .toISOString()
+            .replace("T", " ")
+            .substring(0, 16),
+        };
+      }
+      return s;
+    });
+
+    setGradeSessions(updatedSessions);
+    localStorage.setItem("gradeSessions", JSON.stringify(updatedSessions));
+
+    if (session.notesDraft && Object.keys(session.notesDraft).length > 0) {
+      const newResults = Object.entries(session.notesDraft).map(
+        ([studentId, noteValue]) => ({
+          id: `${sessionId}-${studentId}`,
+          sessionId: session.id,
+          studentId: studentId,
+          subjectId: session.subjectId,
+          matiere: session.matiere,
+          classGroup: session.classGroup || session.classe,
+          examType: session.examType || "TRIMESTER",
+          term: session.term || "FIRST_TRIMESTER",
+          score: parseFloat(noteValue) || 0,
+          maxScore: 20,
+          validatedAt: new Date().toISOString(),
+        }),
+      );
+
+      const updatedExamResults = [...examResults, ...newResults];
+      setExamResults(updatedExamResults);
+      localStorage.setItem("examResults", JSON.stringify(updatedExamResults));
+    }
+
+    showToast("Session de notes validée et injectée dans les bulletins !");
   };
 
   const handleSecretarySaveDraft = (sessionId, draftData) => {
@@ -565,36 +597,23 @@ const App = () => {
       const session = gradeSessions.find((s) => s.id === sessionId);
       if (!session) return;
 
-      const gradesArray = Object.entries(draftData).map(
-        ([studentId, value]) => ({
-          studentId,
-          value: parseFloat(value),
-          maxScore: 20,
-        }),
-      );
-
-      await submitGradeSession({
-        subjectId: session.subjectId,
-        classGroup: session.classGroup,
-        examType: session.examType,
-        term: session.term,
-        grades: gradesArray,
+      const updatedSessions = gradeSessions.map((s) => {
+        if (s.id === sessionId) {
+          return {
+            ...s,
+            notesDraft: draftData,
+            statut: "attente_validation",
+            status: "DRAFT",
+          };
+        }
+        return s;
       });
 
-      setGradeSessions(
-        gradeSessions.map((s) => {
-          if (s.id === sessionId) {
-            return {
-              ...s,
-              notesDraft: draftData,
-              statut: "attente_validation",
-            };
-          }
-          return s;
-        }),
-      );
+      setGradeSessions(updatedSessions);
+      localStorage.setItem("gradeSessions", JSON.stringify(updatedSessions));
+
       setActiveGradeSession(null);
-      showToast("Notes soumises à l'administrateur pour validation !");
+      showToast("Notes soumises à l'administrateur avec succès !");
     } catch (error) {
       showToast(`Erreur lors de la soumission : ${error.message}`);
     }
