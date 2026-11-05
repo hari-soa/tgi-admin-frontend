@@ -25,7 +25,6 @@ export const SubjectModal = ({
     setFormState({ ...formState, [field]: value });
   };
 
-  // Correction du filtre : tolérant sur la casse et les variantes "TEACHER" / "PROF"
   const professorList = staffUsers
     ? staffUsers.filter((s) => {
         const role = (s.role || "").toUpperCase();
@@ -107,7 +106,7 @@ export const SubjectModal = ({
           </div>
 
           <div>
-            <label className={FIELD_LABEL}>Description (Optional)</label>
+            <label className={FIELD_LABEL}>Description</label>
             <input
               type="text"
               placeholder="Description..."

@@ -381,15 +381,19 @@ const App = () => {
     e.preventDefault();
     try {
       const payload = {
-        matiere: formState.matiere,
-        classe: formState.classe,
+        id: Date.now().toString(),
+        subjectId: formState.subjectId,
+        classGroup: formState.classGroup,
+        examType: formState.examType || "TRIMESTER",
+        term: formState.term || "FIRST_TRIMESTER",
+        statut: "brouillon",
+        notesDraft: {},
       };
 
-      const response = await submitGradeSession(payload);
-      setGradeSessions([response || payload, ...gradeSessions]);
+      setGradeSessions([payload, ...gradeSessions]);
       setActiveModal(null);
       setFormState({});
-      showToast("Grade session created and assigned to secretary!");
+      showToast("Session de notes créée avec succès !");
     } catch (error) {
       showToast(`Error: ${error.message}`);
     }
@@ -537,17 +541,44 @@ const App = () => {
     showToast("Draft saved locally!");
   };
 
-  const handleSecretarySubmitToAdmin = (sessionId, draftData) => {
-    setGradeSessions(
-      gradeSessions.map((s) => {
-        if (s.id === sessionId) {
-          return { ...s, notesDraft: draftData, statut: "attente_validation" };
-        }
-        return s;
-      }),
-    );
-    setActiveGradeSession(null);
-    showToast("Grades submitted to administrator for validation!");
+  const handleSecretarySubmitToAdmin = async (sessionId, draftData) => {
+    try {
+      const session = gradeSessions.find((s) => s.id === sessionId);
+      if (!session) return;
+
+      const gradesArray = Object.entries(draftData).map(
+        ([studentId, value]) => ({
+          studentId,
+          value: parseFloat(value),
+          maxScore: 20,
+        }),
+      );
+
+      await submitGradeSession({
+        subjectId: session.subjectId,
+        classGroup: session.classGroup,
+        examType: session.examType,
+        term: session.term,
+        grades: gradesArray,
+      });
+
+      setGradeSessions(
+        gradeSessions.map((s) => {
+          if (s.id === sessionId) {
+            return {
+              ...s,
+              notesDraft: draftData,
+              statut: "attente_validation",
+            };
+          }
+          return s;
+        }),
+      );
+      setActiveGradeSession(null);
+      showToast("Notes soumises à l'administrateur pour validation !");
+    } catch (error) {
+      showToast(`Erreur lors de la soumission : ${error.message}`);
+    }
   };
 
   const toggleUserStatus = async (userId) => {

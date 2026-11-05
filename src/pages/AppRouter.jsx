@@ -112,6 +112,7 @@ const AppRouter = ({
         />
       );
     }
+
     if (activeTab === "notes") {
       return (
         <StudentGrades
@@ -121,6 +122,7 @@ const AppRouter = ({
         />
       );
     }
+
     if (activeTab === "historique_remarque") {
       return (
         <StudentHistory
