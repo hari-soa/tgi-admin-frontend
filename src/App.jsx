@@ -608,20 +608,30 @@ const App = () => {
     }
   };
 
-  const deleteUser = async (userId) => {
+  const deleteUser = async (userIdOrObj) => {
+    const userId =
+      typeof userIdOrObj === "object"
+        ? userIdOrObj?.id || userIdOrObj?._id
+        : userIdOrObj;
+
+    if (!userId) {
+      showToast("Erreur : ID utilisateur introuvable");
+      return;
+    }
+
     const previousUsers = [...users];
 
-    setUsers(users.filter((u) => u.id !== userId));
-    if (targetStudent?.id === userId) {
+    setUsers(users.filter((u) => (u.id || u._id) !== userId));
+    if (targetStudent?.id === userId || targetStudent?._id === userId) {
       setTargetStudent(null);
     }
-    showToast("User deleted successfully");
+    showToast("Utilisateur supprimé avec succès");
 
     try {
       await apiDeleteUser(userId);
     } catch (error) {
       setUsers(previousUsers);
-      showToast(`Error: ${error.message}`);
+      showToast(`Erreur : ${error.message}`);
     }
   };
 
