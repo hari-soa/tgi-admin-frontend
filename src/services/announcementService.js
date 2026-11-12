@@ -15,6 +15,13 @@ export const createAnnouncement = async (announcementData) => {
   });
 };
 
+export const updateAnnouncement = async (announcementId, announcementData) => {
+  return await apiFetch(`/announcements/${announcementId}`, {
+    method: "PATCH",
+    body: JSON.stringify(announcementData),
+  });
+};
+
 export const deleteAnnouncement = async (announcementId) => {
   return await apiFetch(`/announcements/${announcementId}`, {
     method: "DELETE",

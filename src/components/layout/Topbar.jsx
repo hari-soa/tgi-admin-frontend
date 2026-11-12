@@ -29,17 +29,19 @@ export const Topbar = ({ currentUser, activeTab }) => {
       <div className={ACTIONS_CONTAINER}>
         <div className={PROFILE_WRAPPER}>
           <img
-            src={currentUser?.photo}
+            src={currentUser?.profilePictureUrl || "/default-avatar.png"}
             alt="profile"
             className={PROFILE_IMAGE}
           />
           <div className={PROFILE_TEXT_CONTAINER}>
-            <p className={PROFILE_NAME}>{currentUser?.prenom}</p>
+            <p className={PROFILE_NAME}>
+              {currentUser?.firstName || "Utilisateur"}
+            </p>
             <div className={PROFILE_META}>
-              <span className={ROLE_BADGE}>{currentUser?.role}</span>
+              <span className={ROLE_BADGE}>{currentUser?.role || "USER"}</span>
               <span
                 className={
-                  currentUser?.statut === "active"
+                  currentUser?.isActive !== false
                     ? STATUS_ACTIVE
                     : STATUS_INACTIVE
                 }

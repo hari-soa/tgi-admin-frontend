@@ -26,7 +26,10 @@ export const SubjectModal = ({
   };
 
   const professorList = staffUsers
-    ? staffUsers.filter((s) => s.role === "prof")
+    ? staffUsers.filter((s) => {
+        const role = (s.role || "").toUpperCase();
+        return ["TEACHER", "PROF"].includes(role);
+      })
     : [];
 
   return (
@@ -37,15 +40,17 @@ export const SubjectModal = ({
         </button>
 
         <form onSubmit={onSubmit} className={FORM_CONTAINER}>
-          <h3 className={MODAL_TITLE}>Create New Subject</h3>
+          <h3 className={MODAL_TITLE}>
+            {formState?.id ? "Edit Subject" : "Create New Subject"}
+          </h3>
 
           <div>
             <label className={FIELD_LABEL}>Subject Name</label>
             <input
               type="text"
               placeholder="Matière"
-              value={formState?.nom || ""}
-              onChange={(e) => handleInputChange("nom", e.target.value)}
+              value={formState?.name || ""}
+              onChange={(e) => handleInputChange("name", e.target.value)}
               className={TEXT_INPUT}
               required
             />
@@ -56,10 +61,13 @@ export const SubjectModal = ({
               <label className={FIELD_LABEL}>Coefficient</label>
               <input
                 type="number"
-                min="1"
+                step="0.1"
+                min="0.1"
                 placeholder="1"
-                value={formState?.coeff || ""}
-                onChange={(e) => handleInputChange("coeff", e.target.value)}
+                value={formState?.coefficient || ""}
+                onChange={(e) =>
+                  handleInputChange("coefficient", parseFloat(e.target.value))
+                }
                 className={TEXT_INPUT}
                 required
               />
@@ -67,13 +75,15 @@ export const SubjectModal = ({
             <div>
               <label className={FIELD_LABEL}>Associated Class</label>
               <select
-                value={formState?.classe || "Seconde"}
-                onChange={(e) => handleInputChange("classe", e.target.value)}
+                value={formState?.classGroup || "SECONDE"}
+                onChange={(e) =>
+                  handleInputChange("classGroup", e.target.value)
+                }
                 className={SELECT_INPUT}
               >
-                <option value="Seconde">Seconde</option>
-                <option value="Première">Première</option>
-                <option value="Terminale">Terminale</option>
+                <option value="SECONDE">Seconde</option>
+                <option value="PREMIERE">Première</option>
+                <option value="TERMINALE">Terminale</option>
               </select>
             </div>
           </div>
@@ -81,21 +91,33 @@ export const SubjectModal = ({
           <div>
             <label className={FIELD_LABEL}>Responsible Professor</label>
             <select
-              value={formState?.prof || ""}
-              onChange={(e) => handleInputChange("prof", e.target.value)}
+              value={formState?.teacherId || ""}
+              onChange={(e) => handleInputChange("teacherId", e.target.value)}
               className={SELECT_INPUT}
+              required
             >
               <option value="">Select a professor...</option>
               {professorList.map((p) => (
-                <option key={p.id} value={`${p.nom} ${p.prenom}`}>
-                  {p.nom} {p.prenom}
+                <option key={p.id} value={p.id}>
+                  {p.lastName || p.nom} {p.firstName || p.prenom}
                 </option>
               ))}
             </select>
           </div>
 
+          <div>
+            <label className={FIELD_LABEL}>Description</label>
+            <input
+              type="text"
+              placeholder="Description..."
+              value={formState?.description || ""}
+              onChange={(e) => handleInputChange("description", e.target.value)}
+              className={TEXT_INPUT}
+            />
+          </div>
+
           <button type="submit" className={SUBMIT_BUTTON}>
-            Save Subject
+            {formState?.id ? "Update Subject" : "Save Subject"}
           </button>
         </form>
       </div>

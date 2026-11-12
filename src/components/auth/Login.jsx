@@ -81,7 +81,7 @@ export const Login = ({ setCurrentUser, showToast }) => {
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="Enter your eamil"
+                placeholder="Enter your e-mail"
                 className={INPUT_FIELD}
               />
             </div>

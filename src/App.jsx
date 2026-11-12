@@ -14,21 +14,25 @@ import HistoryRemarkModal from "./components/modals/HistoryRemarkModal";
 
 import { getCurrentUserProfile, logoutUser } from "./services/authService";
 import {
+  getAllUsers,
   createStudent,
   createAdministrator,
   createSecretary,
-  deactivateStudent,
+  createTeacher,
+  deleteUser as apiDeleteUser,
   updateUser,
 } from "./services/userService";
 import {
   getAllSubjects,
   createSubject,
-  deleteSubject,
+  updateSubject,
+  deleteSubject as apiDeleteSubject,
 } from "./services/subjectService";
 import {
   getAllAnnouncements,
   createAnnouncement,
-  deleteAnnouncement,
+  updateAnnouncement,
+  deleteAnnouncement as apiDeleteAnnouncement,
 } from "./services/announcementService";
 import {
   createGrade,
@@ -39,6 +43,8 @@ import {
 } from "./services/gradeService";
 import {
   createAttendanceSlot,
+  updateAttendanceSlot,
+  deleteAttendanceSlot,
   getDailyAttendance,
   checkAttendance,
   updateAttendanceMotif,
@@ -49,13 +55,36 @@ import {
 const App = () => {
   const [currentUser, setCurrentUser] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState("dashboard");
+
+  const [activeTab, setActiveTab] = useState(() => {
+    return localStorage.getItem("activeTab") || "dashboard";
+  });
+
+  useEffect(() => {
+    localStorage.setItem("activeTab", activeTab);
+  }, [activeTab]);
+
+  const [gradeSessions, setGradeSessions] = useState(() => {
+    const saved = localStorage.getItem("gradeSessions");
+    return saved ? JSON.parse(saved) : [];
+  });
+
+  useEffect(() => {
+    localStorage.setItem("gradeSessions", JSON.stringify(gradeSessions));
+  }, [gradeSessions]);
+
+  const [examResults, setExamResults] = useState(() => {
+    const saved = localStorage.getItem("examResults");
+    return saved ? JSON.parse(saved) : [];
+  });
+
+  useEffect(() => {
+    localStorage.setItem("examResults", JSON.stringify(examResults));
+  }, [examResults]);
 
   const [users, setUsers] = useState([]);
   const [announcements, setAnnouncements] = useState([]);
   const [subjects, setSubjects] = useState([]);
-  const [examResults, setExamResults] = useState([]);
-  const [gradeSessions, setGradeSessions] = useState([]);
   const [historiques, setHistoriques] = useState([]);
   const [remarques, setRemarques] = useState([]);
   const [pointages, setPointages] = useState([]);
@@ -65,6 +94,7 @@ const App = () => {
   const [toastMessage, setToastMessage] = useState("");
 
   const [targetStudent, setTargetStudent] = useState(null);
+  const [selectedAnnouncement, setSelectedAnnouncement] = useState(null);
   const [activeGradeSession, setActiveGradeSession] = useState(null);
   const [formState, setFormState] = useState({});
 
@@ -96,26 +126,25 @@ const App = () => {
     const fetchAppData = async () => {
       if (!currentUser) return;
       try {
-        const [
-          subjectsData,
-          announcementsData,
-          usersData,
-          gradeSessionsData,
-          pointagesData,
-        ] = await Promise.all([
-          getAllSubjects().catch(() => []),
-          getAllAnnouncements().catch(() => []),
-          getAllUsers().catch(() => []),
-          Promise.resolve([]),
-          getDailyAttendance().catch(() => []),
-        ]);
+        const todayStr = new Date().toISOString().split("T")[0];
+        const todayDay = new Date()
+          .toLocaleDateString("en-US", { weekday: "long" })
+          .toUpperCase();
+
+        const [subjectsData, announcementsData, usersData, pointagesData] =
+          await Promise.all([
+            getAllSubjects().catch(() => []),
+            getAllAnnouncements().catch(() => []),
+            getAllUsers().catch(() => []),
+            getDailyAttendance(todayDay, todayStr).catch(() => []),
+          ]);
 
         setSubjects(subjectsData);
         setAnnouncements(announcementsData);
         setUsers(usersData);
-        setGradeSessions(gradeSessionsData);
         setPointages(pointagesData);
       } catch (error) {
+        console.error("Error loading application data details:", error);
         showToast("Error loading application data from server");
       }
     };
@@ -128,7 +157,7 @@ const App = () => {
       <div className="flex items-center justify-center h-screen bg-slate-950 text-slate-100 font-sans">
         <div className="text-center">
           <div className="w-10 h-10 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p>Chargement de Collège Saint Michel...</p>
+          <p>Loading...</p>
         </div>
       </div>
     );
@@ -147,6 +176,7 @@ const App = () => {
     logoutUser();
     setCurrentUser(null);
     setTargetStudent(null);
+    localStorage.removeItem("activeTab");
     showToast("Logged out successfully");
   };
 
@@ -154,10 +184,17 @@ const App = () => {
     const found = users.find((u) => u.role === role);
     if (found) {
       setCurrentUser(found);
-      if (role === "admin" || role === "secretaire") setActiveTab("dashboard");
+      setTargetStudent(null);
+      if (
+        role === "ADMIN" ||
+        role === "SECRETARY" ||
+        role === "admin" ||
+        role === "secretaire"
+      )
+        setActiveTab("dashboard");
       else setActiveTab("accueil");
       showToast(
-        `Logged in as ${found.prenom} ${found.nom} (${role.toUpperCase()})`,
+        `Logged in as ${found.firstName || found.prenom} ${found.lastName || found.nom} (${role.toUpperCase()})`,
       );
     }
   };
@@ -165,127 +202,225 @@ const App = () => {
   const handleCreateUser = async (e) => {
     e.preventDefault();
     try {
+      const role = (formState.role || "STUDENT").toUpperCase();
+      const gender = (formState.gender || "MALE").toUpperCase();
+
       const basePayload = {
         firstName: formState.firstName,
         lastName: formState.lastName,
-        password: formState.password,
-        contactNumber:
-          formState.contactNumber,
-        email: formState.email,
-        profilePictureUrl: formState.profilePictureUrl,
+        matricule: formState.matricule,
+        gender: gender,
       };
 
-      let payload;
       let response;
 
-      if (formState.role === "student" || formState.role === "alumni") {
-        payload = {
+      if (role === "STUDENT") {
+        const payload = {
           ...basePayload,
-          classRollNumber: parseInt(
-            formState.classRollNumber,
-          ),
-          classGroup: (
-            formState.classGroup
-          ).toUpperCase(),
-          dateOfBirth: formState.dateOfBirth,
-          gender: (formState.gender).toUpperCase(),
-          address: formState.address,
-          parentsEmail: formState.parentsEmail,
-          parentsContactNumber: formState.parentsContactNumber,
-          entryYear: parseInt(formState.entryYear),
-          graduationYear: formState.graduationYear
-            ? parseInt(formState.graduationYear)
-            : undefined,
-          comments: formState.comments,
+          classRollNumber: parseInt(formState.classRollNumber, 10),
+          classGroup: (formState.classGroup || "SECONDE").toUpperCase(),
         };
         response = await createStudent(payload);
-      } else if (formState.role === "secretaire") {
-        payload = {
-          ...basePayload,
-          department: formState.department,
-        };
-        response = await createSecretary(payload);
+      } else if (role === "SECRETARY") {
+        response = await createSecretary(basePayload);
+      } else if (role === "TEACHER") {
+        response = await createTeacher(basePayload);
       } else {
-        payload = {
+        response = await createAdministrator({
           ...basePayload,
-          role: formState.role || "ADMIN",
-        };
-        response = await createAdministrator(payload);
+          role: role,
+        });
       }
 
-      setUsers([...users, response || payload]);
+      setUsers([...users, response?.data?.user || response || basePayload]);
       setActiveModal(null);
       setFormState({});
-      showToast("User created successfully on server!");
+      showToast("User created successfully on the server!");
     } catch (error) {
       showToast(`Error: ${error.message}`);
     }
   };
 
-  const handleCreateAnnouncement = async (e) => {
+  const handleUpdateUser = async (userId, updatedData) => {
+    const previousUsers = [...users];
+    const previousTarget = targetStudent ? { ...targetStudent } : null;
+
+    setUsers(
+      users.map((u) => (u.id === userId ? { ...u, ...updatedData } : u)),
+    );
+    if (targetStudent?.id === userId) {
+      setTargetStudent({ ...targetStudent, ...updatedData });
+    }
+
+    showToast("Profile updated successfully!");
+
+    try {
+      await updateUser(userId, updatedData);
+    } catch (error) {
+      setUsers(previousUsers);
+      if (targetStudent?.id === userId) {
+        setTargetStudent(previousTarget);
+      }
+      showToast(`Failed to save changes to server: ${error.message}`);
+    }
+  };
+
+  const handleFormSubmitAnnouncement = async (e) => {
     e.preventDefault();
     try {
       const payload = {
         title: formState.title,
-        content:
-          formState.content,
-        targetScope:
-          formState.targetScope,
-        priority:
-          formState.priority,
-        targetClasses:
-          formState.targetClasses,
+        content: formState.content,
+        targetScope: formState.targetScope || "ALL",
+        priority: formState.priority || "NORMAL",
+        targetClasses: formState.targetClasses,
       };
 
-      const response = await createAnnouncement(payload);
-      setAnnouncements([response || payload, ...announcements]);
+      const list = Array.isArray(announcements)
+        ? announcements
+        : announcements?.announcements ||
+          announcements?.data?.announcements ||
+          [];
+
+      if (formState.id) {
+        const response = await updateAnnouncement(formState.id, payload);
+        const updated = response?.data?.announcement ||
+          response || { id: formState.id, ...payload };
+
+        setAnnouncements(
+          list.map((a) => (a.id === formState.id ? { ...a, ...updated } : a)),
+        );
+        showToast("Announcement updated successfully!");
+      } else {
+        const response = await createAnnouncement(payload);
+        const created = response?.data?.announcement || response || payload;
+
+        setAnnouncements([created, ...list]);
+        showToast("Announcement published successfully!");
+      }
+
       setActiveModal(null);
       setFormState({});
-      showToast("Announcement published successfully!");
     } catch (error) {
       showToast(`Error: ${error.message}`);
     }
   };
 
-  const handleCreateSubject = async (e) => {
+  const handleDeleteAnnouncement = async (announcementId) => {
+    const list = Array.isArray(announcements)
+      ? announcements
+      : announcements?.announcements ||
+        announcements?.data?.announcements ||
+        [];
+
+    const previousAnnouncements = [...list];
+
+    setAnnouncements(list.filter((a) => a.id !== announcementId));
+    showToast("Announcement deleted successfully!");
+
+    try {
+      await apiDeleteAnnouncement(announcementId);
+    } catch (error) {
+      setAnnouncements(previousAnnouncements);
+      showToast(`Failed to delete announcement: ${error.message}`);
+    }
+  };
+
+  const handleFormSubmitSubject = async (e) => {
     e.preventDefault();
     try {
       const payload = {
         name: formState.name,
         coefficient: parseFloat(formState.coefficient),
-        description: formState.description,
+        description: formState.description || undefined,
         assignments: [
           {
-            classGroup: formState.classGroup",
-            teacherId:
-              formState.teacherId,
+            classGroup: (formState.classGroup || "SECONDE").toUpperCase(),
+            teacherId: formState.teacherId,
           },
         ],
       };
 
-      const response = await createSubject(payload);
-      setSubjects([...subjects, response || payload]);
+      const list = Array.isArray(subjects)
+        ? subjects
+        : subjects?.subjects || subjects?.data?.subjects || [];
+
+      if (formState.id) {
+        const response = await updateSubject(formState.id, payload);
+        const updated = response?.data?.subject ||
+          response || { id: formState.id, ...payload };
+
+        setSubjects(
+          list.map((s) => (s.id === formState.id ? { ...s, ...updated } : s)),
+        );
+        showToast("Subject updated successfully!");
+      } else {
+        const response = await createSubject(payload);
+        const created = response?.data?.subject || response || payload;
+
+        setSubjects([created, ...list]);
+        showToast("Subject created successfully!");
+      }
+
       setActiveModal(null);
       setFormState({});
-      showToast("Subject created successfully!");
     } catch (error) {
       showToast(`Error: ${error.message}`);
+    }
+  };
+
+  const handleDeleteSubject = async (subjectId) => {
+    const list = Array.isArray(subjects)
+      ? subjects
+      : subjects?.subjects || subjects?.data?.subjects || [];
+
+    const previousSubjects = [...list];
+
+    setSubjects(list.filter((s) => s.id !== subjectId));
+    showToast("Subject deleted successfully!");
+
+    try {
+      await apiDeleteSubject(subjectId);
+    } catch (error) {
+      setSubjects(previousSubjects);
+      showToast(`Failed to delete subject: ${error.message}`);
     }
   };
 
   const handleCreateGradeSession = async (e) => {
     e.preventDefault();
     try {
+      const subjectsArray = Array.isArray(subjects)
+        ? subjects
+        : subjects?.subjects || subjects?.data?.subjects || [];
+
+      const foundSubject = subjectsArray.find(
+        (s) => (s.id || s._id) === formState.subjectId,
+      );
+      const subjectName = foundSubject
+        ? foundSubject.name || foundSubject.nom
+        : "Matière";
+
       const payload = {
-        matiere: formState.matiere,
-        classe: formState.classe,
+        id: Date.now().toString(),
+        subjectId: formState.subjectId,
+        matiere: subjectName,
+        classGroup: formState.classGroup,
+        classe: formState.classGroup,
+        examType: formState.examType || "TRIMESTER",
+        term: formState.term || "FIRST_TRIMESTER",
+        statut: "brouillon",
+        notesDraft: {},
+        dateCreation: new Date().toLocaleDateString(),
       };
 
-      const response = await submitGradeSession(payload);
-      setGradeSessions([response || payload, ...gradeSessions]);
+      const updatedSessions = [payload, ...gradeSessions];
+      setGradeSessions(updatedSessions);
+      localStorage.setItem("gradeSessions", JSON.stringify(updatedSessions));
+
       setActiveModal(null);
       setFormState({});
-      showToast("Grade session created and assigned to secretary!");
+      showToast("Session de notes créée avec succès !");
     } catch (error) {
       showToast(`Error: ${error.message}`);
     }
@@ -295,17 +430,64 @@ const App = () => {
     e.preventDefault();
     try {
       const payload = {
-        profName: formState.profName,
-        matiere: formState.matiere,
-        classe: formState.classe,
-        jour: formState.jour,
+        teacherId: formState.teacherId,
+        subjectId: formState.subjectId,
+        targetClass: (formState.targetClass || "SECONDE").toUpperCase(),
+        dayOfWeek: formState.dayOfWeek || "MONDAY",
+        startTime: formState.startTime,
+        endTime: formState.endTime,
+        classroom: formState.classroom,
       };
 
-      const response = await createAttendanceSlot(payload);
-      setPointages([...pointages, response || payload]);
+      if (formState.id) {
+        await updateAttendanceSlot(formState.id, payload);
+        showToast("Teacher attendance slot updated successfully!");
+      } else {
+        await createAttendanceSlot(payload);
+        showToast("Teacher attendance slot created successfully!");
+      }
+
+      const todayStr = new Date().toISOString().split("T")[0];
+      const todayDay = new Date()
+        .toLocaleDateString("en-US", { weekday: "LONG" })
+        .toUpperCase();
+      const freshPointages = await getDailyAttendance(todayDay, todayStr).catch(
+        () => [],
+      );
+      setPointages(freshPointages);
+
       setActiveModal(null);
       setFormState({});
-      showToast("Teacher attendance slot created successfully!");
+    } catch (error) {
+      showToast(`Error: ${error.message}`);
+    }
+  };
+
+  const handleDeleteSlot = async (slotId) => {
+    const previousPointages = [...pointages];
+    setPointages(pointages.filter((p) => p.slotId !== slotId));
+    showToast("Attendance slot deleted successfully!");
+
+    try {
+      await deleteAttendanceSlot(slotId);
+    } catch (error) {
+      setPointages(previousPointages);
+      showToast(`Failed to delete slot: ${error.message}`);
+    }
+  };
+
+  const handleTogglePointage = async (slotId, attendanceDate) => {
+    try {
+      await checkAttendance({ slotId, attendanceDate });
+      const todayDay = new Date(attendanceDate)
+        .toLocaleDateString("en-US", { weekday: "LONG" })
+        .toUpperCase();
+      const freshPointages = await getDailyAttendance(
+        todayDay,
+        attendanceDate,
+      ).catch(() => pointages);
+      setPointages(freshPointages);
+      showToast("Attendance checked and updated successfully!");
     } catch (error) {
       showToast(`Error: ${error.message}`);
     }
@@ -356,22 +538,46 @@ const App = () => {
     const session = gradeSessions.find((s) => s.id === sessionId);
     if (!session) return;
 
-    setGradeSessions(
-      gradeSessions.map((s) => {
-        if (s.id === sessionId) {
-          return {
-            ...s,
-            statut: "valide",
-            dateValidation: new Date()
-              .toISOString()
-              .replace("T", " ")
-              .substring(0, 16),
-          };
-        }
-        return s;
-      }),
-    );
-    showToast("Grade session validated and injected into student reports!");
+    const updatedSessions = gradeSessions.map((s) => {
+      if (s.id === sessionId) {
+        return {
+          ...s,
+          statut: "valide",
+          dateValidation: new Date()
+            .toISOString()
+            .replace("T", " ")
+            .substring(0, 16),
+        };
+      }
+      return s;
+    });
+
+    setGradeSessions(updatedSessions);
+    localStorage.setItem("gradeSessions", JSON.stringify(updatedSessions));
+
+    if (session.notesDraft && Object.keys(session.notesDraft).length > 0) {
+      const newResults = Object.entries(session.notesDraft).map(
+        ([studentId, noteValue]) => ({
+          id: `${sessionId}-${studentId}`,
+          sessionId: session.id,
+          studentId: studentId,
+          subjectId: session.subjectId,
+          matiere: session.matiere,
+          classGroup: session.classGroup || session.classe,
+          examType: session.examType || "TRIMESTER",
+          term: session.term || "FIRST_TRIMESTER",
+          score: parseFloat(noteValue) || 0,
+          maxScore: 20,
+          validatedAt: new Date().toISOString(),
+        }),
+      );
+
+      const updatedExamResults = [...examResults, ...newResults];
+      setExamResults(updatedExamResults);
+      localStorage.setItem("examResults", JSON.stringify(updatedExamResults));
+    }
+
+    showToast("Session de notes validée et injectée dans les bulletins !");
   };
 
   const handleSecretarySaveDraft = (sessionId, draftData) => {
@@ -386,64 +592,84 @@ const App = () => {
     showToast("Draft saved locally!");
   };
 
-  const handleSecretarySubmitToAdmin = (sessionId, draftData) => {
-    setGradeSessions(
-      gradeSessions.map((s) => {
+  const handleSecretarySubmitToAdmin = async (sessionId, draftData) => {
+    try {
+      const session = gradeSessions.find((s) => s.id === sessionId);
+      if (!session) return;
+
+      const updatedSessions = gradeSessions.map((s) => {
         if (s.id === sessionId) {
-          return { ...s, notesDraft: draftData, statut: "attente_validation" };
+          return {
+            ...s,
+            notesDraft: draftData,
+            statut: "attente_validation",
+            status: "DRAFT",
+          };
         }
         return s;
-      }),
-    );
-    setActiveGradeSession(null);
-    showToast("Grades submitted to administrator for validation!");
-  };
+      });
 
-  const handleTogglePointage = async (
-    pointageId,
-    status,
-    retardMin = 0,
-    motif = "",
-  ) => {
-    try {
-      await checkAttendance({ slotId: pointageId, status, retardMin, motif });
-      setPointages(
-        pointages.map((p) => {
-          if (p.id === pointageId) {
-            return { ...p, status, retardMin, motif };
-          }
-          return p;
-        }),
-      );
-      showToast(`Pointage updated: ${status.toUpperCase()}`);
+      setGradeSessions(updatedSessions);
+      localStorage.setItem("gradeSessions", JSON.stringify(updatedSessions));
+
+      setActiveGradeSession(null);
+      showToast("Notes soumises à l'administrateur avec succès !");
     } catch (error) {
-      showToast(`Error: ${error.message}`);
+      showToast(`Erreur lors de la soumission : ${error.message}`);
     }
   };
 
   const toggleUserStatus = async (userId) => {
-    try {
-      const targetUser = users.find((u) => u.id === userId);
-      const newStatus =
-        targetUser?.statut === "active" ? "desactive" : "active";
-      await updateUser(userId, { statut: newStatus });
+    const previousUsers = [...users];
+    const targetUser = users.find((u) => u.id === userId);
+    if (!targetUser) return;
 
-      setUsers(
-        users.map((u) => (u.id === userId ? { ...u, statut: newStatus } : u)),
-      );
-      showToast("User status updated");
+    const newStatus = targetUser.isActive !== false ? false : true;
+
+    setUsers(
+      users.map((u) => (u.id === userId ? { ...u, isActive: newStatus } : u)),
+    );
+    if (targetStudent?.id === userId) {
+      setTargetStudent({ ...targetStudent, isActive: newStatus });
+    }
+
+    showToast(`User status updated to: ${newStatus ? "ACTIVE" : "INACTIVE"}`);
+
+    try {
+      await updateUser(userId, { isActive: newStatus });
     } catch (error) {
-      showToast(`Error: ${error.message}`);
+      setUsers(previousUsers);
+      if (targetStudent?.id === userId) {
+        setTargetStudent(targetUser);
+      }
+      showToast(`Status update reverted: ${error.message}`);
     }
   };
 
-  const deleteUser = async (userId) => {
+  const deleteUser = async (userIdOrObj) => {
+    const userId =
+      typeof userIdOrObj === "object"
+        ? userIdOrObj?.id || userIdOrObj?._id
+        : userIdOrObj;
+
+    if (!userId) {
+      showToast("Erreur : ID utilisateur introuvable");
+      return;
+    }
+
+    const previousUsers = [...users];
+
+    setUsers(users.filter((u) => (u.id || u._id) !== userId));
+    if (targetStudent?.id === userId || targetStudent?._id === userId) {
+      setTargetStudent(null);
+    }
+    showToast("Utilisateur supprimé avec succès");
+
     try {
-      await deactivateStudent(userId);
-      setUsers(users.filter((u) => u.id !== userId));
-      showToast("User deleted/deactivated");
+      await apiDeleteUser(userId);
     } catch (error) {
-      showToast(`Error: ${error.message}`);
+      setUsers(previousUsers);
+      showToast(`Erreur : ${error.message}`);
     }
   };
 
@@ -452,15 +678,21 @@ const App = () => {
   };
 
   const studentUsers = users.filter((u) => {
-    if (u.role !== "student" && u.role !== "ancien") return false;
+    const role = (u.role || "").toUpperCase();
+    if (role !== "STUDENT" && role !== "ANCIEN") return false;
     if (selectedStudentFilter === "tout") return true;
-    if (selectedStudentFilter === "ancien") return u.role === "ancien";
-    return u.classe?.toLowerCase() === selectedStudentFilter.toLowerCase();
+    if (selectedStudentFilter === "ancien") return role === "ANCIEN";
+    return (
+      (u.classGroup || "").toUpperCase() === selectedStudentFilter.toUpperCase()
+    );
   });
 
-  const staffUsers = users.filter((u) =>
-    ["prof", "admin", "secretaire"].includes(u.role),
-  );
+  const staffUsers = users.filter((u) => {
+    const role = (u.role || "").toUpperCase();
+    return ["TEACHER", "ADMIN", "SECRETARY", "PROF", "SECRETAIRE"].includes(
+      role,
+    );
+  });
 
   if (!currentUser) {
     return (
@@ -524,6 +756,12 @@ const App = () => {
             handleSimulateExport={handleSimulateExport}
             setCurrentUser={setCurrentUser}
             handleLogout={handleLogout}
+            onUpdateUser={handleUpdateUser}
+            onDeleteAnnouncement={handleDeleteAnnouncement}
+            onSelectAnnouncementToEdit={setFormState}
+            onDeleteSubject={handleDeleteSubject}
+            onDeleteSlot={handleDeleteSlot}
+            setFormState={setFormState}
           />
         </main>
       </div>
@@ -538,14 +776,14 @@ const App = () => {
       <AnnouncementModal
         isOpen={activeModal === "announcement"}
         onClose={() => setActiveModal(null)}
-        onSubmit={handleCreateAnnouncement}
+        onSubmit={handleFormSubmitAnnouncement}
         formState={formState}
         setFormState={setFormState}
       />
       <SubjectModal
         isOpen={activeModal === "subject"}
         onClose={() => setActiveModal(null)}
-        onSubmit={handleCreateSubject}
+        onSubmit={handleFormSubmitSubject}
         formState={formState}
         setFormState={setFormState}
         staffUsers={staffUsers}
@@ -565,6 +803,7 @@ const App = () => {
         formState={formState}
         setFormState={setFormState}
         staffUsers={staffUsers}
+        subjects={subjects}
       />
       <HistoryRemarkModal
         isOpen={

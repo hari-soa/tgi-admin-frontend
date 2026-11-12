@@ -50,6 +50,9 @@ export const SecretaryGrades = ({
     return STATUS_DEFAULT;
   };
 
+  // Sécurisation de la liste des sessions
+  const sessionsList = Array.isArray(gradeSessions) ? gradeSessions : [];
+
   return (
     <div className={CONTAINER_WRAPPER}>
       <div>
@@ -63,7 +66,8 @@ export const SecretaryGrades = ({
             <div>
               <span className={ACTIVE_SESSION_TAG}>Grille d'évaluation</span>
               <h3 className={ACTIVE_SESSION_TITLE}>
-                {activeGradeSession.matiere} — {activeGradeSession.classe}
+                {activeGradeSession.matiere || "Matière"} —{" "}
+                {activeGradeSession.classe || activeGradeSession.classGroup}
               </h3>
               <p className={ACTIVE_SESSION_DATE}>
                 Date de création :{" "}
@@ -80,32 +84,47 @@ export const SecretaryGrades = ({
 
           <div className={ROSTER_SECTION}>
             <h4 className={ROSTER_TITLE}>
-              Roster des étudiants ({activeGradeSession.classe})
+              Roster des étudiants (
+              {activeGradeSession.classe || activeGradeSession.classGroup})
             </h4>
             {users
-              .filter(
-                (u) =>
-                  u.role === "student" &&
-                  u.classe === activeGradeSession.classe,
-              )
-              .map((student) => {
-                const currentVal =
-                  activeGradeSession.notesDraft?.[student.id] || "";
+              .filter((u) => {
+                const role = (u.role || "").toUpperCase();
+                const uClass = (u.classe || u.classGroup || "").toUpperCase();
+                const sessionClass = (
+                  activeGradeSession.classe ||
+                  activeGradeSession.classGroup ||
+                  ""
+                ).toUpperCase();
                 return (
-                  <div key={student.id} className={ROSTER_CARD}>
+                  (role === "STUDENT" || role === "ANCIEN") &&
+                  uClass === sessionClass
+                );
+              })
+              .map((student) => {
+                const studentId = student.id || student._id;
+                const currentVal =
+                  activeGradeSession.notesDraft?.[studentId] || "";
+                return (
+                  <div key={studentId} className={ROSTER_CARD}>
                     <div className={STUDENT_INFO_ROW}>
                       <img
-                        src={student.photo}
+                        src={
+                          student.profilePictureUrl ||
+                          student.photo ||
+                          "/default-avatar.png"
+                        }
                         alt="etu"
                         className={STUDENT_AVATAR}
                       />
                       <div>
                         <p className={STUDENT_NAME}>
-                          {student.nom} {student.prenom}
+                          {student.lastName || student.nom}{" "}
+                          {student.firstName || student.prenom}
                         </p>
                         <p className={STUDENT_MATRICULE}>
-                          {student.matricule} •{" "}
-                          {extractClassNum(student.matricule)}
+                          {student.matricule || "N/A"} •{" "}
+                          {extractClassNum(student.matricule || "")}
                         </p>
                       </div>
                     </div>
@@ -121,7 +140,7 @@ export const SecretaryGrades = ({
                           if (!activeGradeSession.notesDraft) {
                             activeGradeSession.notesDraft = {};
                           }
-                          activeGradeSession.notesDraft[student.id] =
+                          activeGradeSession.notesDraft[studentId] =
                             e.target.value;
                         }}
                         className={GRADE_INPUT}
@@ -159,11 +178,13 @@ export const SecretaryGrades = ({
         </div>
       ) : (
         <div className={SESSIONS_GRID}>
-          {gradeSessions.map((session) => (
+          {sessionsList.map((session) => (
             <div key={session.id} className={SESSION_CARD}>
               <div>
                 <div className={SESSION_CARD_HEADER}>
-                  <h3 className={SESSION_SUBJECT_TITLE}>{session.matiere}</h3>
+                  <h3 className={SESSION_SUBJECT_TITLE}>
+                    {session.matiere || session.subjectName || "Matière"}
+                  </h3>
                   <span className={getStatusBadgeClass(session.statut)}>
                     {session.statut?.replace("_", " ") || "brouillon"}
                   </span>
@@ -171,7 +192,7 @@ export const SecretaryGrades = ({
                 <p className={SESSION_CLASS_TEXT}>
                   Classe :{" "}
                   <span className={SESSION_CLASS_HIGHLIGHT}>
-                    {session.classe}
+                    {session.classe || session.classGroup}
                   </span>
                 </p>
                 <p className={SESSION_CREATION_DATE}>

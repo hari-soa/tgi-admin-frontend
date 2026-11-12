@@ -16,11 +16,7 @@ import {
   TABLE_BODY,
   TABLE_ROW,
   CELL_SUBJECT,
-  CELL_NOTE,
-  CELL_NOTE_COEFF,
   CELL_AVERAGE,
-  MENTION_BADGE,
-  CELL_RANK,
 } from "../../styles/StudentGradesStyles";
 
 export const StudentGrades = ({
@@ -28,37 +24,47 @@ export const StudentGrades = ({
   examResults,
   handleSimulateExport,
 }) => {
-  const [selectedExamFilter, setSelectedExamFilter] = useState("Trimestre 1");
+  const resultsList = Array.isArray(examResults) ? examResults : [];
+  const [selectedResultId, setSelectedResultId] = useState(
+    resultsList[0]?.id || "",
+  );
+
+  const currentBulletin = resultsList.find((r) => r.id === selectedResultId);
 
   return (
     <div className={CONTAINER_WRAPPER}>
       <div className={HEADER_SECTION}>
         <div>
-          <h2 className={HEADER_TITLE}>Résultats d'examens</h2>
-          <p className={HEADER_SUBTITLE}>Bulletins</p>
+          <h2 className={HEADER_TITLE}>Résultats et Bulletins Annuels</h2>
+          <p className={HEADER_SUBTITLE}>Suivi académique officiel</p>
         </div>
         <div className={HEADER_ACTIONS}>
           <select
-            value={selectedExamFilter}
-            onChange={(e) => setSelectedExamFilter(e.target.value)}
+            value={selectedResultId}
+            onChange={(e) => setSelectedResultId(e.target.value)}
             className={SELECT_INPUT}
           >
-            <option value="Examen Blanc">Semi-trimestriel 1</option>
-            <option value="Trimestre 1">Trimestrel 1</option>
+            {resultsList.map((res) => (
+              <option key={res.id} value={res.id}>
+                {res.academicYear} — Classe : {res.classGroup} ({res.status})
+              </option>
+            ))}
           </select>
-          <button
-            onClick={() => handleSimulateExport(`Examen_${selectedExamFilter}`)}
-            className={EXPORT_BUTTON}
-          >
-            Exporter Examen (PDF)
-          </button>
+          {currentBulletin && (
+            <button
+              onClick={() => handleSimulateExport(currentBulletin.id)}
+              className={EXPORT_BUTTON}
+            >
+              Télécharger le Bulletin (PDF)
+            </button>
+          )}
         </div>
       </div>
 
       <div className={TABLE_CONTAINER}>
         <div className={TABLE_HEADER_BOX}>
           <h3 className={TABLE_TITLE}>
-            Détail des Matières — {selectedExamFilter}
+            Détail des Matières — Année {currentBulletin?.academicYear || "N/A"}
           </h3>
         </div>
         <div className={TABLE_SCROLL}>
@@ -66,39 +72,82 @@ export const StudentGrades = ({
             <thead className={TABLE_HEAD}>
               <tr>
                 <th className="p-4">Matière</th>
-                <th className="p-4">Coefficient</th>
-                <th className="p-4">Note /20</th>
-                <th className="p-4">Note Coeff</th>
-                <th className="p-4">Moyenne Classe</th>
-                <th className="p-4">Mention</th>
-                <th className="p-4">Rang</th>
+                <th className="p-4">Coef</th>
+                <th className="p-4 text-center">ST1</th>
+                <th className="p-4 text-center">T1</th>
+                <th className="p-4 text-center">ST2</th>
+                <th className="p-4 text-center">T2</th>
+                <th className="p-4 text-center">ST3</th>
+                <th className="p-4 text-center">T3</th>
+                <th className="p-4">Moyenne Matière</th>
               </tr>
             </thead>
             <tbody className={TABLE_BODY}>
-              {examResults
-                .filter(
-                  (res) =>
-                    res.studentId === currentUser?.id &&
-                    res.examName === selectedExamFilter,
-                )
-                .map((res) => (
-                  <tr key={res.id} className={TABLE_ROW}>
-                    <td className={CELL_SUBJECT}>{res.matiere}</td>
-                    <td className="p-4">{res.coeff}</td>
-                    <td className={CELL_NOTE}>{res.note} / 20</td>
-                    <td className={CELL_NOTE_COEFF}>{res.noteCoeff}</td>
-                    <td className={CELL_AVERAGE}>{res.moyenne}</td>
-                    <td className="p-4">
-                      <span className={MENTION_BADGE}>
-                        {res.mention || "N/A"}
-                      </span>
+              {!currentBulletin ||
+              !currentBulletin.subjects ||
+              currentBulletin.subjects.length === 0 ? (
+                <tr>
+                  <td colSpan="9" className="text-center p-6 text-slate-400">
+                    Aucun résultat disponible pour cette période.
+                  </td>
+                </tr>
+              ) : (
+                currentBulletin.subjects.map((sub, idx) => (
+                  <tr key={idx} className={TABLE_ROW}>
+                    <td className={CELL_SUBJECT}>{sub.subjectName}</td>
+                    <td className="p-4">{sub.coefficient}</td>
+                    <td className="p-4 text-center">
+                      {sub.term1SemiTrimesterGrade ?? "-"}
                     </td>
-                    <td className={CELL_RANK}>{res.rang || "N/A"}</td>
+                    <td className="p-4 text-center">
+                      {sub.term1TrimesterGrade ?? "-"}
+                    </td>
+                    <td className="p-4 text-center">
+                      {sub.term2SemiTrimesterGrade ?? "-"}
+                    </td>
+                    <td className="p-4 text-center">
+                      {sub.term2TrimesterGrade ?? "-"}
+                    </td>
+                    <td className="p-4 text-center">
+                      {sub.term3SemiTrimesterGrade ?? "-"}
+                    </td>
+                    <td className="p-4 text-center">
+                      {sub.term3TrimesterGrade ?? "-"}
+                    </td>
+                    <td className={CELL_AVERAGE}>
+                      {sub.subjectOverallAverage} / 20
+                    </td>
                   </tr>
-                ))}
+                ))
+              )}
             </tbody>
           </table>
         </div>
+
+        {currentBulletin && (
+          <div className="p-4 bg-slate-900 border-t border-slate-800 flex justify-between items-center text-sm text-slate-300">
+            <div>
+              <span>Moyenne Générale : </span>
+              <strong className="text-white text-base">
+                {currentBulletin.overallAverage} / 20
+              </strong>
+            </div>
+            <div>
+              <span>Rang : </span>
+              <strong className="text-white">
+                {currentBulletin.classRank
+                  ? `${currentBulletin.classRank}e`
+                  : "N/A"}
+              </strong>
+            </div>
+            <div>
+              <span>Décision : </span>
+              <span className="px-2.5 py-1 rounded text-xs font-semibold bg-blue-950 text-blue-300 border border-blue-800">
+                {currentBulletin.decision}
+              </span>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

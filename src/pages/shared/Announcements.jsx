@@ -19,9 +19,17 @@ import {
 
 export const Announcements = ({
   currentUser,
-  announcements,
+  announcements = [],
   setActiveModal,
+  onDeleteAnnouncement,
+  onSelectAnnouncementToEdit,
 }) => {
+  const validAnnouncements = Array.isArray(announcements)
+    ? announcements
+    : announcements?.announcements || announcements?.data?.announcements || [];
+
+  const isAdmin = currentUser?.role?.toUpperCase() === "ADMIN";
+
   return (
     <div className={CONTAINER_WRAPPER}>
       <div className={HEADER_SECTION}>
@@ -31,9 +39,17 @@ export const Announcements = ({
             Communications officielles archivées
           </p>
         </div>
-        {currentUser?.role === "admin" && (
+        {isAdmin && (
           <button
-            onClick={() => setActiveModal("announcement")}
+            onClick={() => {
+              if (onSelectAnnouncementToEdit) {
+                onSelectAnnouncementToEdit({
+                  targetScope: "ALL",
+                  priority: "NORMAL",
+                });
+              }
+              setActiveModal("announcement");
+            }}
             className={BROADCAST_BUTTON}
           >
             + Diffuser une annonce
@@ -42,21 +58,64 @@ export const Announcements = ({
       </div>
 
       <div className={GRID_CONTAINER}>
-        {announcements.map((ann) => (
-          <div key={ann.id} className={ann.urgent ? CARD_URGENT : CARD_NORMAL}>
-            <div className={CARD_HEADER}>
-              <span className={ann.urgent ? BADGE_URGENT : BADGE_NORMAL}>
-                {ann.urgent ? "Urgent" : "Général"}
-              </span>
-              <span className={DATE_TEXT}>{ann.date || "Récemment"}</span>
+        {validAnnouncements.map((ann) => {
+          const isUrgent = ann.priority === "URGENT";
+          return (
+            <div
+              key={ann.id}
+              className={`${isUrgent ? CARD_URGENT : CARD_NORMAL} flex flex-col justify-between`}
+            >
+              <div>
+                <div className={CARD_HEADER}>
+                  <span className={isUrgent ? BADGE_URGENT : BADGE_NORMAL}>
+                    {isUrgent ? "Urgent" : "Général"}
+                  </span>
+                  <span className={DATE_TEXT}>
+                    {ann.createdAt
+                      ? new Date(ann.createdAt).toLocaleDateString()
+                      : "Récemment"}
+                  </span>
+                </div>
+                <h3 className={TITLE_TEXT}>{ann.title}</h3>
+                <p className={CONTEXT_TEXT}>{ann.content}</p>
+              </div>
+
+              <div className="mt-4 pt-4 border-t border-slate-800/80 flex items-center justify-between">
+                <span className={FOOTER_META}>
+                  Cible :{" "}
+                  <span className={TARGET_TEXT}>
+                    {ann.targetScope || "ALL"}
+                    {ann.targetValue ? ` (${ann.targetValue})` : ""}
+                  </span>
+                </span>
+
+                {isAdmin && (
+                  <div className="flex items-center space-x-2">
+                    {onSelectAnnouncementToEdit && (
+                      <button
+                        onClick={() => {
+                          onSelectAnnouncementToEdit(ann);
+                          setActiveModal("announcement");
+                        }}
+                        className="px-2.5 py-1 bg-slate-800 hover:bg-slate-700 text-blue-400 text-xs font-medium rounded transition-colors"
+                      >
+                        Modifier
+                      </button>
+                    )}
+                    {onDeleteAnnouncement && (
+                      <button
+                        onClick={() => onDeleteAnnouncement(ann.id)}
+                        className="px-2.5 py-1 bg-slate-800 hover:bg-slate-700 text-red-400 text-xs font-medium rounded transition-colors"
+                      >
+                        Supprimer
+                      </button>
+                    )}
+                  </div>
+                )}
+              </div>
             </div>
-            <h3 className={TITLE_TEXT}>{ann.title}</h3>
-            <p className={CONTEXT_TEXT}>{ann.context}</p>
-            <span className={FOOTER_META}>
-              Cible : <span className={TARGET_TEXT}>{ann.cible || "tout"}</span>
-            </span>
-          </div>
-        ))}
+          );
+        })}
       </div>
     </div>
   );

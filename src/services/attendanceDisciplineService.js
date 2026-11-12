@@ -8,8 +8,22 @@ export const createAttendanceSlot = async (slotData) => {
   });
 };
 
-export const getDailyAttendance = async () => {
-  return await apiFetch("/attendance/daily");
+export const updateAttendanceSlot = async (slotId, slotData) => {
+  return await apiFetch(`/attendance/slots/${slotId}`, {
+    method: "PATCH",
+    body: JSON.stringify(slotData),
+  });
+};
+
+export const deleteAttendanceSlot = async (slotId) => {
+  return await apiFetch(`/attendance/slots/${slotId}`, {
+    method: "DELETE",
+  });
+};
+
+export const getDailyAttendance = async (day, date) => {
+  const query = day && date ? `?day=${day}&date=${date}` : "";
+  return await apiFetch(`/attendance/daily${query}`);
 };
 
 export const checkAttendance = async (checkData) => {

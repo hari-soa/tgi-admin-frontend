@@ -15,6 +15,13 @@ export const createSubject = async (subjectData) => {
   });
 };
 
+export const updateSubject = async (subjectId, subjectData) => {
+  return await apiFetch(`/subjects/${subjectId}`, {
+    method: "PATCH",
+    body: JSON.stringify(subjectData),
+  });
+};
+
 export const deleteSubject = async (subjectId) => {
   return await apiFetch(`/subjects/${subjectId}`, {
     method: "DELETE",
