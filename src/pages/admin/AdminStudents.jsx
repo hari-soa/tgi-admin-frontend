@@ -1,48 +1,78 @@
 import { useState, useEffect } from "react";
-import { extractClassNum } from "../../utils/helpers";
+import { extractClassNum, isFormerStudent } from "../../utils/helpers";
 import {
-  CONTAINER_WRAPPER,
-  HEADER_SECTION,
-  HEADER_TITLE,
-  HEADER_SUBTITLE,
-  HEADER_ACTIONS,
-  FILTER_SELECT,
-  CREATE_BUTTON,
-  PROFILE_CARD,
-  PROFILE_HEADER,
-  PROFILE_INFO_CONTAINER,
-  PROFILE_AVATAR,
-  PROFILE_NAME,
-  PROFILE_MATRICULE,
-  PROFILE_CLASS_INFO,
-  CLOSE_BUTTON,
-  META_GRID,
-  META_LABEL,
-  META_VALUE_WHITE,
-  META_VALUE_CAPITALIZE,
-  PROFILE_ACTIONS,
+  CLASS_GROUP_LABELS,
+  HISTORY_TYPE_LABELS,
+  REMARK_CATEGORY_LABELS,
+  formatDate,
+} from "../../utils/labels";
+import {
   ACTION_BLUE_BUTTON,
   ACTION_SECONDARY_BUTTON,
-  SUB_SECTIONS_GRID,
-  SUB_SECTION_BOX,
-  SUB_SECTION_TITLE,
-  SUB_SECTION_ITEM,
+  ALUMNI_TEXT,
+  AVATAR_WRAPPER,
+  BUTTONS_ROW,
+  CANCEL_BUTTON,
+  CLOSE_BUTTON,
+  CONTAINER_WRAPPER,
+  CREATE_BUTTON,
+  DELETE_ICON_BUTTON,
+  DETAIL_ACTIONS_ROW,
+  EDIT_AVATAR,
+  EDIT_BUTTON,
+  EDIT_FORM,
+  EDIT_HEADER_BOX,
+  EDIT_INPUT,
+  FILE_INPUT,
+  FILTER_SELECT,
+  FORM_ACTIONS,
+  FULL_WIDTH_FIELD,
+  HEADER_ACTIONS,
+  HEADER_SECTION,
+  HEADER_SUBTITLE,
+  HEADER_TITLE,
   ITEM_LABEL_BLUE,
   ITEM_LABEL_EMERALD,
+  META_GRID,
+  META_LABEL,
+  META_VALUE_CAPITALIZE,
+  META_VALUE_WHITE,
+  NAME_FIELDS_GRID,
+  PROFILE_ACTIONS,
+  PROFILE_AVATAR,
+  PROFILE_CARD,
+  PROFILE_CLASS_INFO,
+  PROFILE_HEADER,
+  PROFILE_INFO_CONTAINER,
+  PROFILE_MATRICULE,
+  PROFILE_NAME,
+  PROFILE_VIEW_BUTTON,
+  ROW_ACTIONS,
+  SAVE_BUTTON,
+  SUB_SECTIONS_GRID,
+  SUB_SECTION_BOX,
+  SUB_SECTION_ITEM,
+  SUB_SECTION_TITLE,
+  TABLE_ACTIONS_CELL,
+  TABLE_AVATAR,
+  TABLE_BODY,
+  TABLE_CELL_CAPITALIZE,
+  TABLE_CELL_DEFAULT,
+  TABLE_CELL_MATRICULE,
+  TABLE_CELL_STUDENT,
   TABLE_CONTAINER,
-  TABLE_SCROLL,
   TABLE_ELEMENT,
   TABLE_HEAD,
-  TABLE_BODY,
+  TABLE_HEAD_CELL,
+  TABLE_HEAD_CELL_RIGHT,
   TABLE_ROW,
-  TABLE_CELL_STUDENT,
-  TABLE_AVATAR,
-  TABLE_CELL_MATRICULE,
-  TABLE_CELL_DEFAULT,
-  ALUMNI_TEXT,
-  TABLE_ACTIONS_CELL,
-  PROFILE_VIEW_BUTTON,
+  TABLE_SCROLL,
+  TOGGLE_INPUT,
+  TOGGLE_LABEL,
+  TOGGLE_TEXT,
+  TOGGLE_TRACK,
 } from "../../styles/AdminStudentsStyles";
+import { getAvatarSource } from "../../utils/helpers";
 
 export const AdminStudents = ({
   studentUsers,
@@ -51,14 +81,13 @@ export const AdminStudents = ({
   targetStudent,
   setTargetStudent,
   setActiveModal,
+  setFormState,
   toggleUserStatus,
   deleteUser,
-  setCurrentUser,
   setActiveTab,
-  historiques,
-  remarques,
+  historyRecords,
+  remarks,
   onUpdateUser,
-  isAdmin = true,
 }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState({ ...targetStudent });
@@ -87,11 +116,20 @@ export const AdminStudents = ({
 
   const handleSave = async (e) => {
     e.preventDefault();
-    if (onUpdateUser && targetStudent) {
-      await onUpdateUser(targetStudent.id, formData);
-      setTargetStudent((prev) => ({ ...prev, ...formData }));
-    }
+    await onUpdateUser(targetStudent.id, formData);
     setIsEditing(false);
+  };
+
+  const openModal = (modalName) => {
+    setFormState({});
+    setActiveModal(modalName);
+  };
+
+  const handleDeleteStudent = (student) => {
+    const confirmed = window.confirm(
+      `Supprimer définitivement ${student.firstName} ${student.lastName} ?`,
+    );
+    if (confirmed) deleteUser(student.id);
   };
 
   return (
@@ -108,16 +146,13 @@ export const AdminStudents = ({
               onChange={(e) => setSelectedStudentFilter(e.target.value)}
               className={FILTER_SELECT}
             >
-              <option value="tout">Tout</option>
+              <option value="all">Tout</option>
               <option value="SECONDE">Seconde</option>
               <option value="PREMIERE">Première</option>
               <option value="TERMINALE">Terminale</option>
-              <option value="ancien">Anciens</option>
+              <option value="ANCIEN">Anciens</option>
             </select>
-            <button
-              onClick={() => setActiveModal("user")}
-              className={CREATE_BUTTON}
-            >
+            <button onClick={() => openModal("user")} className={CREATE_BUTTON}>
               + Nouvel élève
             </button>
           </div>
@@ -129,7 +164,7 @@ export const AdminStudents = ({
           <div className={PROFILE_HEADER}>
             <div className={PROFILE_INFO_CONTAINER}>
               <img
-                src={targetStudent.profilePictureUrl || "/default-avatar.png"}
+                src={getAvatarSource(targetStudent)}
                 alt="target"
                 className={PROFILE_AVATAR}
               />
@@ -142,17 +177,17 @@ export const AdminStudents = ({
                   {extractClassNum(targetStudent.matricule)}
                 </p>
                 <p className={PROFILE_CLASS_INFO}>
-                  {targetStudent.role === "ANCIEN"
+                  {isFormerStudent(targetStudent)
                     ? `Ancien élève (${targetStudent.graduationYear})`
-                    : `Classe : ${targetStudent.classGroup || "N/A"}`}
+                    : `Classe : ${CLASS_GROUP_LABELS[targetStudent.classGroup] || "N/A"}`}
                 </p>
               </div>
             </div>
-            <div className="flex items-center gap-3">
-              {isAdmin && !isEditing && (
+            <div className={BUTTONS_ROW}>
+              {!isEditing && (
                 <button
                   onClick={() => setIsEditing(true)}
-                  className="px-4 py-2 bg-blue-600 text-white text-sm rounded-lg font-semibold hover:bg-blue-500 transition"
+                  className={EDIT_BUTTON}
                 >
                   Modifier le profil ✏️
                 </button>
@@ -170,29 +205,29 @@ export const AdminStudents = ({
           </div>
 
           {isEditing ? (
-            <form onSubmit={handleSave} className="space-y-6 mt-6">
-              <div className="flex items-center gap-4 bg-slate-900/50 p-4 rounded-xl border border-slate-800">
-                <div className="relative">
+            <form onSubmit={handleSave} className={EDIT_FORM}>
+              <div className={EDIT_HEADER_BOX}>
+                <div className={AVATAR_WRAPPER}>
                   <img
-                    src={formData.profilePictureUrl || "/default-avatar.png"}
+                    src={getAvatarSource(formData)}
                     alt="profile edit"
-                    className="w-20 h-20 rounded-full object-cover border border-slate-700"
+                    className={EDIT_AVATAR}
                   />
                   <input
                     type="file"
                     accept="image/*"
                     onChange={handleImageUpload}
-                    className="mt-2 text-xs text-slate-400"
+                    className={FILE_INPUT}
                   />
                 </div>
-                <div className="grid grid-cols-2 gap-4 w-full">
+                <div className={NAME_FIELDS_GRID}>
                   <div>
                     <label className={META_LABEL}>Nom</label>
                     <input
                       type="text"
                       value={formData.lastName || ""}
                       onChange={(e) => handleChange("lastName", e.target.value)}
-                      className="w-full bg-slate-900 border border-slate-700 p-2 rounded text-white text-sm"
+                      className={EDIT_INPUT}
                     />
                   </div>
                   <div>
@@ -203,7 +238,7 @@ export const AdminStudents = ({
                       onChange={(e) =>
                         handleChange("firstName", e.target.value)
                       }
-                      className="w-full bg-slate-900 border border-slate-700 p-2 rounded text-white text-sm"
+                      className={EDIT_INPUT}
                     />
                   </div>
                 </div>
@@ -216,7 +251,7 @@ export const AdminStudents = ({
                     type="email"
                     value={formData.email || ""}
                     onChange={(e) => handleChange("email", e.target.value)}
-                    className="w-full bg-slate-900 border border-slate-700 p-2 rounded text-white text-sm"
+                    className={EDIT_INPUT}
                   />
                 </div>
                 <div>
@@ -227,7 +262,7 @@ export const AdminStudents = ({
                     onChange={(e) =>
                       handleChange("contactNumber", e.target.value)
                     }
-                    className="w-full bg-slate-900 border border-slate-700 p-2 rounded text-white text-sm"
+                    className={EDIT_INPUT}
                   />
                 </div>
                 <div>
@@ -235,7 +270,7 @@ export const AdminStudents = ({
                   <select
                     value={formData.gender || "MALE"}
                     onChange={(e) => handleChange("gender", e.target.value)}
-                    className="w-full bg-slate-900 border border-slate-700 p-2 rounded text-white text-sm"
+                    className={EDIT_INPUT}
                   >
                     <option value="MALE">Masculin</option>
                     <option value="FEMALE">Féminin</option>
@@ -246,11 +281,12 @@ export const AdminStudents = ({
                   <select
                     value={formData.classGroup || "SECONDE"}
                     onChange={(e) => handleChange("classGroup", e.target.value)}
-                    className="w-full bg-slate-900 border border-slate-700 p-2 rounded text-white text-sm"
+                    className={EDIT_INPUT}
                   >
                     <option value="SECONDE">Seconde</option>
                     <option value="PREMIERE">Première</option>
                     <option value="TERMINALE">Terminale</option>
+                    <option value="ANCIEN">Ancien</option>
                   </select>
                 </div>
                 <div>
@@ -261,7 +297,7 @@ export const AdminStudents = ({
                     onChange={(e) =>
                       handleChange("classRollNumber", Number(e.target.value))
                     }
-                    className="w-full bg-slate-900 border border-slate-700 p-2 rounded text-white text-sm"
+                    className={EDIT_INPUT}
                   />
                 </div>
                 <div>
@@ -276,32 +312,29 @@ export const AdminStudents = ({
                     onChange={(e) =>
                       handleChange("dateOfBirth", e.target.value)
                     }
-                    className="w-full bg-slate-900 border border-slate-700 p-2 rounded text-white text-sm"
+                    className={EDIT_INPUT}
                   />
                 </div>
-                <div className="col-span-2">
+                <div className={FULL_WIDTH_FIELD}>
                   <label className={META_LABEL}>Adresse</label>
                   <input
                     type="text"
                     value={formData.address || ""}
                     onChange={(e) => handleChange("address", e.target.value)}
-                    className="w-full bg-slate-900 border border-slate-700 p-2 rounded text-white text-sm"
+                    className={EDIT_INPUT}
                   />
                 </div>
               </div>
 
-              <div className="flex justify-end gap-3 mt-6">
+              <div className={FORM_ACTIONS}>
                 <button
                   type="button"
                   onClick={() => setIsEditing(false)}
-                  className="px-4 py-2 bg-slate-800 text-slate-300 rounded hover:bg-slate-700 text-sm"
+                  className={CANCEL_BUTTON}
                 >
                   Annuler
                 </button>
-                <button
-                  type="submit"
-                  className="px-4 py-2 bg-emerald-600 text-white rounded font-semibold hover:bg-emerald-500 text-sm"
-                >
+                <button type="submit" className={SAVE_BUTTON}>
                   Enregistrer les modifications
                 </button>
               </div>
@@ -355,25 +388,22 @@ export const AdminStudents = ({
                 </div>
               </div>
 
-              <div className="flex items-center mt-6 pt-4 border-t border-slate-800">
+              <div className={DETAIL_ACTIONS_ROW}>
                 <div className={PROFILE_ACTIONS}>
                   <button
-                    onClick={() => {
-                      setCurrentUser(targetStudent);
-                      setActiveTab("notes");
-                    }}
+                    onClick={() => setActiveTab("grades")}
                     className={ACTION_BLUE_BUTTON}
                   >
                     Voir résultat (Bulletin)
                   </button>
                   <button
-                    onClick={() => setActiveModal("target_history")}
+                    onClick={() => openModal("target_history")}
                     className={ACTION_SECONDARY_BUTTON}
                   >
                     + Créer un historique
                   </button>
                   <button
-                    onClick={() => setActiveModal("target_remark")}
+                    onClick={() => openModal("target_remark")}
                     className={ACTION_SECONDARY_BUTTON}
                   >
                     + Créer une remarque
@@ -384,27 +414,28 @@ export const AdminStudents = ({
               <div className={SUB_SECTIONS_GRID}>
                 <div className={SUB_SECTION_BOX}>
                   <h4 className={SUB_SECTION_TITLE}>Historique Discipline</h4>
-                  {historiques
-                    .filter((h) => h.studentId === targetStudent.id)
-                    .map((h) => (
-                      <div key={h.id} className={SUB_SECTION_ITEM}>
-                        <span className={ITEM_LABEL_BLUE}>{h.type}</span> —{" "}
-                        {h.reason || h.raison} ({h.startDate || h.date})
-                      </div>
-                    ))}
+                  {historyRecords.map((record) => (
+                    <div key={record.id} className={SUB_SECTION_ITEM}>
+                      <span className={ITEM_LABEL_BLUE}>
+                        {HISTORY_TYPE_LABELS[record.type]}
+                      </span>{" "}
+                      — {record.reason} ({formatDate(record.startDate)}
+                      {record.endDate !== record.startDate &&
+                        ` → ${formatDate(record.endDate)}`}
+                      )
+                    </div>
+                  ))}
                 </div>
                 <div className={SUB_SECTION_BOX}>
                   <h4 className={SUB_SECTION_TITLE}>Remarques Dossier</h4>
-                  {remarques
-                    .filter((r) => r.studentId === targetStudent.id)
-                    .map((r) => (
-                      <div key={r.id} className={SUB_SECTION_ITEM}>
-                        <span className={ITEM_LABEL_EMERALD}>
-                          {r.category || r.type}
-                        </span>{" "}
-                        — {r.content || r.raison}
-                      </div>
-                    ))}
+                  {remarks.map((remark) => (
+                    <div key={remark.id} className={SUB_SECTION_ITEM}>
+                      <span className={ITEM_LABEL_EMERALD}>
+                        {REMARK_CATEGORY_LABELS[remark.category]}
+                      </span>{" "}
+                      — {remark.content}
+                    </div>
+                  ))}
                 </div>
               </div>
             </>
@@ -416,12 +447,12 @@ export const AdminStudents = ({
             <table className={TABLE_ELEMENT}>
               <thead className={TABLE_HEAD}>
                 <tr>
-                  <th className="p-4">Élève</th>
-                  <th className="p-4">Matricule</th>
-                  <th className="p-4">Classe / Num</th>
-                  <th className="p-4">Genre</th>
-                  <th className="p-4">Statut (Actif / Inactif)</th>
-                  <th className="p-4 text-right">Actions</th>
+                  <th className={TABLE_HEAD_CELL}>Élève</th>
+                  <th className={TABLE_HEAD_CELL}>Matricule</th>
+                  <th className={TABLE_HEAD_CELL}>Classe / Num</th>
+                  <th className={TABLE_HEAD_CELL}>Genre</th>
+                  <th className={TABLE_HEAD_CELL}>Statut (Actif / Inactif)</th>
+                  <th className={TABLE_HEAD_CELL_RIGHT}>Actions</th>
                 </tr>
               </thead>
               <tbody className={TABLE_BODY}>
@@ -429,7 +460,7 @@ export const AdminStudents = ({
                   <tr key={student.id} className={TABLE_ROW}>
                     <td className={TABLE_CELL_STUDENT}>
                       <img
-                        src={student.profilePictureUrl || "/default-avatar.png"}
+                        src={getAvatarSource(student)}
                         alt="avatar"
                         className={TABLE_AVATAR}
                       />
@@ -441,49 +472,49 @@ export const AdminStudents = ({
                       {student.matricule}
                     </td>
                     <td className={TABLE_CELL_DEFAULT}>
-                      {student.role === "ANCIEN" ? (
+                      {isFormerStudent(student) ? (
                         <span className={ALUMNI_TEXT}>
                           Ancien ({student.graduationYear})
                         </span>
                       ) : (
                         <span>
-                          {student.classGroup || "N/A"} (N°
+                          {CLASS_GROUP_LABELS[student.classGroup] || "N/A"} (N°
                           {student.classRollNumber || "—"})
                         </span>
                       )}
                     </td>
-                    <td className="p-4 capitalize">{student.gender}</td>
-                    <td className="p-4">
-                      <label className="relative inline-flex items-center cursor-pointer">
+                    <td className={TABLE_CELL_CAPITALIZE}>{student.gender}</td>
+                    <td className={TABLE_HEAD_CELL}>
+                      <label className={TOGGLE_LABEL}>
                         <input
                           type="checkbox"
                           checked={student.isActive !== false}
                           onChange={() => toggleUserStatus(student.id)}
-                          className="sr-only peer"
+                          className={TOGGLE_INPUT}
                         />
-                        <div className="w-11 h-6 bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-600"></div>
-                        <span className="ml-3 text-xs font-bold text-slate-300">
+                        <div className={TOGGLE_TRACK}></div>
+                        <span className={TOGGLE_TEXT}>
                           {student.isActive !== false ? "ACTIF" : "INACTIF"}
                         </span>
                       </label>
                     </td>
                     <td className={TABLE_ACTIONS_CELL}>
-                      <div className="flex items-center justify-end gap-3">
+                      <div className={ROW_ACTIONS}>
                         <button
                           onClick={() => setTargetStudent(student)}
                           className={PROFILE_VIEW_BUTTON}
                         >
                           Voir le profil
                         </button>
-                        {isAdmin && (
+                        {
                           <button
-                            onClick={() => deleteUser(student.id)}
-                            className="p-2 text-rose-400 hover:text-rose-200 hover:bg-rose-950/40 rounded-lg transition"
+                            onClick={() => handleDeleteStudent(student)}
+                            className={DELETE_ICON_BUTTON}
                             title="Supprimer"
                           >
                             🗑️
                           </button>
-                        )}
+                        }
                       </div>
                     </td>
                   </tr>

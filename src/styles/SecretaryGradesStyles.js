@@ -46,3 +46,5 @@ export const SESSION_CREATION_DATE = "text-[11px] text-slate-500 mt-2";
 export const SESSION_VALIDATION_DATE = "text-[11px] text-emerald-400 mt-1";
 export const EDIT_GRADES_BUTTON =
   "w-full mt-4 bg-slate-800 hover:bg-blue-600 text-white text-xs font-semibold py-2 rounded-xl transition-colors";
+export const EMPTY_TEXT = "text-slate-400 text-sm";
+export const READ_ONLY_NOTE = "text-xs text-purple-300 mt-4";

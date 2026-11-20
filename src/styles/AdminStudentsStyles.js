@@ -64,3 +64,35 @@ export const PROFILE_VIEW_BUTTON =
   "bg-blue-600/20 hover:bg-blue-600 text-blue-300 hover:text-white px-3 py-1 rounded text-xs transition-colors";
 export const DELETE_BUTTON =
   "bg-red-500/10 hover:bg-red-600 text-red-400 hover:text-white px-2 py-1 rounded text-xs transition-colors";
+export const BUTTONS_ROW = "flex items-center gap-3";
+export const EDIT_BUTTON =
+  "px-4 py-2 bg-blue-600 text-white text-sm rounded-lg font-semibold hover:bg-blue-500 transition";
+export const EDIT_FORM = "space-y-6 mt-6";
+export const EDIT_HEADER_BOX =
+  "flex items-center gap-4 bg-slate-900/50 p-4 rounded-xl border border-slate-800";
+export const AVATAR_WRAPPER = "relative";
+export const EDIT_AVATAR =
+  "w-20 h-20 rounded-full object-cover border border-slate-700";
+export const FILE_INPUT = "mt-2 text-xs text-slate-400";
+export const NAME_FIELDS_GRID = "grid grid-cols-2 gap-4 w-full";
+export const EDIT_INPUT =
+  "w-full bg-slate-900 border border-slate-700 p-2 rounded text-white text-sm";
+export const FULL_WIDTH_FIELD = "col-span-2";
+export const FORM_ACTIONS = "flex justify-end gap-3 mt-6";
+export const CANCEL_BUTTON =
+  "px-4 py-2 bg-slate-800 text-slate-300 rounded hover:bg-slate-700 text-sm";
+export const SAVE_BUTTON =
+  "px-4 py-2 bg-emerald-600 text-white rounded font-semibold hover:bg-emerald-500 text-sm";
+export const DETAIL_ACTIONS_ROW =
+  "flex items-center mt-6 pt-4 border-t border-slate-800";
+export const TABLE_HEAD_CELL = "p-4";
+export const TABLE_HEAD_CELL_RIGHT = "p-4 text-right";
+export const TABLE_CELL_CAPITALIZE = "p-4 capitalize";
+export const TOGGLE_LABEL = "relative inline-flex items-center cursor-pointer";
+export const TOGGLE_INPUT = "sr-only peer";
+export const TOGGLE_TRACK =
+  "w-11 h-6 bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-600";
+export const TOGGLE_TEXT = "ml-3 text-xs font-bold text-slate-300";
+export const ROW_ACTIONS = "flex items-center justify-end gap-3";
+export const DELETE_ICON_BUTTON =
+  "p-2 text-rose-400 hover:text-rose-200 hover:bg-rose-950/40 rounded-lg transition";

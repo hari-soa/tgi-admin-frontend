@@ -25,3 +25,17 @@ export const FIELD_LABEL =
 export const FIELD_VALUE = "text-white font-medium mt-1";
 export const FIELD_VALUE_CAPITALIZE = "text-white font-medium mt-1 capitalize";
 export const ADDRESS_GRID_SPAN = "sm:col-span-2";
+export const PAGE_HEADER_ROW = "flex justify-between items-center mb-6";
+export const EDIT_BUTTON =
+  "px-4 py-2 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-500 transition";
+export const EDIT_FORM = "space-y-6";
+export const AVATAR_WRAPPER = "relative";
+export const FILE_INPUT = "mt-2 text-xs text-slate-400";
+export const NAME_FIELDS_GRID = "grid grid-cols-2 gap-4 w-full";
+export const EDIT_INPUT =
+  "w-full bg-slate-900 border border-slate-700 p-2 rounded text-white text-sm";
+export const FORM_ACTIONS = "flex justify-end gap-3 mt-6";
+export const CANCEL_BUTTON =
+  "px-4 py-2 bg-slate-800 text-slate-300 rounded hover:bg-slate-700";
+export const SAVE_BUTTON =
+  "px-4 py-2 bg-emerald-600 text-white rounded font-semibold hover:bg-emerald-500";

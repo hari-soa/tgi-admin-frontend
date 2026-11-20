@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import Sidebar from "./components/layout/Sidebar";
 import Topbar from "./components/layout/Topbar";
 import AppRouter from "./pages/AppRouter";
@@ -9,155 +9,516 @@ import UserModal from "./components/modals/UserModal";
 import AnnouncementModal from "./components/modals/AnnouncementModal";
 import SubjectModal from "./components/modals/SubjectModal";
 import GradeSessionModal from "./components/modals/GradeSessionModal";
-import PointageModal from "./components/modals/PointageModal";
+import AttendanceModal from "./components/modals/AttendanceModal";
 import HistoryRemarkModal from "./components/modals/HistoryRemarkModal";
 
 import { getCurrentUserProfile, logoutUser } from "./services/authService";
 import {
   getAllUsers,
-  createStudent,
-  createAdministrator,
-  createSecretary,
-  createTeacher,
-  deleteUser as apiDeleteUser,
+  getStaffUsers,
+  createUser,
   updateUser,
+  deleteUser as deleteUserOnServer,
 } from "./services/userService";
 import {
   getAllSubjects,
   createSubject,
   updateSubject,
-  deleteSubject as apiDeleteSubject,
+  deleteSubject as deleteSubjectOnServer,
 } from "./services/subjectService";
 import {
   getAllAnnouncements,
   createAnnouncement,
   updateAnnouncement,
-  deleteAnnouncement as apiDeleteAnnouncement,
+  deleteAnnouncement as deleteAnnouncementOnServer,
 } from "./services/announcementService";
 import {
-  createGrade,
+  getGradeSessions,
+  createGradeSession,
+  saveGradeSessionDraft,
   submitGradeSession,
-  reviewGrade,
-  createAnnualResult,
+  validateGradeSession,
   getStudentResults,
+  exportResultPdf,
 } from "./services/gradeService";
 import {
+  getDailyAttendance,
   createAttendanceSlot,
   updateAttendanceSlot,
   deleteAttendanceSlot,
-  getDailyAttendance,
   checkAttendance,
-  updateAttendanceMotif,
+  markAbsence,
+} from "./services/attendanceService";
+import {
+  getStudentHistory,
+  getStudentRemarks,
   createHistoryRecord,
-  createRemarkRecord,
-} from "./services/attendanceDisciplineService";
+  createRemark,
+} from "./services/disciplinaryService";
+import {
+  getTodayIsoDate,
+  getDayOfWeek,
+  omitEmptyValues,
+  toUserUpdatePayload,
+} from "./utils/helpers";
+import {
+  APP_LAYOUT,
+  APP_CONTENT,
+  APP_MAIN,
+  LOADING_SCREEN,
+  LOADING_CONTENT,
+  LOADING_SPINNER,
+} from "./styles/AppStyles";
+
+const TOAST_DURATION_MS = 4000;
+const DEFAULT_TAB = "dashboard";
+const DEFAULT_SLOT_START = "08:00";
+const DEFAULT_SLOT_END = "10:00";
+const STAFF_ROLES_WITH_GRADE_SESSIONS = ["ADMIN", "SECRETARY"];
 
 const App = () => {
   const [currentUser, setCurrentUser] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState(
+    () => localStorage.getItem("activeTab") || DEFAULT_TAB,
+  );
 
-  const [activeTab, setActiveTab] = useState(() => {
-    return localStorage.getItem("activeTab") || "dashboard";
-  });
+  const [users, setUsers] = useState([]);
+  const [staffUsers, setStaffUsers] = useState([]);
+  const [announcements, setAnnouncements] = useState([]);
+  const [subjects, setSubjects] = useState([]);
+  const [gradeSessions, setGradeSessions] = useState([]);
+  const [attendanceCards, setAttendanceCards] = useState([]);
+  const [attendanceDate, setAttendanceDate] = useState(getTodayIsoDate());
+
+  const [historyRecords, setHistoryRecords] = useState([]);
+  const [remarks, setRemarks] = useState([]);
+  const [annualResults, setAnnualResults] = useState([]);
+
+  const [selectedStudentFilter, setSelectedStudentFilter] = useState("all");
+  const [targetStudent, setTargetStudent] = useState(null);
+  const [activeGradeSession, setActiveGradeSession] = useState(null);
+  const [activeModal, setActiveModal] = useState(null);
+  const [formState, setFormState] = useState({});
+  const [toastMessage, setToastMessage] = useState("");
+
+  const userRole = currentUser?.role || "";
+  const isAdmin = userRole === "ADMIN";
+
+  // The student whose grades, history and remarks are displayed: the student
+  // themself, or the one selected by an administrator or a secretary.
+  const viewedStudent = userRole === "STUDENT" ? currentUser : targetStudent;
+
+  const showToast = (message) => {
+    setToastMessage(message);
+    setTimeout(() => setToastMessage(""), TOAST_DURATION_MS);
+  };
+
+  const closeModal = () => {
+    setActiveModal(null);
+    setFormState({});
+  };
 
   useEffect(() => {
     localStorage.setItem("activeTab", activeTab);
   }, [activeTab]);
 
-  const [gradeSessions, setGradeSessions] = useState(() => {
-    const saved = localStorage.getItem("gradeSessions");
-    return saved ? JSON.parse(saved) : [];
-  });
-
   useEffect(() => {
-    localStorage.setItem("gradeSessions", JSON.stringify(gradeSessions));
-  }, [gradeSessions]);
-
-  const [examResults, setExamResults] = useState(() => {
-    const saved = localStorage.getItem("examResults");
-    return saved ? JSON.parse(saved) : [];
-  });
-
-  useEffect(() => {
-    localStorage.setItem("examResults", JSON.stringify(examResults));
-  }, [examResults]);
-
-  const [users, setUsers] = useState([]);
-  const [announcements, setAnnouncements] = useState([]);
-  const [subjects, setSubjects] = useState([]);
-  const [historiques, setHistoriques] = useState([]);
-  const [remarques, setRemarques] = useState([]);
-  const [pointages, setPointages] = useState([]);
-
-  const [selectedStudentFilter, setSelectedStudentFilter] = useState("tout");
-  const [activeModal, setActiveModal] = useState(null);
-  const [toastMessage, setToastMessage] = useState("");
-
-  const [targetStudent, setTargetStudent] = useState(null);
-  const [selectedAnnouncement, setSelectedAnnouncement] = useState(null);
-  const [activeGradeSession, setActiveGradeSession] = useState(null);
-  const [formState, setFormState] = useState({});
-
-  const showToast = (msg) => {
-    setToastMessage(msg);
-    setTimeout(() => setToastMessage(""), 4000);
-  };
-
-  useEffect(() => {
-    const initAuth = async () => {
-      const token = localStorage.getItem("token");
-      if (token) {
+    const restoreSession = async () => {
+      if (localStorage.getItem("token")) {
         try {
-          const userProfile = await getCurrentUserProfile();
-          setCurrentUser(userProfile);
-        } catch (err) {
-          console.error("Session expired or invalid token", err);
-          localStorage.removeItem("token");
-          setCurrentUser(null);
+          setCurrentUser(await getCurrentUserProfile());
+        } catch {
+          logoutUser();
         }
       }
       setLoading(false);
     };
 
-    initAuth();
+    restoreSession();
   }, []);
 
+  const refreshDirectory = useCallback(async () => {
+    const canListUsers = STAFF_ROLES_WITH_GRADE_SESSIONS.includes(userRole);
+    const [usersData, staffData] = await Promise.all([
+      canListUsers ? getAllUsers() : Promise.resolve([]),
+      getStaffUsers(),
+    ]);
+    setUsers(usersData);
+    setStaffUsers(staffData);
+  }, [userRole]);
+
+  const refreshGradeSessions = useCallback(async () => {
+    if (STAFF_ROLES_WITH_GRADE_SESSIONS.includes(userRole)) {
+      setGradeSessions(await getGradeSessions());
+    }
+  }, [userRole]);
+
   useEffect(() => {
-    const fetchAppData = async () => {
-      if (!currentUser) return;
+    if (!currentUser) return;
+
+    const loadSharedData = async () => {
       try {
-        const todayStr = new Date().toISOString().split("T")[0];
-        const todayDay = new Date()
-          .toLocaleDateString("en-US", { weekday: "long" })
-          .toUpperCase();
-
-        const [subjectsData, announcementsData, usersData, pointagesData] =
-          await Promise.all([
-            getAllSubjects().catch(() => []),
-            getAllAnnouncements().catch(() => []),
-            getAllUsers().catch(() => []),
-            getDailyAttendance(todayDay, todayStr).catch(() => []),
-          ]);
-
+        const [subjectsData, announcementsData] = await Promise.all([
+          getAllSubjects(),
+          getAllAnnouncements(),
+        ]);
+        await Promise.all([refreshDirectory(), refreshGradeSessions()]);
         setSubjects(subjectsData);
         setAnnouncements(announcementsData);
-        setUsers(usersData);
-        setPointages(pointagesData);
       } catch (error) {
-        console.error("Error loading application data details:", error);
-        showToast("Error loading application data from server");
+        showToast(`Erreur de chargement des données : ${error.message}`);
       }
     };
 
-    fetchAppData();
-  }, [currentUser]);
+    loadSharedData();
+  }, [currentUser, refreshDirectory, refreshGradeSessions]);
+
+  const refreshAttendance = useCallback(async () => {
+    const dayOfWeek = getDayOfWeek(attendanceDate);
+    setAttendanceCards(
+      dayOfWeek ? await getDailyAttendance(dayOfWeek, attendanceDate) : [],
+    );
+  }, [attendanceDate]);
+
+  useEffect(() => {
+    if (!isAdmin) return;
+    refreshAttendance().catch((error) =>
+      showToast(`Erreur de chargement du pointage : ${error.message}`),
+    );
+  }, [isAdmin, refreshAttendance]);
+
+  const refreshStudentRecords = useCallback(async () => {
+    if (!viewedStudent) {
+      setHistoryRecords([]);
+      setRemarks([]);
+      setAnnualResults([]);
+      return;
+    }
+
+    const [historyData, remarksData, resultsData] = await Promise.all([
+      getStudentHistory(viewedStudent.id),
+      getStudentRemarks(viewedStudent.id),
+      getStudentResults(viewedStudent.id),
+    ]);
+    setHistoryRecords(historyData);
+    setRemarks(remarksData);
+    setAnnualResults(resultsData);
+  }, [viewedStudent?.id]);
+
+  useEffect(() => {
+    refreshStudentRecords().catch((error) =>
+      showToast(`Erreur de chargement du dossier élève : ${error.message}`),
+    );
+  }, [refreshStudentRecords]);
+
+  /** Runs a server action, refreshes the data it changed, and reports the outcome. */
+  const runAction = async (action, successMessage) => {
+    try {
+      await action();
+      if (successMessage) showToast(successMessage);
+      return true;
+    } catch (error) {
+      showToast(`Erreur : ${error.message}`);
+      return false;
+    }
+  };
+
+  const handleLogout = () => {
+    logoutUser();
+    setCurrentUser(null);
+    setTargetStudent(null);
+    setActiveTab(DEFAULT_TAB);
+    showToast("Déconnexion réussie");
+  };
+
+  // ---------- Users ----------
+
+  const handleCreateUser = async (event) => {
+    event.preventDefault();
+    const role = formState.role || "STUDENT";
+    const basePayload = {
+      firstName: formState.firstName,
+      lastName: formState.lastName,
+      matricule: formState.matricule,
+      gender: formState.gender || "MALE",
+      email: formState.email,
+      contactNumber: formState.contactNumber,
+    };
+    const rolePayloads = {
+      STUDENT: {
+        classRollNumber: Number(formState.classRollNumber),
+        classGroup: formState.classGroup || "SECONDE",
+      },
+      TEACHER: { homeroomClass: formState.homeroomClass },
+      SECRETARY: { department: formState.department },
+      ADMIN: {},
+    };
+
+    const succeeded = await runAction(async () => {
+      await createUser(
+        role,
+        omitEmptyValues({ ...basePayload, ...rolePayloads[role] }),
+      );
+      await refreshDirectory();
+    }, "Utilisateur créé avec succès");
+
+    if (succeeded) closeModal();
+  };
+
+  const handleUpdateUser = async (userId, userData) => {
+    await runAction(async () => {
+      const updatedUser = await updateUser(
+        userId,
+        toUserUpdatePayload(userData),
+      );
+      await refreshDirectory();
+      if (currentUser.id === userId) setCurrentUser(updatedUser);
+      if (targetStudent?.id === userId) setTargetStudent(updatedUser);
+    }, "Profil mis à jour avec succès");
+  };
+
+  const toggleUserStatus = async (userId) => {
+    const user = users.find((candidate) => candidate.id === userId);
+    if (!user) return;
+    const newStatus = user.isActive === false;
+
+    await runAction(
+      async () => {
+        const updatedUser = await updateUser(userId, { isActive: newStatus });
+        await refreshDirectory();
+        if (targetStudent?.id === userId) setTargetStudent(updatedUser);
+      },
+      newStatus ? "Compte réactivé" : "Compte désactivé",
+    );
+  };
+
+  const deleteUser = async (userId) => {
+    await runAction(async () => {
+      await deleteUserOnServer(userId);
+      await refreshDirectory();
+      if (targetStudent?.id === userId) setTargetStudent(null);
+    }, "Utilisateur supprimé avec succès");
+  };
+
+  // ---------- Announcements ----------
+
+  const handleSubmitAnnouncement = async (event) => {
+    event.preventDefault();
+    const payload = {
+      title: formState.title,
+      content: formState.content,
+      targetScope: formState.targetScope || "ALL",
+      priority: formState.priority || "NORMAL",
+      targetClasses:
+        formState.targetScope === "CLASS" ? formState.targetClasses : undefined,
+    };
+    const isEdition = Boolean(formState.id);
+
+    const succeeded = await runAction(
+      async () => {
+        if (isEdition) {
+          await updateAnnouncement(formState.id, payload);
+        } else {
+          await createAnnouncement(payload);
+        }
+        setAnnouncements(await getAllAnnouncements());
+      },
+      isEdition
+        ? "Annonce modifiée avec succès"
+        : "Annonce publiée avec succès",
+    );
+
+    if (succeeded) closeModal();
+  };
+
+  const handleDeleteAnnouncement = async (announcementId) => {
+    await runAction(async () => {
+      await deleteAnnouncementOnServer(announcementId);
+      setAnnouncements(await getAllAnnouncements());
+    }, "Annonce supprimée avec succès");
+  };
+
+  // ---------- Subjects ----------
+
+  const handleSubmitSubject = async (event) => {
+    event.preventDefault();
+    const payload = {
+      name: formState.name,
+      coefficient: Number(formState.coefficient),
+      description: formState.description || undefined,
+      assignments: [
+        {
+          classGroup: formState.classGroup || "SECONDE",
+          teacherId: formState.teacherId,
+        },
+      ],
+    };
+    const isEdition = Boolean(formState.id);
+
+    const succeeded = await runAction(
+      async () => {
+        if (isEdition) {
+          await updateSubject(formState.id, payload);
+        } else {
+          await createSubject(payload);
+        }
+        setSubjects(await getAllSubjects());
+      },
+      isEdition ? "Matière modifiée avec succès" : "Matière créée avec succès",
+    );
+
+    if (succeeded) closeModal();
+  };
+
+  const handleDeleteSubject = async (subjectId) => {
+    await runAction(async () => {
+      await deleteSubjectOnServer(subjectId);
+      setSubjects(await getAllSubjects());
+    }, "Matière supprimée avec succès");
+  };
+
+  // ---------- Grade sessions ----------
+
+  const handleCreateGradeSession = async (event) => {
+    event.preventDefault();
+    const succeeded = await runAction(async () => {
+      await createGradeSession({
+        classGroup: formState.classGroup,
+        subjectId: formState.subjectId,
+        examType: formState.examType || "TRIMESTER",
+        term: formState.term || "FIRST_TRIMESTER",
+      });
+      await refreshGradeSessions();
+    }, "Session de notes créée avec succès");
+
+    if (succeeded) closeModal();
+  };
+
+  const handleSaveDraft = async (sessionId, grades) => {
+    await runAction(async () => {
+      await saveGradeSessionDraft(sessionId, grades);
+      await refreshGradeSessions();
+    }, "Brouillon enregistré");
+  };
+
+  const handleSubmitSession = async (sessionId, grades) => {
+    const succeeded = await runAction(async () => {
+      await submitGradeSession(sessionId, grades);
+      await refreshGradeSessions();
+    }, "Notes soumises à l'administrateur avec succès");
+
+    if (succeeded) setActiveGradeSession(null);
+  };
+
+  const handleValidateSession = async (sessionId) => {
+    await runAction(async () => {
+      await validateGradeSession(sessionId);
+      await Promise.all([refreshGradeSessions(), refreshStudentRecords()]);
+    }, "Session validée : les notes sont publiées dans les bulletins");
+  };
+
+  const handleExportReportCard = async (resultId) => {
+    await runAction(async () => {
+      window.open(await exportResultPdf(resultId), "_blank", "noopener");
+    });
+  };
+
+  // ---------- Teacher attendance ----------
+
+  const handleSubmitSlot = async (event) => {
+    event.preventDefault();
+    const payload = {
+      teacherId: formState.teacherId,
+      subjectId: formState.subjectId,
+      targetClass: formState.targetClass || "SECONDE",
+      dayOfWeek: formState.dayOfWeek || "MONDAY",
+      startTime: formState.startTime || DEFAULT_SLOT_START,
+      endTime: formState.endTime || DEFAULT_SLOT_END,
+      classroom: formState.classroom,
+    };
+    const isEdition = Boolean(formState.id);
+
+    const succeeded = await runAction(
+      async () => {
+        if (isEdition) {
+          await updateAttendanceSlot(formState.id, payload);
+        } else {
+          await createAttendanceSlot(payload);
+        }
+        await refreshAttendance();
+      },
+      isEdition ? "Créneau modifié avec succès" : "Créneau créé avec succès",
+    );
+
+    if (succeeded) closeModal();
+  };
+
+  const handleDeleteSlot = async (slotId) => {
+    await runAction(async () => {
+      await deleteAttendanceSlot(slotId);
+      await refreshAttendance();
+    }, "Créneau supprimé avec succès");
+  };
+
+  const handleCheckAttendance = async (slotId, date) => {
+    await runAction(async () => {
+      await checkAttendance(slotId, date);
+      await refreshAttendance();
+    }, "Présence enregistrée");
+  };
+
+  const handleMarkAbsence = async (slotId, date, motif) => {
+    await runAction(async () => {
+      await markAbsence(slotId, date, motif);
+      await refreshAttendance();
+    }, "Absence enregistrée");
+  };
+
+  // ---------- History and remarks of the selected student ----------
+
+  const handleAddHistoryRecord = async (event) => {
+    event.preventDefault();
+    const succeeded = await runAction(async () => {
+      await createHistoryRecord({
+        studentId: targetStudent.id,
+        type: formState.type || "ABSENCE",
+        startDate: formState.startDate,
+        endDate: formState.endDate || formState.startDate,
+        reason: formState.reason,
+      });
+      await refreshStudentRecords();
+    }, "Événement ajouté au dossier de l'élève");
+
+    if (succeeded) closeModal();
+  };
+
+  const handleAddRemark = async (event) => {
+    event.preventDefault();
+    const succeeded = await runAction(async () => {
+      await createRemark({
+        studentId: targetStudent.id,
+        category: formState.category || "BEHAVIOR",
+        content: formState.content,
+      });
+      await refreshStudentRecords();
+    }, "Remarque ajoutée au dossier de l'élève");
+
+    if (succeeded) closeModal();
+  };
+
+  const studentUsers = users.filter((user) => {
+    if (user.role !== "STUDENT") return false;
+    if (selectedStudentFilter === "all") return true;
+    return user.classGroup === selectedStudentFilter;
+  });
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-screen bg-slate-950 text-slate-100 font-sans">
-        <div className="text-center">
-          <div className="w-10 h-10 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p>Loading...</p>
+      <div className={LOADING_SCREEN}>
+        <div className={LOADING_CONTENT}>
+          <div className={LOADING_SPINNER}></div>
+          <p>Chargement...</p>
         </div>
       </div>
     );
@@ -166,540 +527,11 @@ const App = () => {
   if (!currentUser) {
     return (
       <>
-        <Login setCurrentUser={setCurrentUser} showToast={showToast} />
-        <Toast message={toastMessage} />
-      </>
-    );
-  }
-
-  const handleLogout = () => {
-    logoutUser();
-    setCurrentUser(null);
-    setTargetStudent(null);
-    localStorage.removeItem("activeTab");
-    showToast("Logged out successfully");
-  };
-
-  const handleSwitchUser = (role) => {
-    const found = users.find((u) => u.role === role);
-    if (found) {
-      setCurrentUser(found);
-      setTargetStudent(null);
-      if (
-        role === "ADMIN" ||
-        role === "SECRETARY" ||
-        role === "admin" ||
-        role === "secretaire"
-      )
-        setActiveTab("dashboard");
-      else setActiveTab("accueil");
-      showToast(
-        `Logged in as ${found.firstName || found.prenom} ${found.lastName || found.nom} (${role.toUpperCase()})`,
-      );
-    }
-  };
-
-  const handleCreateUser = async (e) => {
-    e.preventDefault();
-    try {
-      const role = (formState.role || "STUDENT").toUpperCase();
-      const gender = (formState.gender || "MALE").toUpperCase();
-
-      const basePayload = {
-        firstName: formState.firstName,
-        lastName: formState.lastName,
-        matricule: formState.matricule,
-        gender: gender,
-      };
-
-      let response;
-
-      if (role === "STUDENT") {
-        const payload = {
-          ...basePayload,
-          classRollNumber: parseInt(formState.classRollNumber, 10),
-          classGroup: (formState.classGroup || "SECONDE").toUpperCase(),
-        };
-        response = await createStudent(payload);
-      } else if (role === "SECRETARY") {
-        response = await createSecretary(basePayload);
-      } else if (role === "TEACHER") {
-        response = await createTeacher(basePayload);
-      } else {
-        response = await createAdministrator({
-          ...basePayload,
-          role: role,
-        });
-      }
-
-      setUsers([...users, response?.data?.user || response || basePayload]);
-      setActiveModal(null);
-      setFormState({});
-      showToast("User created successfully on the server!");
-    } catch (error) {
-      showToast(`Error: ${error.message}`);
-    }
-  };
-
-  const handleUpdateUser = async (userId, updatedData) => {
-    const previousUsers = [...users];
-    const previousTarget = targetStudent ? { ...targetStudent } : null;
-
-    setUsers(
-      users.map((u) => (u.id === userId ? { ...u, ...updatedData } : u)),
-    );
-    if (targetStudent?.id === userId) {
-      setTargetStudent({ ...targetStudent, ...updatedData });
-    }
-
-    showToast("Profile updated successfully!");
-
-    try {
-      await updateUser(userId, updatedData);
-    } catch (error) {
-      setUsers(previousUsers);
-      if (targetStudent?.id === userId) {
-        setTargetStudent(previousTarget);
-      }
-      showToast(`Failed to save changes to server: ${error.message}`);
-    }
-  };
-
-  const handleFormSubmitAnnouncement = async (e) => {
-    e.preventDefault();
-    try {
-      const payload = {
-        title: formState.title,
-        content: formState.content,
-        targetScope: formState.targetScope || "ALL",
-        priority: formState.priority || "NORMAL",
-        targetClasses: formState.targetClasses,
-      };
-
-      const list = Array.isArray(announcements)
-        ? announcements
-        : announcements?.announcements ||
-          announcements?.data?.announcements ||
-          [];
-
-      if (formState.id) {
-        const response = await updateAnnouncement(formState.id, payload);
-        const updated = response?.data?.announcement ||
-          response || { id: formState.id, ...payload };
-
-        setAnnouncements(
-          list.map((a) => (a.id === formState.id ? { ...a, ...updated } : a)),
-        );
-        showToast("Announcement updated successfully!");
-      } else {
-        const response = await createAnnouncement(payload);
-        const created = response?.data?.announcement || response || payload;
-
-        setAnnouncements([created, ...list]);
-        showToast("Announcement published successfully!");
-      }
-
-      setActiveModal(null);
-      setFormState({});
-    } catch (error) {
-      showToast(`Error: ${error.message}`);
-    }
-  };
-
-  const handleDeleteAnnouncement = async (announcementId) => {
-    const list = Array.isArray(announcements)
-      ? announcements
-      : announcements?.announcements ||
-        announcements?.data?.announcements ||
-        [];
-
-    const previousAnnouncements = [...list];
-
-    setAnnouncements(list.filter((a) => a.id !== announcementId));
-    showToast("Announcement deleted successfully!");
-
-    try {
-      await apiDeleteAnnouncement(announcementId);
-    } catch (error) {
-      setAnnouncements(previousAnnouncements);
-      showToast(`Failed to delete announcement: ${error.message}`);
-    }
-  };
-
-  const handleFormSubmitSubject = async (e) => {
-    e.preventDefault();
-    try {
-      const payload = {
-        name: formState.name,
-        coefficient: parseFloat(formState.coefficient),
-        description: formState.description || undefined,
-        assignments: [
-          {
-            classGroup: (formState.classGroup || "SECONDE").toUpperCase(),
-            teacherId: formState.teacherId,
-          },
-        ],
-      };
-
-      const list = Array.isArray(subjects)
-        ? subjects
-        : subjects?.subjects || subjects?.data?.subjects || [];
-
-      if (formState.id) {
-        const response = await updateSubject(formState.id, payload);
-        const updated = response?.data?.subject ||
-          response || { id: formState.id, ...payload };
-
-        setSubjects(
-          list.map((s) => (s.id === formState.id ? { ...s, ...updated } : s)),
-        );
-        showToast("Subject updated successfully!");
-      } else {
-        const response = await createSubject(payload);
-        const created = response?.data?.subject || response || payload;
-
-        setSubjects([created, ...list]);
-        showToast("Subject created successfully!");
-      }
-
-      setActiveModal(null);
-      setFormState({});
-    } catch (error) {
-      showToast(`Error: ${error.message}`);
-    }
-  };
-
-  const handleDeleteSubject = async (subjectId) => {
-    const list = Array.isArray(subjects)
-      ? subjects
-      : subjects?.subjects || subjects?.data?.subjects || [];
-
-    const previousSubjects = [...list];
-
-    setSubjects(list.filter((s) => s.id !== subjectId));
-    showToast("Subject deleted successfully!");
-
-    try {
-      await apiDeleteSubject(subjectId);
-    } catch (error) {
-      setSubjects(previousSubjects);
-      showToast(`Failed to delete subject: ${error.message}`);
-    }
-  };
-
-  const handleCreateGradeSession = async (e) => {
-    e.preventDefault();
-    try {
-      const subjectsArray = Array.isArray(subjects)
-        ? subjects
-        : subjects?.subjects || subjects?.data?.subjects || [];
-
-      const foundSubject = subjectsArray.find(
-        (s) => (s.id || s._id) === formState.subjectId,
-      );
-      const subjectName = foundSubject
-        ? foundSubject.name || foundSubject.nom
-        : "Matière";
-
-      const payload = {
-        id: Date.now().toString(),
-        subjectId: formState.subjectId,
-        matiere: subjectName,
-        classGroup: formState.classGroup,
-        classe: formState.classGroup,
-        examType: formState.examType || "TRIMESTER",
-        term: formState.term || "FIRST_TRIMESTER",
-        statut: "brouillon",
-        notesDraft: {},
-        dateCreation: new Date().toLocaleDateString(),
-      };
-
-      const updatedSessions = [payload, ...gradeSessions];
-      setGradeSessions(updatedSessions);
-      localStorage.setItem("gradeSessions", JSON.stringify(updatedSessions));
-
-      setActiveModal(null);
-      setFormState({});
-      showToast("Session de notes créée avec succès !");
-    } catch (error) {
-      showToast(`Error: ${error.message}`);
-    }
-  };
-
-  const handleCreatePointage = async (e) => {
-    e.preventDefault();
-    try {
-      const payload = {
-        teacherId: formState.teacherId,
-        subjectId: formState.subjectId,
-        targetClass: (formState.targetClass || "SECONDE").toUpperCase(),
-        dayOfWeek: formState.dayOfWeek || "MONDAY",
-        startTime: formState.startTime,
-        endTime: formState.endTime,
-        classroom: formState.classroom,
-      };
-
-      if (formState.id) {
-        await updateAttendanceSlot(formState.id, payload);
-        showToast("Teacher attendance slot updated successfully!");
-      } else {
-        await createAttendanceSlot(payload);
-        showToast("Teacher attendance slot created successfully!");
-      }
-
-      const todayStr = new Date().toISOString().split("T")[0];
-      const todayDay = new Date()
-        .toLocaleDateString("en-US", { weekday: "LONG" })
-        .toUpperCase();
-      const freshPointages = await getDailyAttendance(todayDay, todayStr).catch(
-        () => [],
-      );
-      setPointages(freshPointages);
-
-      setActiveModal(null);
-      setFormState({});
-    } catch (error) {
-      showToast(`Error: ${error.message}`);
-    }
-  };
-
-  const handleDeleteSlot = async (slotId) => {
-    const previousPointages = [...pointages];
-    setPointages(pointages.filter((p) => p.slotId !== slotId));
-    showToast("Attendance slot deleted successfully!");
-
-    try {
-      await deleteAttendanceSlot(slotId);
-    } catch (error) {
-      setPointages(previousPointages);
-      showToast(`Failed to delete slot: ${error.message}`);
-    }
-  };
-
-  const handleTogglePointage = async (slotId, attendanceDate) => {
-    try {
-      await checkAttendance({ slotId, attendanceDate });
-      const todayDay = new Date(attendanceDate)
-        .toLocaleDateString("en-US", { weekday: "LONG" })
-        .toUpperCase();
-      const freshPointages = await getDailyAttendance(
-        todayDay,
-        attendanceDate,
-      ).catch(() => pointages);
-      setPointages(freshPointages);
-      showToast("Attendance checked and updated successfully!");
-    } catch (error) {
-      showToast(`Error: ${error.message}`);
-    }
-  };
-
-  const handleAddHistoryToTarget = async (e) => {
-    e.preventDefault();
-    if (!targetStudent) return;
-    try {
-      const payload = {
-        studentId: targetStudent.id,
-        type: formState.type,
-        detail: formState.detail,
-        raison: formState.raison,
-      };
-
-      const response = await createHistoryRecord(payload);
-      setHistoriques([response || payload, ...historiques]);
-      setActiveModal(null);
-      setFormState({});
-      showToast("History event added to student profile");
-    } catch (error) {
-      showToast(`Error: ${error.message}`);
-    }
-  };
-
-  const handleAddRemarkToTarget = async (e) => {
-    e.preventDefault();
-    if (!targetStudent) return;
-    try {
-      const payload = {
-        studentId: targetStudent.id,
-        type: formState.type,
-        raison: formState.raison,
-      };
-
-      const response = await createRemarkRecord(payload);
-      setRemarques([response || payload, ...remarques]);
-      setActiveModal(null);
-      setFormState({});
-      showToast("Remark added to student profile");
-    } catch (error) {
-      showToast(`Error: ${error.message}`);
-    }
-  };
-
-  const handleAdminValidateSession = (sessionId) => {
-    const session = gradeSessions.find((s) => s.id === sessionId);
-    if (!session) return;
-
-    const updatedSessions = gradeSessions.map((s) => {
-      if (s.id === sessionId) {
-        return {
-          ...s,
-          statut: "valide",
-          dateValidation: new Date()
-            .toISOString()
-            .replace("T", " ")
-            .substring(0, 16),
-        };
-      }
-      return s;
-    });
-
-    setGradeSessions(updatedSessions);
-    localStorage.setItem("gradeSessions", JSON.stringify(updatedSessions));
-
-    if (session.notesDraft && Object.keys(session.notesDraft).length > 0) {
-      const newResults = Object.entries(session.notesDraft).map(
-        ([studentId, noteValue]) => ({
-          id: `${sessionId}-${studentId}`,
-          sessionId: session.id,
-          studentId: studentId,
-          subjectId: session.subjectId,
-          matiere: session.matiere,
-          classGroup: session.classGroup || session.classe,
-          examType: session.examType || "TRIMESTER",
-          term: session.term || "FIRST_TRIMESTER",
-          score: parseFloat(noteValue) || 0,
-          maxScore: 20,
-          validatedAt: new Date().toISOString(),
-        }),
-      );
-
-      const updatedExamResults = [...examResults, ...newResults];
-      setExamResults(updatedExamResults);
-      localStorage.setItem("examResults", JSON.stringify(updatedExamResults));
-    }
-
-    showToast("Session de notes validée et injectée dans les bulletins !");
-  };
-
-  const handleSecretarySaveDraft = (sessionId, draftData) => {
-    setGradeSessions(
-      gradeSessions.map((s) => {
-        if (s.id === sessionId) {
-          return { ...s, notesDraft: draftData, statut: "brouillon" };
-        }
-        return s;
-      }),
-    );
-    showToast("Draft saved locally!");
-  };
-
-  const handleSecretarySubmitToAdmin = async (sessionId, draftData) => {
-    try {
-      const session = gradeSessions.find((s) => s.id === sessionId);
-      if (!session) return;
-
-      const updatedSessions = gradeSessions.map((s) => {
-        if (s.id === sessionId) {
-          return {
-            ...s,
-            notesDraft: draftData,
-            statut: "attente_validation",
-            status: "DRAFT",
-          };
-        }
-        return s;
-      });
-
-      setGradeSessions(updatedSessions);
-      localStorage.setItem("gradeSessions", JSON.stringify(updatedSessions));
-
-      setActiveGradeSession(null);
-      showToast("Notes soumises à l'administrateur avec succès !");
-    } catch (error) {
-      showToast(`Erreur lors de la soumission : ${error.message}`);
-    }
-  };
-
-  const toggleUserStatus = async (userId) => {
-    const previousUsers = [...users];
-    const targetUser = users.find((u) => u.id === userId);
-    if (!targetUser) return;
-
-    const newStatus = targetUser.isActive !== false ? false : true;
-
-    setUsers(
-      users.map((u) => (u.id === userId ? { ...u, isActive: newStatus } : u)),
-    );
-    if (targetStudent?.id === userId) {
-      setTargetStudent({ ...targetStudent, isActive: newStatus });
-    }
-
-    showToast(`User status updated to: ${newStatus ? "ACTIVE" : "INACTIVE"}`);
-
-    try {
-      await updateUser(userId, { isActive: newStatus });
-    } catch (error) {
-      setUsers(previousUsers);
-      if (targetStudent?.id === userId) {
-        setTargetStudent(targetUser);
-      }
-      showToast(`Status update reverted: ${error.message}`);
-    }
-  };
-
-  const deleteUser = async (userIdOrObj) => {
-    const userId =
-      typeof userIdOrObj === "object"
-        ? userIdOrObj?.id || userIdOrObj?._id
-        : userIdOrObj;
-
-    if (!userId) {
-      showToast("Erreur : ID utilisateur introuvable");
-      return;
-    }
-
-    const previousUsers = [...users];
-
-    setUsers(users.filter((u) => (u.id || u._id) !== userId));
-    if (targetStudent?.id === userId || targetStudent?._id === userId) {
-      setTargetStudent(null);
-    }
-    showToast("Utilisateur supprimé avec succès");
-
-    try {
-      await apiDeleteUser(userId);
-    } catch (error) {
-      setUsers(previousUsers);
-      showToast(`Erreur : ${error.message}`);
-    }
-  };
-
-  const handleSimulateExport = (type) => {
-    showToast(`Document [${type}] generated and downloaded in PDF/CSV!`);
-  };
-
-  const studentUsers = users.filter((u) => {
-    const role = (u.role || "").toUpperCase();
-    if (role !== "STUDENT" && role !== "ANCIEN") return false;
-    if (selectedStudentFilter === "tout") return true;
-    if (selectedStudentFilter === "ancien") return role === "ANCIEN";
-    return (
-      (u.classGroup || "").toUpperCase() === selectedStudentFilter.toUpperCase()
-    );
-  });
-
-  const staffUsers = users.filter((u) => {
-    const role = (u.role || "").toUpperCase();
-    return ["TEACHER", "ADMIN", "SECRETARY", "PROF", "SECRETAIRE"].includes(
-      role,
-    );
-  });
-
-  if (!currentUser) {
-    return (
-      <>
         <Login
-          users={users}
-          setCurrentUser={setCurrentUser}
+          setCurrentUser={(user) => {
+            setCurrentUser(user);
+            setActiveTab(DEFAULT_TAB);
+          }}
           showToast={showToast}
         />
         <Toast message={toastMessage} />
@@ -708,24 +540,19 @@ const App = () => {
   }
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 flex font-sans relative">
+    <div className={APP_LAYOUT}>
       <Sidebar
         currentUser={currentUser}
         activeTab={activeTab}
         setActiveTab={setActiveTab}
         setTargetStudent={setTargetStudent}
-        handleSwitchUser={handleSwitchUser}
         handleLogout={handleLogout}
       />
 
-      <Topbar
-        currentUser={currentUser}
-        activeTab={activeTab}
-        handleLogout={handleLogout}
-      />
+      <Topbar currentUser={currentUser} activeTab={activeTab} />
 
-      <div className="flex-1 ml-64 pt-20 flex flex-col min-w-0">
-        <main className="flex-1 overflow-y-auto p-6 md:p-8 bg-slate-950">
+      <div className={APP_CONTENT}>
+        <main className={APP_MAIN}>
           <AppRouter
             currentUser={currentUser}
             activeTab={activeTab}
@@ -735,11 +562,13 @@ const App = () => {
             staffUsers={staffUsers}
             announcements={announcements}
             subjects={subjects}
-            examResults={examResults}
+            annualResults={annualResults}
             gradeSessions={gradeSessions}
-            historiques={historiques}
-            remarques={remarques}
-            pointages={pointages}
+            historyRecords={historyRecords}
+            remarks={remarks}
+            attendanceCards={attendanceCards}
+            attendanceDate={attendanceDate}
+            onAttendanceDateChange={setAttendanceDate}
             selectedStudentFilter={selectedStudentFilter}
             setSelectedStudentFilter={setSelectedStudentFilter}
             targetStudent={targetStudent}
@@ -747,59 +576,57 @@ const App = () => {
             activeGradeSession={activeGradeSession}
             setActiveGradeSession={setActiveGradeSession}
             setActiveModal={setActiveModal}
-            handleAdminValidateSession={handleAdminValidateSession}
+            setFormState={setFormState}
+            onValidateSession={handleValidateSession}
+            onSaveDraft={handleSaveDraft}
+            onSubmitSession={handleSubmitSession}
+            onExportReportCard={handleExportReportCard}
+            onCheckAttendance={handleCheckAttendance}
+            onMarkAbsence={handleMarkAbsence}
+            onDeleteSlot={handleDeleteSlot}
             toggleUserStatus={toggleUserStatus}
             deleteUser={deleteUser}
-            handleSecretarySaveDraft={handleSecretarySaveDraft}
-            handleSecretarySubmitToAdmin={handleSecretarySubmitToAdmin}
-            handleTogglePointage={handleTogglePointage}
-            handleSimulateExport={handleSimulateExport}
-            setCurrentUser={setCurrentUser}
-            handleLogout={handleLogout}
             onUpdateUser={handleUpdateUser}
             onDeleteAnnouncement={handleDeleteAnnouncement}
-            onSelectAnnouncementToEdit={setFormState}
             onDeleteSubject={handleDeleteSubject}
-            onDeleteSlot={handleDeleteSlot}
-            setFormState={setFormState}
           />
         </main>
       </div>
 
       <UserModal
         isOpen={activeModal === "user"}
-        onClose={() => setActiveModal(null)}
+        onClose={closeModal}
         onSubmit={handleCreateUser}
         formState={formState}
         setFormState={setFormState}
       />
       <AnnouncementModal
         isOpen={activeModal === "announcement"}
-        onClose={() => setActiveModal(null)}
-        onSubmit={handleFormSubmitAnnouncement}
+        onClose={closeModal}
+        onSubmit={handleSubmitAnnouncement}
         formState={formState}
         setFormState={setFormState}
       />
       <SubjectModal
         isOpen={activeModal === "subject"}
-        onClose={() => setActiveModal(null)}
-        onSubmit={handleFormSubmitSubject}
+        onClose={closeModal}
+        onSubmit={handleSubmitSubject}
         formState={formState}
         setFormState={setFormState}
         staffUsers={staffUsers}
       />
       <GradeSessionModal
         isOpen={activeModal === "grade_session"}
-        onClose={() => setActiveModal(null)}
+        onClose={closeModal}
         onSubmit={handleCreateGradeSession}
         formState={formState}
         setFormState={setFormState}
         subjects={subjects}
       />
-      <PointageModal
-        isOpen={activeModal === "pointage"}
-        onClose={() => setActiveModal(null)}
-        onSubmit={handleCreatePointage}
+      <AttendanceModal
+        isOpen={activeModal === "attendance"}
+        onClose={closeModal}
+        onSubmit={handleSubmitSlot}
         formState={formState}
         setFormState={setFormState}
         staffUsers={staffUsers}
@@ -809,12 +636,12 @@ const App = () => {
         isOpen={
           activeModal === "target_history" || activeModal === "target_remark"
         }
-        onClose={() => setActiveModal(null)}
+        onClose={closeModal}
         type={activeModal}
         onSubmit={
           activeModal === "target_history"
-            ? handleAddHistoryToTarget
-            : handleAddRemarkToTarget
+            ? handleAddHistoryRecord
+            : handleAddRemark
         }
         formState={formState}
         setFormState={setFormState}

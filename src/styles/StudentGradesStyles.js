@@ -25,3 +25,12 @@ export const CELL_AVERAGE = "p-4 text-slate-400";
 export const MENTION_BADGE =
   "bg-blue-500/10 text-blue-400 px-2 py-0.5 rounded font-semibold text-[10px]";
 export const CELL_RANK = "p-4 font-bold";
+export const TABLE_HEAD_CELL = "p-4";
+export const TABLE_HEAD_CELL_CENTER = "p-4 text-center";
+export const TABLE_EMPTY_CELL = "text-center p-6 text-slate-400";
+export const SUMMARY_BAR =
+  "p-4 bg-slate-900 border-t border-slate-800 flex justify-between items-center text-sm text-slate-300";
+export const SUMMARY_VALUE_LARGE = "text-white text-base";
+export const SUMMARY_VALUE = "text-white";
+export const DECISION_BADGE =
+  "px-2.5 py-1 rounded text-xs font-semibold bg-blue-950 text-blue-300 border border-blue-800";

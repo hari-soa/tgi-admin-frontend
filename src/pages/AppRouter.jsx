@@ -5,10 +5,11 @@ import SecretaryDashboard from "./secretary/SecretaryDashboard";
 import SecretaryGrades from "./secretary/SecretaryGrades";
 import AdminDashboard from "./admin/AdminDashboard";
 import AdminStudents from "./admin/AdminStudents";
-import AdminPointage from "./admin/AdminPointage";
+import AdminAttendance from "./admin/AdminAttendance";
 import StaffList from "./shared/StaffList";
 import Announcements from "./shared/Announcements";
 import Profile from "./shared/Profile";
+import { NOT_FOUND_VIEW } from "../styles/AppStyles";
 
 const AppRouter = ({
   currentUser,
@@ -19,11 +20,13 @@ const AppRouter = ({
   staffUsers,
   announcements,
   subjects,
-  examResults,
+  annualResults,
   gradeSessions,
-  historiques,
-  remarques,
-  pointages,
+  historyRecords,
+  remarks,
+  attendanceCards,
+  attendanceDate,
+  onAttendanceDateChange,
   selectedStudentFilter,
   setSelectedStudentFilter,
   targetStudent,
@@ -31,25 +34,30 @@ const AppRouter = ({
   activeGradeSession,
   setActiveGradeSession,
   setActiveModal,
-  handleAdminValidateSession,
+  setFormState,
+  onValidateSession,
+  onSaveDraft,
+  onSubmitSession,
+  onExportReportCard,
+  onCheckAttendance,
+  onMarkAbsence,
+  onDeleteSlot,
   toggleUserStatus,
   deleteUser,
-  handleSecretarySaveDraft,
-  handleSecretarySubmitToAdmin,
-  handleTogglePointage,
-  handleSimulateExport,
-  setCurrentUser,
   onUpdateUser,
   onDeleteAnnouncement,
-  onSelectAnnouncementToEdit,
-  setFormState,
   onDeleteSubject,
-  onDeleteSlot,
 }) => {
-  const userRole = currentUser?.role?.toUpperCase() || "";
+  const userRole = currentUser?.role || "";
   const isAdmin = userRole === "ADMIN";
+  const isSecretary = userRole === "SECRETARY";
+  const isStudent = userRole === "STUDENT";
 
-  if (activeTab === "profil") {
+  // The student pages show the student themself, or the one an administrator
+  // or a secretary has selected in the students list.
+  const viewedStudent = isStudent ? currentUser : targetStudent;
+
+  if (activeTab === "profile") {
     return (
       <Profile
         currentUser={targetStudent || currentUser}
@@ -62,79 +70,65 @@ const AppRouter = ({
     );
   }
 
-  if (activeTab === "annonces") {
+  if (activeTab === "announcements") {
     return (
       <Announcements
         currentUser={currentUser}
         announcements={announcements}
         setActiveModal={setActiveModal}
         onDeleteAnnouncement={onDeleteAnnouncement}
-        onSelectAnnouncementToEdit={onSelectAnnouncementToEdit}
+        setFormState={setFormState}
       />
     );
   }
 
-  if (activeTab === "pointage") {
-    return (
-      <AdminPointage
-        currentUser={currentUser}
-        pointages={pointages}
-        handleTogglePointage={handleTogglePointage}
-        setActiveModal={setActiveModal}
-        setFormState={setFormState}
-        onDeleteSlot={onDeleteSlot}
-      />
-    );
-  }
-  if (activeTab === "personnel") {
+  if (activeTab === "staff") {
     return (
       <StaffList
         staffUsers={staffUsers}
-        targetStudent={targetStudent}
-        setTargetStudent={setTargetStudent}
         deleteUser={deleteUser}
         onUpdateUser={onUpdateUser}
         isAdmin={isAdmin}
-        setActiveTab={setActiveTab}
       />
     );
   }
 
-  if (userRole === "STUDENT" || userRole === "ANCIEN") {
-    if (activeTab === "accueil") {
+  if (viewedStudent) {
+    if (activeTab === "home" && isStudent) {
       return (
         <StudentHome
           currentUser={currentUser}
           announcements={announcements}
-          historiques={historiques}
-          remarques={remarques}
+          historyRecords={historyRecords}
+          remarks={remarks}
+          annualResults={annualResults}
           setActiveTab={setActiveTab}
         />
       );
     }
 
-    if (activeTab === "notes") {
+    if (activeTab === "grades") {
       return (
         <StudentGrades
-          currentUser={currentUser}
-          examResults={examResults}
-          handleSimulateExport={handleSimulateExport}
+          student={viewedStudent}
+          annualResults={annualResults}
+          onExportReportCard={onExportReportCard}
         />
       );
     }
 
-    if (activeTab === "historique_remarque") {
+    if (activeTab === "history") {
       return (
         <StudentHistory
-          currentUser={currentUser}
-          historiques={historiques}
-          remarques={remarques}
+          student={viewedStudent}
+          historyRecords={historyRecords}
+          remarks={remarks}
         />
       );
     }
   }
 
-  if (userRole === "SECRETARY" || userRole === "SECRETAIRE") {
+  if (isSecretary) {
     if (activeTab === "dashboard") {
       return (
         <SecretaryDashboard
@@ -144,15 +138,15 @@ const AppRouter = ({
         />
       );
     }
-    if (activeTab === "notes_secr") {
+    if (activeTab === "grade-sessions") {
       return (
         <SecretaryGrades
           users={users}
           gradeSessions={gradeSessions}
           activeGradeSession={activeGradeSession}
           setActiveGradeSession={setActiveGradeSession}
-          handleSecretarySaveDraft={handleSecretarySaveDraft}
-          handleSecretarySubmitToAdmin={handleSecretarySubmitToAdmin}
+          onSaveDraft={onSaveDraft}
+          onSubmitSession={onSubmitSession}
         />
       );
     }
@@ -170,12 +164,12 @@ const AppRouter = ({
           setActiveModal={setActiveModal}
           setFormState={setFormState}
           onDeleteSubject={onDeleteSubject}
-          handleAdminValidateSession={handleAdminValidateSession}
+          onValidateSession={onValidateSession}
         />
       );
     }
 
-    if (activeTab === "etudiants") {
+    if (activeTab === "students") {
       return (
         <AdminStudents
           studentUsers={studentUsers}
@@ -184,18 +178,34 @@ const AppRouter = ({
           targetStudent={targetStudent}
           setTargetStudent={setTargetStudent}
           setActiveModal={setActiveModal}
+          setFormState={setFormState}
           toggleUserStatus={toggleUserStatus}
           deleteUser={deleteUser}
-          setCurrentUser={setCurrentUser}
+          onUpdateUser={onUpdateUser}
           setActiveTab={setActiveTab}
-          historiques={historiques}
-          remarques={remarques}
+          historyRecords={historyRecords}
+          remarks={remarks}
+        />
+      );
+    }
+
+    if (activeTab === "attendance") {
+      return (
+        <AdminAttendance
+          attendanceCards={attendanceCards}
+          attendanceDate={attendanceDate}
+          onAttendanceDateChange={onAttendanceDateChange}
+          onCheckAttendance={onCheckAttendance}
+          onMarkAbsence={onMarkAbsence}
+          onDeleteSlot={onDeleteSlot}
+          setActiveModal={setActiveModal}
+          setFormState={setFormState}
         />
       );
     }
   }
 
-  return <div className="text-white p-8">View not found.</div>;
+  return <div className={NOT_FOUND_VIEW}>Page introuvable.</div>;
 };
 
 export default AppRouter;

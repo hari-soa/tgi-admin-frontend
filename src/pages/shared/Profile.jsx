@@ -1,28 +1,37 @@
 import { useState, useEffect } from "react";
 import {
-  CONTAINER_WRAPPER,
-  HEADER_TITLE,
-  HEADER_SUBTITLE,
-  CARD_BOX,
-  USER_HEADER_SECTION,
-  PROFILE_IMAGE,
-  USER_INFO_BOX,
-  USER_NAME,
-  USER_MATRICULE,
+  ADDRESS_GRID_SPAN,
+  AVATAR_WRAPPER,
   BADGE_CONTAINER,
-  ROLE_BADGE,
-  STATUS_ACTIVE_BADGE,
-  STATUS_INACTIVE_BADGE,
+  CANCEL_BUTTON,
+  CARD_BOX,
+  CONTAINER_WRAPPER,
   DETAILS_GRID,
+  EDIT_BUTTON,
+  EDIT_FORM,
+  EDIT_INPUT,
   FIELD_LABEL,
   FIELD_VALUE,
   FIELD_VALUE_CAPITALIZE,
-  ADDRESS_GRID_SPAN,
+  FILE_INPUT,
+  FORM_ACTIONS,
+  HEADER_SUBTITLE,
+  HEADER_TITLE,
+  NAME_FIELDS_GRID,
+  PAGE_HEADER_ROW,
+  PROFILE_IMAGE,
+  ROLE_BADGE,
+  SAVE_BUTTON,
+  STATUS_ACTIVE_BADGE,
+  STATUS_INACTIVE_BADGE,
+  USER_HEADER_SECTION,
+  USER_INFO_BOX,
+  USER_MATRICULE,
+  USER_NAME,
 } from "../../styles/ProfileStyles";
+import { getAvatarSource, getChangedFields } from "../../utils/helpers";
 
 export const Profile = ({ currentUser, onUpdateUser, isAdmin }) => {
-  if (!currentUser) return null;
-
   const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState({ ...currentUser });
 
@@ -30,10 +39,12 @@ export const Profile = ({ currentUser, onUpdateUser, isAdmin }) => {
     setFormData({ ...currentUser });
   }, [currentUser]);
 
-  const userRole = (currentUser.role || "").toUpperCase();
-  const isStudent = userRole === "STUDENT" || userRole === "ANCIEN";
-  const isTeacher = userRole === "TEACHER" || userRole === "PROF";
-  const isSecretary = userRole === "SECRETARY" || userRole === "SECRETAIRE";
+  if (!currentUser) return null;
+
+  const userRole = currentUser.role;
+  const isStudent = userRole === "STUDENT";
+  const isTeacher = userRole === "TEACHER";
+  const isSecretary = userRole === "SECRETARY";
 
   const handleChange = (field, value) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
@@ -52,15 +63,16 @@ export const Profile = ({ currentUser, onUpdateUser, isAdmin }) => {
 
   const handleSave = async (e) => {
     e.preventDefault();
-    if (onUpdateUser) {
-      await onUpdateUser(currentUser.id, formData);
+    const changedFields = getChangedFields(currentUser, formData);
+    if (Object.keys(changedFields).length > 0) {
+      await onUpdateUser(currentUser.id, changedFields);
     }
     setIsEditing(false);
   };
 
   return (
     <div className={CONTAINER_WRAPPER}>
-      <div className="flex justify-between items-center mb-6">
+      <div className={PAGE_HEADER_ROW}>
         <div>
           <h2 className={HEADER_TITLE}>Profil Utilisateur</h2>
           <p className={HEADER_SUBTITLE}>
@@ -68,10 +80,7 @@ export const Profile = ({ currentUser, onUpdateUser, isAdmin }) => {
           </p>
         </div>
         {isAdmin && !isEditing && (
-          <button
-            onClick={() => setIsEditing(true)}
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-500 transition"
-          >
+          <button onClick={() => setIsEditing(true)} className={EDIT_BUTTON}>
             Modifier le profil ✏️
           </button>
         )}
@@ -79,11 +88,11 @@ export const Profile = ({ currentUser, onUpdateUser, isAdmin }) => {
 
       <div className={CARD_BOX}>
         {isEditing ? (
-          <form onSubmit={handleSave} className="space-y-6">
+          <form onSubmit={handleSave} className={EDIT_FORM}>
             <div className={USER_HEADER_SECTION}>
-              <div className="relative">
+              <div className={AVATAR_WRAPPER}>
                 <img
-                  src={formData.profilePictureUrl || "/default-avatar.png"}
+                  src={getAvatarSource(formData)}
                   alt="profile"
                   className={PROFILE_IMAGE}
                 />
@@ -91,18 +100,18 @@ export const Profile = ({ currentUser, onUpdateUser, isAdmin }) => {
                   type="file"
                   accept="image/*"
                   onChange={handleImageUpload}
-                  className="mt-2 text-xs text-slate-400"
+                  className={FILE_INPUT}
                 />
               </div>
               <div className={USER_INFO_BOX}>
-                <div className="grid grid-cols-2 gap-4 w-full">
+                <div className={NAME_FIELDS_GRID}>
                   <div>
                     <label className={FIELD_LABEL}>Nom</label>
                     <input
                       type="text"
                       value={formData.lastName || ""}
                       onChange={(e) => handleChange("lastName", e.target.value)}
-                      className="w-full bg-slate-900 border border-slate-700 p-2 rounded text-white text-sm"
+                      className={EDIT_INPUT}
                     />
                   </div>
                   <div>
@@ -113,7 +122,7 @@ export const Profile = ({ currentUser, onUpdateUser, isAdmin }) => {
                       onChange={(e) =>
                         handleChange("firstName", e.target.value)
                       }
-                      className="w-full bg-slate-900 border border-slate-700 p-2 rounded text-white text-sm"
+                      className={EDIT_INPUT}
                     />
                   </div>
                 </div>
@@ -127,7 +136,7 @@ export const Profile = ({ currentUser, onUpdateUser, isAdmin }) => {
                   type="email"
                   value={formData.email || ""}
                   onChange={(e) => handleChange("email", e.target.value)}
-                  className="w-full bg-slate-900 border border-slate-700 p-2 rounded text-white text-sm"
+                  className={EDIT_INPUT}
                 />
               </div>
               <div>
@@ -138,7 +147,7 @@ export const Profile = ({ currentUser, onUpdateUser, isAdmin }) => {
                   onChange={(e) =>
                     handleChange("contactNumber", e.target.value)
                   }
-                  className="w-full bg-slate-900 border border-slate-700 p-2 rounded text-white text-sm"
+                  className={EDIT_INPUT}
                 />
               </div>
               <div>
@@ -146,7 +155,7 @@ export const Profile = ({ currentUser, onUpdateUser, isAdmin }) => {
                 <select
                   value={formData.gender || "MALE"}
                   onChange={(e) => handleChange("gender", e.target.value)}
-                  className="w-full bg-slate-900 border border-slate-700 p-2 rounded text-white text-sm"
+                  className={EDIT_INPUT}
                 >
                   <option value="MALE">Masculin</option>
                   <option value="FEMALE">Féminin</option>
@@ -162,11 +171,12 @@ export const Profile = ({ currentUser, onUpdateUser, isAdmin }) => {
                       onChange={(e) =>
                         handleChange("classGroup", e.target.value)
                       }
-                      className="w-full bg-slate-900 border border-slate-700 p-2 rounded text-white text-sm"
+                      className={EDIT_INPUT}
                     >
                       <option value="SECONDE">Seconde</option>
                       <option value="PREMIERE">Première</option>
                       <option value="TERMINALE">Terminale</option>
+                      <option value="ANCIEN">Ancien</option>
                     </select>
                   </div>
                   <div>
@@ -177,7 +187,7 @@ export const Profile = ({ currentUser, onUpdateUser, isAdmin }) => {
                       onChange={(e) =>
                         handleChange("classRollNumber", Number(e.target.value))
                       }
-                      className="w-full bg-slate-900 border border-slate-700 p-2 rounded text-white text-sm"
+                      className={EDIT_INPUT}
                     />
                   </div>
                   <div>
@@ -192,7 +202,7 @@ export const Profile = ({ currentUser, onUpdateUser, isAdmin }) => {
                       onChange={(e) =>
                         handleChange("dateOfBirth", e.target.value)
                       }
-                      className="w-full bg-slate-900 border border-slate-700 p-2 rounded text-white text-sm"
+                      className={EDIT_INPUT}
                     />
                   </div>
                   <div className={ADDRESS_GRID_SPAN}>
@@ -201,7 +211,7 @@ export const Profile = ({ currentUser, onUpdateUser, isAdmin }) => {
                       type="text"
                       value={formData.address || ""}
                       onChange={(e) => handleChange("address", e.target.value)}
-                      className="w-full bg-slate-900 border border-slate-700 p-2 rounded text-white text-sm"
+                      className={EDIT_INPUT}
                     />
                   </div>
                 </>
@@ -218,7 +228,7 @@ export const Profile = ({ currentUser, onUpdateUser, isAdmin }) => {
                     onChange={(e) =>
                       handleChange("homeroomClass", e.target.value)
                     }
-                    className="w-full bg-slate-900 border border-slate-700 p-2 rounded text-white text-sm"
+                    className={EDIT_INPUT}
                     placeholder="Ex: Terminale C / Mathématiques"
                   />
                 </div>
@@ -231,25 +241,22 @@ export const Profile = ({ currentUser, onUpdateUser, isAdmin }) => {
                     type="text"
                     value={formData.department || ""}
                     onChange={(e) => handleChange("department", e.target.value)}
-                    className="w-full bg-slate-900 border border-slate-700 p-2 rounded text-white text-sm"
+                    className={EDIT_INPUT}
                     placeholder="Ex: Administration & Scolarité"
                   />
                 </div>
               )}
             </div>
 
-            <div className="flex justify-end gap-3 mt-6">
+            <div className={FORM_ACTIONS}>
               <button
                 type="button"
                 onClick={() => setIsEditing(false)}
-                className="px-4 py-2 bg-slate-800 text-slate-300 rounded hover:bg-slate-700"
+                className={CANCEL_BUTTON}
               >
                 Annuler
               </button>
-              <button
-                type="submit"
-                className="px-4 py-2 bg-emerald-600 text-white rounded font-semibold hover:bg-emerald-500"
-              >
+              <button type="submit" className={SAVE_BUTTON}>
                 Enregistrer les modifications
               </button>
             </div>
@@ -258,7 +265,7 @@ export const Profile = ({ currentUser, onUpdateUser, isAdmin }) => {
           <>
             <div className={USER_HEADER_SECTION}>
               <img
-                src={currentUser.profilePictureUrl || "/default-avatar.png"}
+                src={getAvatarSource(currentUser)}
                 alt="profile"
                 className={PROFILE_IMAGE}
               />

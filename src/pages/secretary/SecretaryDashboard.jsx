@@ -16,28 +16,27 @@ import {
   CARD_META,
   ACTION_BUTTON,
 } from "../../styles/SecretaryDashboardStyles";
+import {
+  CLASS_GROUP_LABELS,
+  EXAM_TYPE_LABELS,
+  TERM_LABELS,
+  GRADE_SESSION_STATUS_LABELS,
+  formatDate,
+} from "../../utils/labels";
 
 export const SecretaryDashboard = ({
   gradeSessions,
   setActiveGradeSession,
   setActiveTab,
 }) => {
-  // Sécurisation du tableau et élargissement du filtre pour ne pas rater les sessions
-  const sessionsList = Array.isArray(gradeSessions)
-    ? gradeSessions
-    : gradeSessions?.gradeSessions || gradeSessions?.data || [];
+  const openSessions = gradeSessions.filter(
+    (session) => session.status === "OPEN",
+  );
 
-  const pendingOrDraftSessions = sessionsList.filter((session) => {
-    const status = (session.statut || session.status || "").toLowerCase();
-    // Affiche tout ce qui n'est pas explicitement validé/clôturé
-    return (
-      status === "" ||
-      status === "brouillon" ||
-      status === "attente_saisie" ||
-      status === "draft" ||
-      status === "attente_validation"
-    );
-  });
+  const handleEnterGrades = (session) => {
+    setActiveGradeSession(session);
+    setActiveTab("grade-sessions");
+  };
 
   return (
     <div className={CONTAINER_WRAPPER}>
@@ -51,40 +50,31 @@ export const SecretaryDashboard = ({
       </div>
 
       <div className={SECTION_CONTAINER}>
-        <h3 className={SECTION_TITLE}>Sessions de notes en attente</h3>
+        <h3 className={SECTION_TITLE}>Sessions de notes à saisir</h3>
         <div className={SESSIONS_LIST}>
-          {pendingOrDraftSessions.length === 0 ? (
+          {openSessions.length === 0 ? (
             <p className={EMPTY_TEXT}>Aucune session en attente.</p>
           ) : (
-            pendingOrDraftSessions.map((session) => (
-              <div key={session.id || session._id} className={SESSION_CARD}>
+            openSessions.map((session) => (
+              <div key={session.id} className={SESSION_CARD}>
                 <div>
                   <div className={CARD_HEADER_ROW}>
-                    <span className={SUBJECT_TITLE}>
-                      {session.matiere ||
-                        session.subjectName ||
-                        session.subjectId ||
-                        "Matière non spécifiée"}
-                    </span>
+                    <span className={SUBJECT_TITLE}>{session.subjectName}</span>
                     <span className={CLASS_BADGE}>
-                      {session.classe || session.classGroup || "Classe"}
+                      {CLASS_GROUP_LABELS[session.classGroup]}
                     </span>
                     <span className={STATUS_BADGE}>
-                      {session.statut === "attente_validation"
-                        ? "En attente validation"
-                        : "Brouillon"}
+                      {GRADE_SESSION_STATUS_LABELS[session.status]}
                     </span>
                   </div>
                   <p className={CARD_META}>
-                    Créé par Admin le :{" "}
-                    {session.dateCreation || session.createdAt || "Récemment"}
+                    {EXAM_TYPE_LABELS[session.examType]} •{" "}
+                    {TERM_LABELS[session.term]} • ouverte le{" "}
+                    {formatDate(session.createdAt)}
                   </p>
                 </div>
                 <button
-                  onClick={() => {
-                    setActiveGradeSession(session);
-                    setActiveTab("notes_secr");
-                  }}
+                  onClick={() => handleEnterGrades(session)}
                   className={ACTION_BUTTON}
                 >
                   Saisir les notes →

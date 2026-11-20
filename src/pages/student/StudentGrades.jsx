@@ -17,19 +17,37 @@ import {
   TABLE_ROW,
   CELL_SUBJECT,
   CELL_AVERAGE,
+  TABLE_HEAD_CELL,
+  TABLE_HEAD_CELL_CENTER,
+  TABLE_EMPTY_CELL,
+  SUMMARY_BAR,
+  SUMMARY_VALUE_LARGE,
+  SUMMARY_VALUE,
+  DECISION_BADGE,
 } from "../../styles/StudentGradesStyles";
+import {
+  CLASS_GROUP_LABELS,
+  ACADEMIC_DECISION_LABELS,
+} from "../../utils/labels";
 
-export const StudentGrades = ({
-  currentUser,
-  examResults,
-  handleSimulateExport,
-}) => {
-  const resultsList = Array.isArray(examResults) ? examResults : [];
-  const [selectedResultId, setSelectedResultId] = useState(
-    resultsList[0]?.id || "",
-  );
+const GRADE_COLUMNS = [
+  { label: "ST1", field: "term1SemiTrimesterGrade" },
+  { label: "T1", field: "term1TrimesterGrade" },
+  { label: "ST2", field: "term2SemiTrimesterGrade" },
+  { label: "T2", field: "term2TrimesterGrade" },
+  { label: "ST3", field: "term3SemiTrimesterGrade" },
+  { label: "T3", field: "term3TrimesterGrade" },
+];
 
-  const currentBulletin = resultsList.find((r) => r.id === selectedResultId);
+const TABLE_COLUMN_COUNT = GRADE_COLUMNS.length + 3;
+
+export const StudentGrades = ({ annualResults, onExportReportCard }) => {
+  const [selectedResultId, setSelectedResultId] = useState("");
+
+  // Results are loaded after the first render: default to the most recent one
+  const currentReportCard =
+    annualResults.find((result) => result.id === selectedResultId) ||
+    annualResults[0];
 
   return (
     <div className={CONTAINER_WRAPPER}>
@@ -40,19 +58,20 @@ export const StudentGrades = ({
         </div>
         <div className={HEADER_ACTIONS}>
           <select
-            value={selectedResultId}
-            onChange={(e) => setSelectedResultId(e.target.value)}
+            value={currentReportCard?.id || ""}
+            onChange={(event) => setSelectedResultId(event.target.value)}
             className={SELECT_INPUT}
           >
-            {resultsList.map((res) => (
-              <option key={res.id} value={res.id}>
-                {res.academicYear} — Classe : {res.classGroup} ({res.status})
+            {annualResults.map((result) => (
+              <option key={result.id} value={result.id}>
+                {result.academicYear} — Classe :{" "}
+                {CLASS_GROUP_LABELS[result.classGroup]}
               </option>
             ))}
           </select>
-          {currentBulletin && (
+          {currentReportCard && (
             <button
-              onClick={() => handleSimulateExport(currentBulletin.id)}
+              onClick={() => onExportReportCard(currentReportCard.id)}
               className={EXPORT_BUTTON}
             >
               Télécharger le Bulletin (PDF)
@@ -64,58 +83,43 @@ export const StudentGrades = ({
       <div className={TABLE_CONTAINER}>
         <div className={TABLE_HEADER_BOX}>
           <h3 className={TABLE_TITLE}>
-            Détail des Matières — Année {currentBulletin?.academicYear || "N/A"}
+            Détail des Matières — Année{" "}
+            {currentReportCard?.academicYear || "N/A"}
           </h3>
         </div>
         <div className={TABLE_SCROLL}>
           <table className={TABLE_ELEMENT}>
             <thead className={TABLE_HEAD}>
               <tr>
-                <th className="p-4">Matière</th>
-                <th className="p-4">Coef</th>
-                <th className="p-4 text-center">ST1</th>
-                <th className="p-4 text-center">T1</th>
-                <th className="p-4 text-center">ST2</th>
-                <th className="p-4 text-center">T2</th>
-                <th className="p-4 text-center">ST3</th>
-                <th className="p-4 text-center">T3</th>
-                <th className="p-4">Moyenne Matière</th>
+                <th className={TABLE_HEAD_CELL}>Matière</th>
+                <th className={TABLE_HEAD_CELL}>Coef</th>
+                {GRADE_COLUMNS.map(({ label }) => (
+                  <th key={label} className={TABLE_HEAD_CELL_CENTER}>
+                    {label}
+                  </th>
+                ))}
+                <th className={TABLE_HEAD_CELL}>Moyenne Matière</th>
               </tr>
             </thead>
             <tbody className={TABLE_BODY}>
-              {!currentBulletin ||
-              !currentBulletin.subjects ||
-              currentBulletin.subjects.length === 0 ? (
+              {!currentReportCard || currentReportCard.subjects.length === 0 ? (
                 <tr>
-                  <td colSpan="9" className="text-center p-6 text-slate-400">
-                    Aucun résultat disponible pour cette période.
+                  <td colSpan={TABLE_COLUMN_COUNT} className={TABLE_EMPTY_CELL}>
+                    Aucun résultat publié pour le moment.
                   </td>
                 </tr>
               ) : (
-                currentBulletin.subjects.map((sub, idx) => (
-                  <tr key={idx} className={TABLE_ROW}>
-                    <td className={CELL_SUBJECT}>{sub.subjectName}</td>
-                    <td className="p-4">{sub.coefficient}</td>
-                    <td className="p-4 text-center">
-                      {sub.term1SemiTrimesterGrade ?? "-"}
-                    </td>
-                    <td className="p-4 text-center">
-                      {sub.term1TrimesterGrade ?? "-"}
-                    </td>
-                    <td className="p-4 text-center">
-                      {sub.term2SemiTrimesterGrade ?? "-"}
-                    </td>
-                    <td className="p-4 text-center">
-                      {sub.term2TrimesterGrade ?? "-"}
-                    </td>
-                    <td className="p-4 text-center">
-                      {sub.term3SemiTrimesterGrade ?? "-"}
-                    </td>
-                    <td className="p-4 text-center">
-                      {sub.term3TrimesterGrade ?? "-"}
-                    </td>
+                currentReportCard.subjects.map((subject) => (
+                  <tr key={subject.subjectId} className={TABLE_ROW}>
+                    <td className={CELL_SUBJECT}>{subject.subjectName}</td>
+                    <td className={TABLE_HEAD_CELL}>{subject.coefficient}</td>
+                    {GRADE_COLUMNS.map(({ field }) => (
+                      <td key={field} className={TABLE_HEAD_CELL_CENTER}>
+                        {subject[field] ?? "-"}
+                      </td>
+                    ))}
                     <td className={CELL_AVERAGE}>
-                      {sub.subjectOverallAverage} / 20
+                      {subject.subjectOverallAverage} / 20
                     </td>
                   </tr>
                 ))
@@ -123,27 +127,26 @@ export const StudentGrades = ({
             </tbody>
           </table>
         </div>
-
-        {currentBulletin && (
-          <div className="p-4 bg-slate-900 border-t border-slate-800 flex justify-between items-center text-sm text-slate-300">
+        {currentReportCard && (
+          <div className={SUMMARY_BAR}>
             <div>
               <span>Moyenne Générale : </span>
-              <strong className="text-white text-base">
-                {currentBulletin.overallAverage} / 20
+              <strong className={SUMMARY_VALUE_LARGE}>
+                {currentReportCard.overallAverage} / 20
               </strong>
             </div>
             <div>
               <span>Rang : </span>
-              <strong className="text-white">
-                {currentBulletin.classRank
-                  ? `${currentBulletin.classRank}e`
+              <strong className={SUMMARY_VALUE}>
+                {currentReportCard.classRank
+                  ? `${currentReportCard.classRank}e`
                   : "N/A"}
               </strong>
             </div>
             <div>
               <span>Décision : </span>
-              <span className="px-2.5 py-1 rounded text-xs font-semibold bg-blue-950 text-blue-300 border border-blue-800">
-                {currentBulletin.decision}
+              <span className={DECISION_BADGE}>
+                {ACADEMIC_DECISION_LABELS[currentReportCard.decision]}
               </span>
             </div>
           </div>

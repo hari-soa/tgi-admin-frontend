@@ -1,52 +1,39 @@
-import { apiFetch } from "./api";
+import { apiFetch, jsonBody } from "./api";
+
+const CREATE_ENDPOINT_BY_ROLE = {
+  ADMIN: "/users/admin",
+  STUDENT: "/users/students",
+  SECRETARY: "/users/secretary",
+  TEACHER: "/users/teachers",
+};
 
 export const getAllUsers = async () => {
-  const response = await apiFetch("/users");
-  return response?.data?.users || response?.users || response;
+  const data = await apiFetch("/users");
+  return data.users;
 };
 
-export const getUserById = async (userId) => {
-  const response = await apiFetch(`/users/${userId}`);
-  return response?.data?.user || response;
+/** Teachers, secretaries and administrators: readable by every role. */
+export const getStaffUsers = async () => {
+  const data = await apiFetch("/users/staff");
+  return data.users;
 };
 
-export const createAdministrator = async (adminData) => {
-  return await apiFetch("/users/admin", {
+export const createUser = async (role, userData) => {
+  const data = await apiFetch(CREATE_ENDPOINT_BY_ROLE[role], {
     method: "POST",
-    body: JSON.stringify(adminData),
+    body: jsonBody(userData),
   });
-};
-
-export const createStudent = async (studentData) => {
-  return await apiFetch("/users/students", {
-    method: "POST",
-    body: JSON.stringify(studentData),
-  });
-};
-
-export const createSecretary = async (secretaryData) => {
-  return await apiFetch("/users/secretary", {
-    method: "POST",
-    body: JSON.stringify(secretaryData),
-  });
-};
-
-export const createTeacher = async (teacherData) => {
-  return await apiFetch("/users/teachers", {
-    method: "POST",
-    body: JSON.stringify(teacherData),
-  });
+  return data.user;
 };
 
 export const updateUser = async (userId, userData) => {
-  return await apiFetch(`/users/${userId}`, {
+  const data = await apiFetch(`/users/${userId}`, {
     method: "PATCH",
-    body: JSON.stringify(userData),
+    body: jsonBody(userData),
   });
+  return data.user;
 };
 
 export const deleteUser = async (userId) => {
-  return await apiFetch(`/users/${userId}`, {
-    method: "DELETE",
-  });
+  await apiFetch(`/users/${userId}`, { method: "DELETE" });
 };

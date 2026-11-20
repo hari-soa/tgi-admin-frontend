@@ -19,3 +19,11 @@ export const TITLE_TEXT = "font-bold text-white text-base mb-2";
 export const CONTEXT_TEXT = "text-slate-300 text-sm leading-relaxed";
 export const FOOTER_META = "text-[10px] text-slate-500 block mt-4";
 export const TARGET_TEXT = "text-slate-300 capitalize";
+export const CARD_LAYOUT = "flex flex-col justify-between";
+export const CARD_FOOTER =
+  "mt-4 pt-4 border-t border-slate-800/80 flex items-center justify-between";
+export const ACTIONS_GROUP = "flex items-center space-x-2";
+export const EDIT_BUTTON =
+  "px-2.5 py-1 bg-slate-800 hover:bg-slate-700 text-blue-400 text-xs font-medium rounded transition-colors";
+export const DELETE_BUTTON =
+  "px-2.5 py-1 bg-slate-800 hover:bg-slate-700 text-red-400 text-xs font-medium rounded transition-colors";

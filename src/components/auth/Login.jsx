@@ -1,28 +1,30 @@
 import { useState } from "react";
-import { loginUser, getCurrentUserProfile } from "../../services/authService";
+import { loginUser } from "../../services/authService";
 import logoImage from "../../assets/logo-tgi.jpg";
 import {
-  CONTAINER_WRAPPER,
-  CONTENT_WRAPPER,
   CARD_BOX,
-  HEADER_CONTAINER,
-  LOGO_IMAGE,
-  TITLE_TEXT,
-  SUBTITLE_TEXT,
-  ERROR_BOX,
-  FORM_CONTAINER,
-  LABEL_TEXT,
-  INPUT_FIELD,
-  PASSWORD_INPUT_FIELD,
-  PASSWORD_TOGGLE_BTN,
-  ICON_SIZE,
-  PASSWORD_HELP_TEXT,
-  OPTIONS_CONTAINER,
-  REMEMBER_ME_LABEL,
   CHECKBOX_INPUT,
   CHECKBOX_TEXT,
-  SUBMIT_BUTTON,
+  CONTAINER_WRAPPER,
+  CONTENT_WRAPPER,
+  ERROR_BOX,
+  FIELD_WRAPPER_LEFT,
   FOOTER_CONTAINER,
+  FORM_CONTAINER,
+  HEADER_CONTAINER,
+  ICON_SIZE,
+  INPUT_FIELD,
+  LABEL_TEXT,
+  LOGO_IMAGE,
+  OPTIONS_CONTAINER,
+  PASSWORD_FIELD_WRAPPER,
+  PASSWORD_HELP_TEXT,
+  PASSWORD_INPUT_FIELD,
+  PASSWORD_TOGGLE_BTN,
+  REMEMBER_ME_LABEL,
+  SUBMIT_BUTTON,
+  SUBTITLE_TEXT,
+  TITLE_TEXT,
 } from "../../styles/LoginStyles";
 
 export const Login = ({ setCurrentUser, showToast }) => {
@@ -37,24 +39,13 @@ export const Login = ({ setCurrentUser, showToast }) => {
     setError("");
 
     try {
-      await loginUser(email, password);
-      const userProfile = await getCurrentUserProfile();
-
-      if (userProfile && userProfile.statut === "desactive") {
-        setError(
-          "This account has been disabled. Please contact the administrator.",
-        );
-        return;
-      }
-
-      setCurrentUser(userProfile);
-      if (showToast) {
-        showToast(
-          `Successfully logged in as ${userProfile.firstName || userProfile.prenom || ""} ${userProfile.lastName || userProfile.nom || ""} (${(userProfile.role || "USER").toUpperCase()})`,
-        );
-      }
+      const { user } = await loginUser(email, password);
+      setCurrentUser(user);
+      showToast(
+        `Connecté en tant que ${user.firstName} ${user.lastName} (${user.role})`,
+      );
     } catch (err) {
-      setError(err.message || "Invalid email or password.");
+      setError(err.message || "E-mail ou mot de passe invalide.");
     }
   };
 
@@ -64,7 +55,7 @@ export const Login = ({ setCurrentUser, showToast }) => {
         <div className={CARD_BOX}>
           <div className={HEADER_CONTAINER}>
             <img src={logoImage} alt="Logo" className={LOGO_IMAGE} />
-            <div className="text-left">
+            <div className={FIELD_WRAPPER_LEFT}>
               <h1 className={TITLE_TEXT}>Collège Saint Michel Amparibe</h1>
               <p className={SUBTITLE_TEXT}>
                 TGI - Technologie Générale Industriel
@@ -88,7 +79,7 @@ export const Login = ({ setCurrentUser, showToast }) => {
 
             <div>
               <label className={LABEL_TEXT}>Password</label>
-              <div className="relative">
+              <div className={PASSWORD_FIELD_WRAPPER}>
                 <input
                   type={showPassword ? "text" : "password"}
                   required
@@ -140,6 +131,9 @@ export const Login = ({ setCurrentUser, showToast }) => {
                   )}
                 </button>
               </div>
+              <p className={PASSWORD_HELP_TEXT}>
+                Le mot de passe est votre matricule.
+              </p>
             </div>
 
             <div className={OPTIONS_CONTAINER}>

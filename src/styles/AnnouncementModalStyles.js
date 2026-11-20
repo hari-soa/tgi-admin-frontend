@@ -16,3 +16,6 @@ export const SELECT_INPUT =
   "w-full bg-slate-950 border border-slate-800 rounded-lg p-2 text-white focus:outline-none focus:border-blue-500";
 export const SUBMIT_BUTTON =
   "w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-2.5 rounded-xl transition-all mt-2";
+export const CLASS_CHECKBOX_LIST = "flex flex-wrap gap-4 mt-1";
+export const CLASS_CHECKBOX_LABEL =
+  "flex items-center space-x-2 text-slate-300 cursor-pointer";

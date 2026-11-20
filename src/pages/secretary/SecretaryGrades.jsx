@@ -1,4 +1,16 @@
-import { extractClassNum } from "../../utils/helpers";
+import { useState, useEffect } from "react";
+import {
+  extractClassNum,
+  getAvatarSource,
+  getFullName,
+} from "../../utils/helpers";
+import {
+  CLASS_GROUP_LABELS,
+  EXAM_TYPE_LABELS,
+  TERM_LABELS,
+  GRADE_SESSION_STATUS_LABELS,
+  formatDate,
+} from "../../utils/labels";
 import {
   CONTAINER_WRAPPER,
   HEADER_TITLE,
@@ -26,32 +38,67 @@ import {
   SESSION_CARD,
   SESSION_CARD_HEADER,
   SESSION_SUBJECT_TITLE,
-  STATUS_VALIDATED,
   STATUS_PENDING_VALIDATION,
   STATUS_DEFAULT,
   SESSION_CLASS_TEXT,
   SESSION_CLASS_HIGHLIGHT,
   SESSION_CREATION_DATE,
-  SESSION_VALIDATION_DATE,
   EDIT_GRADES_BUTTON,
+  EMPTY_TEXT,
+  READ_ONLY_NOTE,
 } from "../../styles/SecretaryGradesStyles";
+
+const MAX_SCORE = 20;
+
+const describeSession = (session) =>
+  `${EXAM_TYPE_LABELS[session.examType]} • ${TERM_LABELS[session.term]} • ${session.academicYear}`;
+
+const buildDraftValues = (session) =>
+  Object.fromEntries(
+    (session?.draftGrades ?? []).map((entry) => [
+      entry.studentId,
+      String(entry.value),
+    ]),
+  );
 
 export const SecretaryGrades = ({
   users,
   gradeSessions,
   activeGradeSession,
   setActiveGradeSession,
-  handleSecretarySaveDraft,
-  handleSecretarySubmitToAdmin,
+  onSaveDraft,
+  onSubmitSession,
 }) => {
-  const getStatusBadgeClass = (status) => {
-    if (status === "valide") return STATUS_VALIDATED;
-    if (status === "attente_validation") return STATUS_PENDING_VALIDATION;
-    return STATUS_DEFAULT;
-  };
+  // Marks typed in the grid, by student id (kept as text while typing)
+  const [draftValues, setDraftValues] = useState({});
 
-  // Sécurisation de la liste des sessions
-  const sessionsList = Array.isArray(gradeSessions) ? gradeSessions : [];
+  useEffect(() => {
+    setDraftValues(buildDraftValues(activeGradeSession));
+  }, [activeGradeSession?.id]);
+
+  const isSessionReadOnly = activeGradeSession?.status !== "OPEN";
+
+  const rosterStudents = activeGradeSession
+    ? users.filter(
+        (user) =>
+          user.role === "STUDENT" &&
+          user.isActive !== false &&
+          user.classGroup === activeGradeSession.classGroup,
+      )
+    : [];
+
+  const toGradeEntries = () =>
+    Object.entries(draftValues)
+      .filter(([, value]) => value !== "")
+      .map(([studentId, value]) => ({
+        studentId,
+        value: Number(value),
+        maxScore: MAX_SCORE,
+      }));
+
+  const handleGradeChange = (studentId, value) => {
+    setDraftValues({ ...draftValues, [studentId]: value });
+  };
 
   return (
     <div className={CONTAINER_WRAPPER}>
@@ -66,12 +113,11 @@ export const SecretaryGrades = ({
             <div>
               <span className={ACTIVE_SESSION_TAG}>Grille d'évaluation</span>
               <h3 className={ACTIVE_SESSION_TITLE}>
-                {activeGradeSession.matiere || "Matière"} —{" "}
-                {activeGradeSession.classe || activeGradeSession.classGroup}
+                {activeGradeSession.subjectName} —{" "}
+                {CLASS_GROUP_LABELS[activeGradeSession.classGroup]}
               </h3>
               <p className={ACTIVE_SESSION_DATE}>
-                Date de création :{" "}
-                {activeGradeSession.dateCreation || "Récemment"}
+                {describeSession(activeGradeSession)}
               </p>
             </div>
             <button
@@ -84,135 +130,115 @@ export const SecretaryGrades = ({
 
           <div className={ROSTER_SECTION}>
             <h4 className={ROSTER_TITLE}>
-              Roster des étudiants (
-              {activeGradeSession.classe || activeGradeSession.classGroup})
+              Liste des élèves (
+              {CLASS_GROUP_LABELS[activeGradeSession.classGroup]})
             </h4>
-            {users
-              .filter((u) => {
-                const role = (u.role || "").toUpperCase();
-                const uClass = (u.classe || u.classGroup || "").toUpperCase();
-                const sessionClass = (
-                  activeGradeSession.classe ||
-                  activeGradeSession.classGroup ||
-                  ""
-                ).toUpperCase();
-                return (
-                  (role === "STUDENT" || role === "ANCIEN") &&
-                  uClass === sessionClass
-                );
-              })
-              .map((student) => {
-                const studentId = student.id || student._id;
-                const currentVal =
-                  activeGradeSession.notesDraft?.[studentId] || "";
-                return (
-                  <div key={studentId} className={ROSTER_CARD}>
-                    <div className={STUDENT_INFO_ROW}>
-                      <img
-                        src={
-                          student.profilePictureUrl ||
-                          student.photo ||
-                          "/default-avatar.png"
-                        }
-                        alt="etu"
-                        className={STUDENT_AVATAR}
-                      />
-                      <div>
-                        <p className={STUDENT_NAME}>
-                          {student.lastName || student.nom}{" "}
-                          {student.firstName || student.prenom}
-                        </p>
-                        <p className={STUDENT_MATRICULE}>
-                          {student.matricule || "N/A"} •{" "}
-                          {extractClassNum(student.matricule || "")}
-                        </p>
-                      </div>
-                    </div>
-                    <div className={GRADE_INPUT_ROW}>
-                      <label className={GRADE_LABEL}>Note /20 :</label>
-                      <input
-                        type="number"
-                        step="0.5"
-                        max="20"
-                        min="0"
-                        defaultValue={currentVal}
-                        onChange={(e) => {
-                          if (!activeGradeSession.notesDraft) {
-                            activeGradeSession.notesDraft = {};
-                          }
-                          activeGradeSession.notesDraft[studentId] =
-                            e.target.value;
-                        }}
-                        className={GRADE_INPUT}
-                      />
-                    </div>
+            {rosterStudents.map((student) => (
+              <div key={student.id} className={ROSTER_CARD}>
+                <div className={STUDENT_INFO_ROW}>
+                  <img
+                    src={getAvatarSource(student)}
+                    alt={getFullName(student)}
+                    className={STUDENT_AVATAR}
+                  />
+                  <div>
+                    <p className={STUDENT_NAME}>
+                      {student.lastName} {student.firstName}
+                    </p>
+                    <p className={STUDENT_MATRICULE}>
+                      {student.matricule} • {extractClassNum(student.matricule)}
+                    </p>
                   </div>
-                );
-              })}
+                </div>
+                <div className={GRADE_INPUT_ROW}>
+                  <label className={GRADE_LABEL}>Note /{MAX_SCORE} :</label>
+                  <input
+                    type="number"
+                    step="0.25"
+                    min="0"
+                    max={MAX_SCORE}
+                    value={draftValues[student.id] ?? ""}
+                    disabled={isSessionReadOnly}
+                    onChange={(event) =>
+                      handleGradeChange(student.id, event.target.value)
+                    }
+                    className={GRADE_INPUT}
+                  />
+                </div>
+              </div>
+            ))}
+            {rosterStudents.length === 0 && (
+              <p className={EMPTY_TEXT}>Aucun élève actif dans cette classe.</p>
+            )}
           </div>
 
-          <div className={FORM_ACTIONS_ROW}>
-            <button
-              onClick={() =>
-                handleSecretarySaveDraft(
-                  activeGradeSession.id,
-                  activeGradeSession.notesDraft || {},
-                )
-              }
-              className={DRAFT_BUTTON}
-            >
-              Sauvegarder en brouillon
-            </button>
-            <button
-              onClick={() =>
-                handleSecretarySubmitToAdmin(
-                  activeGradeSession.id,
-                  activeGradeSession.notesDraft || {},
-                )
-              }
-              className={SUBMIT_BUTTON}
-            >
-              Envoyer à l'Admin
-            </button>
-          </div>
+          {isSessionReadOnly ? (
+            <p className={READ_ONLY_NOTE}>
+              Cette session a été soumise : elle est en attente de validation
+              par l'administrateur.
+            </p>
+          ) : (
+            <div className={FORM_ACTIONS_ROW}>
+              <button
+                onClick={() =>
+                  onSaveDraft(activeGradeSession.id, toGradeEntries())
+                }
+                className={DRAFT_BUTTON}
+              >
+                Sauvegarder en brouillon
+              </button>
+              <button
+                onClick={() =>
+                  onSubmitSession(activeGradeSession.id, toGradeEntries())
+                }
+                className={SUBMIT_BUTTON}
+              >
+                Envoyer à l'Admin
+              </button>
+            </div>
+          )}
         </div>
       ) : (
         <div className={SESSIONS_GRID}>
-          {sessionsList.map((session) => (
+          {gradeSessions.length === 0 && (
+            <p className={EMPTY_TEXT}>Aucune session de notes ouverte.</p>
+          )}
+          {gradeSessions.map((session) => (
             <div key={session.id} className={SESSION_CARD}>
               <div>
                 <div className={SESSION_CARD_HEADER}>
                   <h3 className={SESSION_SUBJECT_TITLE}>
-                    {session.matiere || session.subjectName || "Matière"}
+                    {session.subjectName}
                   </h3>
-                  <span className={getStatusBadgeClass(session.statut)}>
-                    {session.statut?.replace("_", " ") || "brouillon"}
+                  <span
+                    className={
+                      session.status === "PENDING_REVIEW"
+                        ? STATUS_PENDING_VALIDATION
+                        : STATUS_DEFAULT
+                    }
+                  >
+                    {GRADE_SESSION_STATUS_LABELS[session.status]}
                   </span>
                 </div>
                 <p className={SESSION_CLASS_TEXT}>
                   Classe :{" "}
                   <span className={SESSION_CLASS_HIGHLIGHT}>
-                    {session.classe || session.classGroup}
+                    {CLASS_GROUP_LABELS[session.classGroup]}
                   </span>
                 </p>
                 <p className={SESSION_CREATION_DATE}>
-                  Créée : {session.dateCreation || "Récemment"}
+                  {describeSession(session)} • créée le{" "}
+                  {formatDate(session.createdAt)}
                 </p>
-                {session.dateValidation && (
-                  <p className={SESSION_VALIDATION_DATE}>
-                    Validée le : {session.dateValidation}
-                  </p>
-                )}
               </div>
-
-              {session.statut !== "valide" && (
-                <button
-                  onClick={() => setActiveGradeSession(session)}
-                  className={EDIT_GRADES_BUTTON}
-                >
-                  Saisir / Modifier les notes
-                </button>
-              )}
+              <button
+                onClick={() => setActiveGradeSession(session)}
+                className={EDIT_GRADES_BUTTON}
+              >
+                {session.status === "OPEN"
+                  ? "Saisir / Modifier les notes"
+                  : "Consulter les notes"}
+              </button>
             </div>
           ))}
         </div>

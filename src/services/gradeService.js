@@ -1,69 +1,48 @@
-import { apiFetch } from "./api";
+import { API_ORIGIN, apiFetch, jsonBody } from "./api";
 
-export const getAllGrades = async () => {
-  return await apiFetch("/grades");
+export const getGradeSessions = async () => {
+  const data = await apiFetch("/grades/sessions");
+  return data.sessions;
 };
 
-export const getGradeById = async (gradeId) => {
-  return await apiFetch(`/grades/${gradeId}`);
-};
-
-export const createGrade = async (gradeData) => {
-  return await apiFetch("/grades", {
+export const createGradeSession = async (sessionData) => {
+  const data = await apiFetch("/grades/sessions", {
     method: "POST",
-    body: JSON.stringify(gradeData),
+    body: jsonBody(sessionData),
   });
+  return data.session;
 };
 
-export const updateGrade = async (gradeId, gradeData) => {
-  return await apiFetch(`/grades/${gradeId}`, {
+export const saveGradeSessionDraft = async (sessionId, grades) => {
+  const data = await apiFetch(`/grades/sessions/${sessionId}/draft`, {
     method: "PUT",
-    body: JSON.stringify(gradeData),
+    body: jsonBody({ grades }),
   });
+  return data.session;
 };
 
-export const deleteGrade = async (gradeId) => {
-  return await apiFetch(`/grades/${gradeId}`, {
-    method: "DELETE",
-  });
-};
-
-export const submitGradeSession = async (sessionData) => {
-  return await apiFetch("/grades/session", {
+export const submitGradeSession = async (sessionId, grades) => {
+  const data = await apiFetch(`/grades/sessions/${sessionId}/submit`, {
     method: "POST",
-    body: JSON.stringify(sessionData),
+    body: jsonBody({ grades }),
   });
+  return data.session;
 };
 
-export const reviewGrade = async (gradeId, reviewData) => {
-  return await apiFetch(`/grades/${gradeId}/review`, {
+export const validateGradeSession = async (sessionId) => {
+  const data = await apiFetch(`/grades/sessions/${sessionId}/validate`, {
     method: "PATCH",
-    body: JSON.stringify(reviewData),
   });
+  return data.session;
 };
 
 export const getStudentResults = async (studentId) => {
-  return await apiFetch(`/results/student/${studentId}`);
+  const data = await apiFetch(`/results/student/${studentId}`);
+  return data.results;
 };
 
-export const getResultById = async (resultId) => {
-  return await apiFetch(`/results/${resultId}`);
-};
-
-export const createAnnualResult = async (resultData) => {
-  return await apiFetch("/results", {
-    method: "POST",
-    body: JSON.stringify(resultData),
-  });
-};
-
-export const reviewAnnualResult = async (resultId, reviewData) => {
-  return await apiFetch(`/results/${resultId}/review`, {
-    method: "PATCH",
-    body: JSON.stringify(reviewData),
-  });
-};
-
-export const exportBulletinPdf = async (resultId) => {
-  return await apiFetch(`/results/${resultId}/pdf`);
+/** Generates the PDF of a bulletin and returns its absolute URL. */
+export const exportResultPdf = async (resultId) => {
+  const data = await apiFetch(`/results/${resultId}/pdf`);
+  return `${API_ORIGIN}${data.pdfUrl}`;
 };
