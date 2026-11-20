@@ -10,64 +10,80 @@ import {
   ROLE_BADGE,
   METADATA_CONTAINER,
   META_LABEL,
-  META_CAPITALIZE,
   ACTION_CONTAINER,
   ACTION_BUTTON,
+  DETAIL_HEADER,
+  DETAIL_HEADER_ACTIONS,
+  BACK_BUTTON,
+  DELETE_DETAIL_BUTTON,
+  DETAIL_PANEL,
+  CARD_ACTIONS,
+  CARD_PRIMARY_ACTION,
+  DELETE_CARD_BUTTON,
 } from "../../styles/StaffListStyles";
+import { useState } from "react";
 import Profile from "./Profile";
+import { getAvatarSource, getFullName } from "../../utils/helpers";
+
+const STAFF_ROLE_LABELS = {
+  ADMIN: "Administrateur",
+  SECRETARY: "Secrétaire",
+  TEACHER: "Enseignant",
+};
 
 export const StaffList = ({
   staffUsers,
-  targetStudent,
-  setTargetStudent,
   deleteUser,
   onUpdateUser,
   isAdmin,
 }) => {
-  if (targetStudent) {
+  const [selectedStaff, setSelectedStaff] = useState(null);
+
+  const handleDeleteStaff = async (staff) => {
+    const confirmed = window.confirm(
+      `Voulez-vous vraiment supprimer ${staff.firstName} ${staff.lastName} ?`,
+    );
+    if (!confirmed) return;
+    await deleteUser(staff.id);
+    setSelectedStaff(null);
+  };
+
+  const handleUpdateStaff = async (userId, updatedData) => {
+    await onUpdateUser(userId, updatedData);
+    setSelectedStaff({ ...selectedStaff, ...updatedData });
+  };
+
+  if (selectedStaff) {
     return (
       <div className={CONTAINER_WRAPPER}>
-        <div className="flex justify-between items-center mb-6">
+        <div className={DETAIL_HEADER}>
           <div>
             <h2 className={HEADER_TITLE}>Fiche du Personnel</h2>
             <p className={HEADER_SUBTITLE}>
               Gestion, modification et suivi du profil
             </p>
           </div>
-          <div className="flex gap-3">
+          <div className={DETAIL_HEADER_ACTIONS}>
             <button
-              onClick={() => setTargetStudent(null)}
-              className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg text-sm font-medium transition-colors"
+              onClick={() => setSelectedStaff(null)}
+              className={BACK_BUTTON}
             >
               ← Retour à la liste
             </button>
             {isAdmin && (
               <button
-                onClick={() => {
-                  if (
-                    window.confirm(
-                      "Voulez-vous vraiment supprimer cet utilisateur ?",
-                    )
-                  ) {
-                    deleteUser(targetStudent.id || targetStudent._id);
-                    setTargetStudent(null);
-                  }
-                }}
-                className="px-4 py-2 bg-red-900/60 hover:bg-red-900 text-red-300 rounded-lg text-sm font-bold transition-colors"
+                onClick={() => handleDeleteStaff(selectedStaff)}
+                className={DELETE_DETAIL_BUTTON}
               >
                 Supprimer l'utilisateur
               </button>
             )}
           </div>
         </div>
-
-        <div className="bg-slate-900/50 border border-slate-800 rounded-xl p-6">
+        <div className={DETAIL_PANEL}>
           <Profile
-            currentUser={targetStudent}
-            onUpdateUser={async (userId, updatedData) => {
-              await onUpdateUser(userId, updatedData);
-              setTargetStudent({ ...targetStudent, ...updatedData });
-            }}
+            currentUser={selectedStaff}
+            onUpdateUser={handleUpdateStaff}
             isAdmin={isAdmin}
           />
         </div>
@@ -85,80 +101,65 @@ export const StaffList = ({
       </div>
 
       <div className={GRID_CONTAINER}>
-        {staffUsers.map((staff) => {
-          const userId = staff.id || staff._id;
-          return (
-            <div key={userId} className={STAFF_CARD}>
-              <div>
-                <div className={CARD_HEADER}>
-                  <img
-                    src={staff.profilePictureUrl || "/default-avatar.png"}
-                    alt="staff"
-                    className={STAFF_AVATAR}
-                  />
-                  <div>
-                    <h3 className={STAFF_NAME}>
-                      {staff.lastName} {staff.firstName}
-                    </h3>
-                    <span className={ROLE_BADGE}>{staff.role}</span>
-                  </div>
-                </div>
-
-                <div className={METADATA_CONTAINER}>
-                  <p>
-                    <span className={META_LABEL}>Email :</span>{" "}
-                    {staff.email || "Non renseigné"}
-                  </p>
-                  <p>
-                    <span className={META_LABEL}>Contact :</span>{" "}
-                    {staff.contactNumber || "Non renseigné"}
-                  </p>
-                  <p>
-                    <span className={META_LABEL}>Genre :</span>{" "}
-                    <span className={META_CAPITALIZE}>
-                      {staff.gender || "Non spécifié"}
-                    </span>
-                  </p>
-                  <p>
-                    <span className={META_LABEL}>Statut :</span>{" "}
-                    <span
-                      className={`px-2 py-0.5 rounded text-xs font-bold ${
-                        staff.isActive !== false
-                          ? "bg-emerald-600 text-white"
-                          : "bg-red-600 text-white"
-                      }`}
-                    >
-                      {staff.isActive !== false ? "ACTIVE" : "INACTIF"}
-                    </span>
-                  </p>
+        {staffUsers.map((staff) => (
+          <div key={staff.id} className={STAFF_CARD}>
+            <div>
+              <div className={CARD_HEADER}>
+                <img
+                  src={getAvatarSource(staff)}
+                  alt={getFullName(staff)}
+                  className={STAFF_AVATAR}
+                />
+                <div>
+                  <h3 className={STAFF_NAME}>
+                    {staff.lastName} {staff.firstName}
+                  </h3>
+                  <span className={ROLE_BADGE}>
+                    {STAFF_ROLE_LABELS[staff.role]}
+                  </span>
                 </div>
               </div>
-
-              <div
-                className={ACTION_CONTAINER}
-                style={{ display: "flex", gap: "8px", marginTop: "12px" }}
-              >
-                <button
-                  onClick={() => {
-                    setTargetStudent(staff);
-                  }}
-                  className={ACTION_BUTTON}
-                  style={{ flex: 1 }}
-                >
-                  Voir / Modifier le profil →
-                </button>
-                {isAdmin && (
-                  <button
-                    onClick={() => deleteUser(userId)}
-                    className="px-3 py-2 bg-red-900/40 text-red-400 rounded hover:bg-red-900/60 text-xs font-bold"
-                  >
-                    Supprimer
-                  </button>
+              <div className={METADATA_CONTAINER}>
+                <p>
+                  <span className={META_LABEL}>Email :</span>{" "}
+                  {staff.email || "Non renseigné"}
+                </p>
+                <p>
+                  <span className={META_LABEL}>Contact :</span>{" "}
+                  {staff.contactNumber || "Non renseigné"}
+                </p>
+                {staff.department && (
+                  <p>
+                    <span className={META_LABEL}>Département :</span>{" "}
+                    {staff.department}
+                  </p>
+                )}
+                {staff.homeroomClass && (
+                  <p>
+                    <span className={META_LABEL}>Classe principale :</span>{" "}
+                    {staff.homeroomClass}
+                  </p>
                 )}
               </div>
             </div>
-          );
-        })}
+            <div className={`${ACTION_CONTAINER} ${CARD_ACTIONS}`}>
+              <button
+                onClick={() => setSelectedStaff(staff)}
+                className={`${ACTION_BUTTON} ${CARD_PRIMARY_ACTION}`}
+              >
+                {isAdmin ? "Voir / Modifier le profil →" : "Voir le profil →"}
+              </button>
+              {isAdmin && (
+                <button
+                  onClick={() => handleDeleteStaff(staff)}
+                  className={DELETE_CARD_BUTTON}
+                >
+                  Supprimer
+                </button>
+              )}
+            </div>
+          </div>
+        ))}
       </div>
     </div>
   );

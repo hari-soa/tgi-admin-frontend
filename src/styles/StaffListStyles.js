@@ -17,3 +17,19 @@ export const META_CAPITALIZE = "capitalize";
 export const ACTION_CONTAINER = "mt-4 pt-3 border-t border-slate-800";
 export const ACTION_BUTTON =
   "w-full bg-slate-800 hover:bg-blue-600 text-white text-xs font-semibold py-2 rounded-xl transition-colors shadow-md";
+export const DETAIL_HEADER = "flex justify-between items-center mb-6";
+export const DETAIL_HEADER_ACTIONS = "flex gap-3";
+export const BACK_BUTTON =
+  "px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg text-sm font-medium transition-colors";
+export const DELETE_DETAIL_BUTTON =
+  "px-4 py-2 bg-red-900/60 hover:bg-red-900 text-red-300 rounded-lg text-sm font-bold transition-colors";
+export const DETAIL_PANEL =
+  "bg-slate-900/50 border border-slate-800 rounded-xl p-6";
+export const STATUS_ACTIVE =
+  "px-2 py-0.5 rounded text-xs font-bold bg-emerald-600 text-white";
+export const STATUS_INACTIVE =
+  "px-2 py-0.5 rounded text-xs font-bold bg-red-600 text-white";
+export const CARD_ACTIONS = "flex gap-2 mt-3";
+export const CARD_PRIMARY_ACTION = "flex-1";
+export const DELETE_CARD_BUTTON =
+  "px-3 py-2 bg-red-900/40 text-red-400 rounded hover:bg-red-900/60 text-xs font-bold";

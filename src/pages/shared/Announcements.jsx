@@ -15,20 +15,41 @@ import {
   CONTEXT_TEXT,
   FOOTER_META,
   TARGET_TEXT,
+  CARD_LAYOUT,
+  CARD_FOOTER,
+  ACTIONS_GROUP,
+  EDIT_BUTTON,
+  DELETE_BUTTON,
 } from "../../styles/AnnouncementsStyles";
+import { CLASS_GROUP_LABELS, formatDate } from "../../utils/labels";
+
+const DEFAULT_ANNOUNCEMENT_FORM = { targetScope: "ALL", priority: "NORMAL" };
+
+const describeTarget = (announcement) =>
+  announcement.targetScope === "CLASS"
+    ? announcement.targetClasses
+        .map((classGroup) => CLASS_GROUP_LABELS[classGroup])
+        .join(", ")
+    : "Tout le monde";
 
 export const Announcements = ({
   currentUser,
-  announcements = [],
+  announcements,
   setActiveModal,
   onDeleteAnnouncement,
-  onSelectAnnouncementToEdit,
+  setFormState,
 }) => {
-  const validAnnouncements = Array.isArray(announcements)
-    ? announcements
-    : announcements?.announcements || announcements?.data?.announcements || [];
+  const isAdmin = currentUser.role === "ADMIN";
 
-  const isAdmin = currentUser?.role?.toUpperCase() === "ADMIN";
+  const handleCreate = () => {
+    setFormState(DEFAULT_ANNOUNCEMENT_FORM);
+    setActiveModal("announcement");
+  };
+
+  const handleEdit = (announcement) => {
+    setFormState(announcement);
+    setActiveModal("announcement");
+  };
 
   return (
     <div className={CONTAINER_WRAPPER}>
@@ -40,30 +61,19 @@ export const Announcements = ({
           </p>
         </div>
         {isAdmin && (
-          <button
-            onClick={() => {
-              if (onSelectAnnouncementToEdit) {
-                onSelectAnnouncementToEdit({
-                  targetScope: "ALL",
-                  priority: "NORMAL",
-                });
-              }
-              setActiveModal("announcement");
-            }}
-            className={BROADCAST_BUTTON}
-          >
+          <button onClick={handleCreate} className={BROADCAST_BUTTON}>
             + Diffuser une annonce
           </button>
         )}
       </div>
 
       <div className={GRID_CONTAINER}>
-        {validAnnouncements.map((ann) => {
-          const isUrgent = ann.priority === "URGENT";
+        {announcements.map((announcement) => {
+          const isUrgent = announcement.priority === "URGENT";
           return (
             <div
-              key={ann.id}
-              className={`${isUrgent ? CARD_URGENT : CARD_NORMAL} flex flex-col justify-between`}
+              key={announcement.id}
+              className={`${isUrgent ? CARD_URGENT : CARD_NORMAL} ${CARD_LAYOUT}`}
             >
               <div>
                 <div className={CARD_HEADER}>
@@ -71,45 +81,33 @@ export const Announcements = ({
                     {isUrgent ? "Urgent" : "Général"}
                   </span>
                   <span className={DATE_TEXT}>
-                    {ann.createdAt
-                      ? new Date(ann.createdAt).toLocaleDateString()
-                      : "Récemment"}
+                    {formatDate(announcement.createdAt)}
                   </span>
                 </div>
-                <h3 className={TITLE_TEXT}>{ann.title}</h3>
-                <p className={CONTEXT_TEXT}>{ann.content}</p>
+                <h3 className={TITLE_TEXT}>{announcement.title}</h3>
+                <p className={CONTEXT_TEXT}>{announcement.content}</p>
               </div>
-
-              <div className="mt-4 pt-4 border-t border-slate-800/80 flex items-center justify-between">
+              <div className={CARD_FOOTER}>
                 <span className={FOOTER_META}>
                   Cible :{" "}
                   <span className={TARGET_TEXT}>
-                    {ann.targetScope || "ALL"}
-                    {ann.targetValue ? ` (${ann.targetValue})` : ""}
+                    {describeTarget(announcement)}
                   </span>
                 </span>
-
                 {isAdmin && (
-                  <div className="flex items-center space-x-2">
-                    {onSelectAnnouncementToEdit && (
-                      <button
-                        onClick={() => {
-                          onSelectAnnouncementToEdit(ann);
-                          setActiveModal("announcement");
-                        }}
-                        className="px-2.5 py-1 bg-slate-800 hover:bg-slate-700 text-blue-400 text-xs font-medium rounded transition-colors"
-                      >
-                        Modifier
-                      </button>
-                    )}
-                    {onDeleteAnnouncement && (
-                      <button
-                        onClick={() => onDeleteAnnouncement(ann.id)}
-                        className="px-2.5 py-1 bg-slate-800 hover:bg-slate-700 text-red-400 text-xs font-medium rounded transition-colors"
-                      >
-                        Supprimer
-                      </button>
-                    )}
+                  <div className={ACTIONS_GROUP}>
+                    <button
+                      onClick={() => handleEdit(announcement)}
+                      className={EDIT_BUTTON}
+                    >
+                      Modifier
+                    </button>
+                    <button
+                      onClick={() => onDeleteAnnouncement(announcement.id)}
+                      className={DELETE_BUTTON}
+                    >
+                      Supprimer
+                    </button>
                   </div>
                 )}
               </div>

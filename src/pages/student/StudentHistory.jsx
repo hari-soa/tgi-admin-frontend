@@ -12,11 +12,22 @@ import {
   BADGE_EMERALD,
   DETAIL_TEXT,
   REASON_TEXT,
-  AUTHOR_TEXT,
   DATE_TEXT,
 } from "../../styles/StudentHistoryStyles";
+import {
+  HISTORY_TYPE_LABELS,
+  REMARK_CATEGORY_LABELS,
+  formatDate,
+} from "../../utils/labels";
 
-export const StudentHistory = ({ currentUser, historiques, remarques }) => {
+const SERIOUS_HISTORY_TYPES = ["ABSENCE", "SUSPENSION"];
+
+const describePeriod = (record) =>
+  record.endDate === record.startDate
+    ? formatDate(record.startDate)
+    : `${formatDate(record.startDate)} → ${formatDate(record.endDate)}`;
+
+export const StudentHistory = ({ historyRecords, remarks }) => {
   return (
     <div className={CONTAINER_WRAPPER}>
       <div>
@@ -29,63 +40,57 @@ export const StudentHistory = ({ currentUser, historiques, remarques }) => {
       <div>
         <h3 className={SECTION_TITLE}>Historiques</h3>
         <div className={LIST_CONTAINER}>
-          {historiques
-            .filter((h) => h.studentId === currentUser?.id)
-            .map((h) => {
-              const isRedCard = h.type === "Absence" || h.isRed;
-              return (
-                <div key={h.id} className={isRedCard ? CARD_RED : CARD_NORMAL}>
-                  <div>
-                    <div className={HEADER_ROW}>
-                      <span
-                        className={
-                          h.type === "Absence" ? BADGE_RED : BADGE_BLUE
-                        }
-                      >
-                        {h.type}
-                      </span>
-                      <span className={DETAIL_TEXT}>{h.detail}</span>
-                    </div>
-                    <p className={REASON_TEXT}>{h.raison}</p>
-                    <p className={AUTHOR_TEXT}>
-                      Auteur : {h.author || "Administration"}
-                    </p>
+          {historyRecords.map((record) => {
+            const isSerious = SERIOUS_HISTORY_TYPES.includes(record.type);
+            return (
+              <div
+                key={record.id}
+                className={isSerious ? CARD_RED : CARD_NORMAL}
+              >
+                <div>
+                  <div className={HEADER_ROW}>
+                    <span className={isSerious ? BADGE_RED : BADGE_BLUE}>
+                      {HISTORY_TYPE_LABELS[record.type]}
+                    </span>
+                    <span className={DETAIL_TEXT}>
+                      {describePeriod(record)}
+                    </span>
                   </div>
-                  <span className={DATE_TEXT}>{h.date || "Récemment"}</span>
+                  <p className={REASON_TEXT}>{record.reason}</p>
                 </div>
-              );
-            })}
+                <span className={DATE_TEXT}>
+                  {formatDate(record.createdAt)}
+                </span>
+              </div>
+            );
+          })}
         </div>
       </div>
 
       <div>
         <h3 className={SECTION_TITLE}>Remarques</h3>
         <div className={LIST_CONTAINER}>
-          {remarques
-            .filter((r) => r.studentId === currentUser?.id)
-            .map((r) => {
-              const isRedCard = r.type === "Avertissement" || r.isRed;
-              return (
-                <div key={r.id} className={isRedCard ? CARD_RED : CARD_NORMAL}>
-                  <div>
-                    <div className={HEADER_ROW}>
-                      <span
-                        className={
-                          r.type === "Avertissement" ? BADGE_RED : BADGE_EMERALD
-                        }
-                      >
-                        {r.type}
-                      </span>
-                    </div>
-                    <p className={REASON_TEXT}>{r.raison}</p>
-                    <p className={AUTHOR_TEXT}>
-                      Auteur : {r.author || "Corps Enseignant"}
-                    </p>
+          {remarks.map((remark) => {
+            const isWarning = remark.category === "WARNING";
+            return (
+              <div
+                key={remark.id}
+                className={isWarning ? CARD_RED : CARD_NORMAL}
+              >
+                <div>
+                  <div className={HEADER_ROW}>
+                    <span className={isWarning ? BADGE_RED : BADGE_EMERALD}>
+                      {REMARK_CATEGORY_LABELS[remark.category]}
+                    </span>
                   </div>
-                  <span className={DATE_TEXT}>{r.date || "Récemment"}</span>
+                  <p className={REASON_TEXT}>{remark.content}</p>
                 </div>
-              );
-            })}
+                <span className={DATE_TEXT}>
+                  {formatDate(remark.createdAt)}
+                </span>
+              </div>
+            );
+          })}
         </div>
       </div>
     </div>

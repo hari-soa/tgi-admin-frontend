@@ -10,7 +10,10 @@ import {
   GRID_TWO_COLS,
   SELECT_INPUT,
   SUBMIT_BUTTON,
+  CLASS_CHECKBOX_LIST,
+  CLASS_CHECKBOX_LABEL,
 } from "../../styles/AnnouncementModalStyles";
+import { CLASS_GROUP_LABELS } from "../../utils/labels";
 
 export const AnnouncementModal = ({
   isOpen,
@@ -26,6 +29,14 @@ export const AnnouncementModal = ({
   };
 
   const isEditing = Boolean(formState.id);
+  const selectedClasses = formState.targetClasses || [];
+
+  const toggleTargetClass = (classGroup) => {
+    const updatedClasses = selectedClasses.includes(classGroup)
+      ? selectedClasses.filter((selected) => selected !== classGroup)
+      : [...selectedClasses, classGroup];
+    handleInputChange("targetClasses", updatedClasses);
+  };
 
   return (
     <div className={MODAL_BACKDROP}>
@@ -44,6 +55,7 @@ export const AnnouncementModal = ({
             <input
               type="text"
               placeholder="Titre..."
+              minLength={3}
               value={formState.title || ""}
               onChange={(e) => handleInputChange("title", e.target.value)}
               className={TEXT_INPUT}
@@ -55,6 +67,7 @@ export const AnnouncementModal = ({
             <label className={FIELD_LABEL}>Contenu</label>
             <textarea
               rows="4"
+              minLength={10}
               placeholder="Contenu de l'annonce (minimum 10 caractères)..."
               value={formState.content || ""}
               onChange={(e) => handleInputChange("content", e.target.value)}
@@ -73,8 +86,8 @@ export const AnnouncementModal = ({
                 }
                 className={SELECT_INPUT}
               >
-                <option value="ALL">Tout (ALL)</option>
-                <option value="CLASS">Par classe (CLASS)</option>
+                <option value="ALL">Tout le monde</option>
+                <option value="CLASS">Par classe</option>
               </select>
             </div>
 
@@ -93,29 +106,23 @@ export const AnnouncementModal = ({
 
           {formState.targetScope === "CLASS" && (
             <div>
-              <label className={FIELD_LABEL}>
-                Classes cibles (Séparées par des virgules ou sélection)
-              </label>
-              <input
-                type="text"
-                placeholder="SECONDE, PREMIERE..."
-                value={formState.targetClassesInput || ""}
-                onChange={(e) => {
-                  const val = e.target.value;
-                  handleInputChange("targetClassesInput", val);
-                  handleInputChange(
-                    "targetClasses",
-                    val
-                      .split(",")
-                      .map((c) => c.trim().toUpperCase())
-                      .filter(Boolean),
-                  );
-                }}
-                className={TEXT_INPUT}
-              />
+              <label className={FIELD_LABEL}>Classes concernées</label>
+              <div className={CLASS_CHECKBOX_LIST}>
+                {Object.entries(CLASS_GROUP_LABELS).map(
+                  ([classGroup, label]) => (
+                    <label key={classGroup} className={CLASS_CHECKBOX_LABEL}>
+                      <input
+                        type="checkbox"
+                        checked={selectedClasses.includes(classGroup)}
+                        onChange={() => toggleTargetClass(classGroup)}
+                      />
+                      <span>{label}</span>
+                    </label>
+                  ),
+                )}
+              </div>
             </div>
           )}
-
           <button type="submit" className={SUBMIT_BUTTON}>
             {isEditing ? "Enregistrer les modifications" : "Publier"}
           </button>

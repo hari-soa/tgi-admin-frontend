@@ -57,7 +57,7 @@ export const Sidebar = ({
             />
           </svg>
         );
-      case "personnel":
+      case "staff":
         return (
           <svg
             className={NAV_ICON}
@@ -185,11 +185,11 @@ export const Sidebar = ({
             </button>
             <button
               onClick={() => {
-                setActiveTab("etudiants");
+                setActiveTab("students");
                 setTargetStudent(null);
               }}
               className={
-                activeTab === "etudiants"
+                activeTab === "students"
                   ? NAV_BUTTON_ACTIVE
                   : NAV_BUTTON_INACTIVE
               }
@@ -199,25 +199,23 @@ export const Sidebar = ({
             </button>
             <button
               onClick={() => {
-                setActiveTab("personnel");
+                setActiveTab("staff");
                 setTargetStudent(null);
               }}
               className={
-                activeTab === "personnel"
-                  ? NAV_BUTTON_ACTIVE
-                  : NAV_BUTTON_INACTIVE
+                activeTab === "staff" ? NAV_BUTTON_ACTIVE : NAV_BUTTON_INACTIVE
               }
             >
-              {renderIcon("personnel")}
+              {renderIcon("staff")}
               <span>Liste du personnel</span>
             </button>
             <button
               onClick={() => {
-                setActiveTab("pointage");
+                setActiveTab("attendance");
                 setTargetStudent(null);
               }}
               className={
-                activeTab === "pointage"
+                activeTab === "attendance"
                   ? NAV_BUTTON_ACTIVE
                   : NAV_BUTTON_INACTIVE
               }
@@ -227,11 +225,11 @@ export const Sidebar = ({
             </button>
             <button
               onClick={() => {
-                setActiveTab("annonces");
+                setActiveTab("announcements");
                 setTargetStudent(null);
               }}
               className={
-                activeTab === "annonces"
+                activeTab === "announcements"
                   ? NAV_BUTTON_ACTIVE
                   : NAV_BUTTON_INACTIVE
               }
@@ -241,11 +239,13 @@ export const Sidebar = ({
             </button>
             <button
               onClick={() => {
-                setActiveTab("profil");
+                setActiveTab("profile");
                 setTargetStudent(null);
               }}
               className={
-                activeTab === "profil" ? NAV_BUTTON_ACTIVE : NAV_BUTTON_INACTIVE
+                activeTab === "profile"
+                  ? NAV_BUTTON_ACTIVE
+                  : NAV_BUTTON_INACTIVE
               }
             >
               {renderIcon("profile")}
@@ -254,7 +254,7 @@ export const Sidebar = ({
           </>
         )}
 
-        {(userRole === "secretaire" || userRole === "secretary") && (
+        {userRole === "secretary" && (
           <>
             <button
               onClick={() => setActiveTab("dashboard")}
@@ -268,9 +268,9 @@ export const Sidebar = ({
               <span>Dashboard</span>
             </button>
             <button
-              onClick={() => setActiveTab("notes_secr")}
+              onClick={() => setActiveTab("grade-sessions")}
               className={
-                activeTab === "notes_secr"
+                activeTab === "grade-sessions"
                   ? NAV_BUTTON_ACTIVE
                   : NAV_BUTTON_INACTIVE
               }
@@ -279,20 +279,20 @@ export const Sidebar = ({
               <span>Gestion des Notes</span>
             </button>
             <button
-              onClick={() => setActiveTab("personnel")}
+              onClick={() => setActiveTab("staff")}
               className={
-                activeTab === "personnel"
-                  ? NAV_BUTTON_ACTIVE
-                  : NAV_BUTTON_INACTIVE
+                activeTab === "staff" ? NAV_BUTTON_ACTIVE : NAV_BUTTON_INACTIVE
               }
             >
-              {renderIcon("personnel")}
+              {renderIcon("staff")}
               <span>Liste du personnel</span>
             </button>
             <button
-              onClick={() => setActiveTab("profil")}
+              onClick={() => setActiveTab("profile")}
               className={
-                activeTab === "profil" ? NAV_BUTTON_ACTIVE : NAV_BUTTON_INACTIVE
+                activeTab === "profile"
+                  ? NAV_BUTTON_ACTIVE
+                  : NAV_BUTTON_INACTIVE
               }
             >
               {renderIcon("profile")}
@@ -301,32 +301,30 @@ export const Sidebar = ({
           </>
         )}
 
-        {(userRole === "student" || userRole === "ancien") && (
+        {userRole === "student" && (
           <>
             <button
-              onClick={() => setActiveTab("accueil")}
+              onClick={() => setActiveTab("home")}
               className={
-                activeTab === "accueil"
-                  ? NAV_BUTTON_ACTIVE
-                  : NAV_BUTTON_INACTIVE
+                activeTab === "home" ? NAV_BUTTON_ACTIVE : NAV_BUTTON_INACTIVE
               }
             >
               {renderIcon("dashboard")}
               <span>Accueil</span>
             </button>
             <button
-              onClick={() => setActiveTab("notes")}
+              onClick={() => setActiveTab("grades")}
               className={
-                activeTab === "notes" ? NAV_BUTTON_ACTIVE : NAV_BUTTON_INACTIVE
+                activeTab === "grades" ? NAV_BUTTON_ACTIVE : NAV_BUTTON_INACTIVE
               }
             >
               {renderIcon("grades")}
               <span>Notes & Bulletins</span>
             </button>
             <button
-              onClick={() => setActiveTab("historique_remarque")}
+              onClick={() => setActiveTab("history")}
               className={
-                activeTab === "historique_remarque"
+                activeTab === "history"
                   ? NAV_BUTTON_ACTIVE
                   : NAV_BUTTON_INACTIVE
               }
@@ -335,20 +333,18 @@ export const Sidebar = ({
               <span>Historique & Remarques</span>
             </button>
             <button
-              onClick={() => setActiveTab("personnel")}
+              onClick={() => setActiveTab("staff")}
               className={
-                activeTab === "personnel"
-                  ? NAV_BUTTON_ACTIVE
-                  : NAV_BUTTON_INACTIVE
+                activeTab === "staff" ? NAV_BUTTON_ACTIVE : NAV_BUTTON_INACTIVE
               }
             >
-              {renderIcon("personnel")}
+              {renderIcon("staff")}
               <span>Liste du personnel</span>
             </button>
             <button
-              onClick={() => setActiveTab("annonces")}
+              onClick={() => setActiveTab("announcements")}
               className={
-                activeTab === "annonces"
+                activeTab === "announcements"
                   ? NAV_BUTTON_ACTIVE
                   : NAV_BUTTON_INACTIVE
               }
@@ -357,9 +353,11 @@ export const Sidebar = ({
               <span>Annonces</span>
             </button>
             <button
-              onClick={() => setActiveTab("profil")}
+              onClick={() => setActiveTab("profile")}
               className={
-                activeTab === "profil" ? NAV_BUTTON_ACTIVE : NAV_BUTTON_INACTIVE
+                activeTab === "profile"
+                  ? NAV_BUTTON_ACTIVE
+                  : NAV_BUTTON_INACTIVE
               }
             >
               {renderIcon("profile")}

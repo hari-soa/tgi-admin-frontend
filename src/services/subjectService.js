@@ -1,29 +1,26 @@
-import { apiFetch } from "./api";
+import { apiFetch, jsonBody } from "./api";
 
 export const getAllSubjects = async () => {
-  return await apiFetch("/subjects");
-};
-
-export const getSubjectById = async (subjectId) => {
-  return await apiFetch(`/subjects/${subjectId}`);
+  const data = await apiFetch("/subjects");
+  return data.subjects;
 };
 
 export const createSubject = async (subjectData) => {
-  return await apiFetch("/subjects", {
+  const data = await apiFetch("/subjects", {
     method: "POST",
-    body: JSON.stringify(subjectData),
+    body: jsonBody(subjectData),
   });
+  return data.subject;
 };
 
 export const updateSubject = async (subjectId, subjectData) => {
-  return await apiFetch(`/subjects/${subjectId}`, {
+  const data = await apiFetch(`/subjects/${subjectId}`, {
     method: "PATCH",
-    body: JSON.stringify(subjectData),
+    body: jsonBody(subjectData),
   });
+  return data.subject;
 };
 
 export const deleteSubject = async (subjectId) => {
-  return await apiFetch(`/subjects/${subjectId}`, {
-    method: "DELETE",
-  });
+  await apiFetch(`/subjects/${subjectId}`, { method: "DELETE" });
 };

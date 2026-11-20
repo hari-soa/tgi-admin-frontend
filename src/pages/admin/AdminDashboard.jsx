@@ -1,31 +1,57 @@
 import { useState } from "react";
 import {
-  CONTAINER_WRAPPER,
+  ACTIONS_CONTAINER,
+  ADD_BUTTON,
+  BADGE_EMERALD,
+  BADGE_PURPLE,
+  BADGE_VALIDATION,
   BANNER_CONTAINER,
+  BANNER_MOTTO,
   BANNER_TAG,
   BANNER_TITLE,
-  BANNER_MOTTO,
-  ACTIONS_CONTAINER,
+  CONTAINER_WRAPPER,
+  DANGER_ACTION_BUTTON,
+  EMPTY_TEXT,
+  ITEM_HEADER,
+  ITEM_SUBTITLE,
+  ITEM_TITLE,
+  PENDING_ITEM,
+  PENDING_ITEM_ACTIONS,
+  PENDING_ITEM_CARD,
+  PENDING_ITEM_HEADER,
+  PENDING_ITEM_HIGHLIGHT,
+  PENDING_ITEM_META,
+  PENDING_ITEM_TITLE,
+  PENDING_LIST_CONTAINER,
+  PENDING_SECTION,
+  PENDING_TITLE,
   PRIMARY_ACTION_BUTTON,
   SECONDARY_ACTION_BUTTON,
+  SESSION_SECONDARY_BUTTON,
+  SECTION_CONTAINER,
+  SECTION_HEADER_ROW,
+  SECTION_TITLE,
   STATS_GRID,
   STAT_CARD,
   STAT_LABEL_BLUE,
+  STAT_LABEL_CYAN,
   STAT_LABEL_EMERALD,
   STAT_LABEL_PURPLE,
-  STAT_LABEL_CYAN,
   STAT_VALUE,
-  SECTION_CONTAINER,
-  SECTION_TITLE,
-  PENDING_LIST_CONTAINER,
-  EMPTY_TEXT,
-  PENDING_ITEM_CARD,
-  ITEM_HEADER,
-  ITEM_TITLE,
-  BADGE_VALIDATION,
-  ITEM_SUBTITLE,
+  SUBJECTS_GRID,
+  SUBJECT_CARD,
+  SUBJECT_CARD_HEADER,
+  SUBJECT_COEFFICIENT_BADGE,
+  SUBJECT_DESCRIPTION,
+  SUBJECT_EDIT_BUTTON,
+  SUBJECT_NAME,
   VALIDATE_BUTTON,
 } from "../../styles/AdminDashboardStyles";
+import {
+  CLASS_GROUP_LABELS,
+  EXAM_TYPE_LABELS,
+  TERM_LABELS,
+} from "../../utils/labels";
 
 export const AdminDashboard = ({
   currentUser,
@@ -36,20 +62,15 @@ export const AdminDashboard = ({
   setActiveModal,
   setFormState,
   onDeleteSubject,
-  handleAdminValidateSession,
+  onValidateSession,
 }) => {
   const [selectedClassView, setSelectedClassView] = useState(null); // "SECONDE", "PREMIERE", "TERMINALE" ou null
 
   const pendingSessions = gradeSessions.filter(
-    (session) =>
-      session.status === "DRAFT" || session.statut === "attente_validation",
+    (session) => session.status === "PENDING_REVIEW",
   );
 
-  // Sécurisation et extraction du tableau des matières pour éviter les erreurs de type
-  const subjectsArray = Array.isArray(subjects)
-    ? subjects
-    : subjects?.subjects || subjects?.data?.subjects || [];
-
+  const subjectsArray = subjects;
   const flattenedSubjects = [];
   subjectsArray.forEach((subject) => {
     if (subject.assignments && subject.assignments.length > 0) {
@@ -137,12 +158,12 @@ export const AdminDashboard = ({
             }}
             className={SECONDARY_ACTION_BUTTON}
           >
-            + Créer une note
+            + Ouvrir une session de notes
           </button>
           <button
             onClick={() => {
               setFormState({});
-              setActiveModal("pointage");
+              setActiveModal("attendance");
             }}
             className={SECONDARY_ACTION_BUTTON}
           >
@@ -171,12 +192,12 @@ export const AdminDashboard = ({
       </div>
 
       <div className={SECTION_CONTAINER}>
-        <div className="flex justify-between items-center mb-4">
+        <div className={SECTION_HEADER_ROW}>
           <h3 className={SECTION_TITLE}>Gestion des Matières par Classe</h3>
           {selectedClassView && (
             <button
               onClick={() => setSelectedClassView(null)}
-              className="text-sm text-blue-400 hover:underline bg-blue-950/40 px-3 py-1 rounded-lg border border-blue-800/50"
+              className={ADD_BUTTON}
             >
               ← Retour aux cartes de classes
             </button>
@@ -184,33 +205,28 @@ export const AdminDashboard = ({
         </div>
 
         {!selectedClassView ? (
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className={SUBJECTS_GRID}>
             {classesConfig.map((cls) => {
               const count = flattenedSubjects.filter(
                 (s) => s.classGroup?.toUpperCase() === cls.key,
               ).length;
               return (
-                <div
-                  key={cls.key}
-                  className="bg-slate-900/80 border border-slate-800 rounded-xl p-5 flex flex-col justify-between shadow-lg hover:border-blue-600/50 transition-all"
-                >
+                <div key={cls.key} className={SUBJECT_CARD}>
                   <div>
-                    <div className="flex justify-between items-start mb-2">
-                      <h4 className="text-lg font-semibold text-slate-100">
-                        Classe de {cls.label}
-                      </h4>
-                      <span className="bg-blue-950 text-blue-400 text-xs px-2.5 py-1 rounded-full border border-blue-800/60 font-medium">
+                    <div className={SUBJECT_CARD_HEADER}>
+                      <h4 className={SUBJECT_NAME}>Classe de {cls.label}</h4>
+                      <span className={SUBJECT_COEFFICIENT_BADGE}>
                         {count} matière{count > 1 ? "s" : ""}
                       </span>
                     </div>
-                    <p className="text-slate-400 text-sm mb-4">
+                    <p className={SUBJECT_DESCRIPTION}>
                       Consulter et gérer les coefficients et professeurs de{" "}
                       {cls.label.toLowerCase()}.
                     </p>
                   </div>
                   <button
                     onClick={() => setSelectedClassView(cls.key)}
-                    className="w-full bg-blue-600 hover:bg-blue-500 text-white font-medium py-2 px-4 rounded-lg text-sm transition-colors shadow-sm"
+                    className={SUBJECT_EDIT_BUTTON}
                   >
                     Voir la liste
                   </button>
@@ -219,8 +235,8 @@ export const AdminDashboard = ({
             })}
           </div>
         ) : (
-          <div className="bg-slate-900/60 border border-slate-800 rounded-xl p-4">
-            <h4 className="text-md font-semibold text-blue-400 mb-4 uppercase tracking-wider">
+          <div className={PENDING_SECTION}>
+            <h4 className={PENDING_TITLE}>
               Matières de la classe de {selectedClassView}
             </h4>
             <div className={PENDING_LIST_CONTAINER}>
@@ -238,37 +254,35 @@ export const AdminDashboard = ({
                   .map((sub, idx) => (
                     <div
                       key={`${sub.id}-${sub.classGroup}-${idx}`}
-                      className="bg-slate-950/80 border border-slate-800/80 rounded-xl p-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4"
+                      className={PENDING_ITEM}
                     >
                       <div>
-                        <div className="flex items-center gap-3">
-                          <h5 className="font-bold text-slate-100 text-base">
-                            {sub.name}
-                          </h5>
-                          <span className="bg-emerald-950 text-emerald-400 border border-emerald-800/50 text-xs px-2.5 py-0.5 rounded-full">
+                        <div className={PENDING_ITEM_HEADER}>
+                          <h5 className={PENDING_ITEM_TITLE}>{sub.name}</h5>
+                          <span className={BADGE_EMERALD}>
                             Coeff : {sub.coefficient}
                           </span>
-                          <span className="bg-purple-950 text-purple-300 border border-purple-800/50 text-xs px-2.5 py-0.5 rounded-full">
+                          <span className={BADGE_PURPLE}>
                             Classe : {sub.classGroup}
                           </span>
                         </div>
-                        <p className="text-sm text-slate-400 mt-1">
+                        <p className={PENDING_ITEM_META}>
                           Professeur responsable :{" "}
-                          <span className="text-slate-200 font-medium">
+                          <span className={PENDING_ITEM_HIGHLIGHT}>
                             {sub.teacherName}
                           </span>
                         </p>
                       </div>
-                      <div className="flex items-center gap-2 self-end sm:self-center">
+                      <div className={PENDING_ITEM_ACTIONS}>
                         <button
                           onClick={() => handleEdit(sub, selectedClassView)}
-                          className="bg-slate-800 hover:bg-slate-700 text-slate-200 px-3 py-1.5 rounded-lg text-xs font-medium border border-slate-700 transition-colors"
+                          className={SESSION_SECONDARY_BUTTON}
                         >
                           Modifier
                         </button>
                         <button
                           onClick={() => onDeleteSubject(sub.id)}
-                          className="bg-red-950/60 hover:bg-red-900/80 text-red-300 px-3 py-1.5 rounded-lg text-xs font-medium border border-red-800/50 transition-colors"
+                          className={DANGER_ACTION_BUTTON}
                         >
                           Supprimer
                         </button>
@@ -292,8 +306,10 @@ export const AdminDashboard = ({
                 <div>
                   <div className={ITEM_HEADER}>
                     <h4 className={ITEM_TITLE}>
-                      {session.matiere || session.subjectName} (
-                      {session.classe || session.classGroup})
+                      {session.subjectName} (
+                      {CLASS_GROUP_LABELS[session.classGroup]} —{" "}
+                      {EXAM_TYPE_LABELS[session.examType]},{" "}
+                      {TERM_LABELS[session.term]})
                     </h4>
                     <span className={BADGE_VALIDATION}>Validation requise</span>
                   </div>
@@ -302,10 +318,10 @@ export const AdminDashboard = ({
                   </p>
                 </div>
                 <button
-                  onClick={() => handleAdminValidateSession(session.id)}
+                  onClick={() => onValidateSession(session.id)}
                   className={VALIDATE_BUTTON}
                 >
-                  Valider & Injecter les notes
+                  Valider & publier les notes
                 </button>
               </div>
             ))

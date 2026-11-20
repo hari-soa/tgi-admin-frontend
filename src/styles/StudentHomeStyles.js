@@ -36,3 +36,5 @@ export const PREVIEW_ITEM_RED =
   "p-3 rounded-xl border text-xs bg-red-950/20 border-red-800/40 text-red-200";
 export const PREVIEW_ITEM_NORMAL =
   "p-3 rounded-xl border text-xs bg-slate-950 border-slate-800 text-slate-300";
+export const PREVIEW_ITEM_LABEL = "font-bold";
+export const EMPTY_PREVIEW_TEXT = "text-xs text-slate-500";

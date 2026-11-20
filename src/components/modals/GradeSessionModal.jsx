@@ -7,7 +7,11 @@ import {
   FIELD_LABEL,
   SELECT_INPUT,
   SUBMIT_BUTTON,
+  SELECTS_GRID,
 } from "../../styles/GradeSessionModalStyles";
+import { CLASS_GROUP_LABELS } from "../../utils/labels";
+
+const SESSION_CLASS_GROUPS = ["TERMINALE", "PREMIERE", "SECONDE"];
 
 export const GradeSessionModal = ({
   isOpen,
@@ -27,37 +31,12 @@ export const GradeSessionModal = ({
     }
   };
 
-  const subjectsArray = Array.isArray(subjects)
-    ? subjects
-    : subjects?.subjects || subjects?.data?.subjects || [];
-
-  const flattenedSubjects = [];
-  subjectsArray.forEach((subject) => {
-    if (Array.isArray(subject.assignments) && subject.assignments.length > 0) {
-      subject.assignments.forEach((assignment) => {
-        flattenedSubjects.push({
-          id: subject.id || subject._id,
-          name: subject.name || subject.nom,
-          coefficient: subject.coefficient,
-          classGroup: (assignment.classGroup || "").trim().toUpperCase(),
-        });
-      });
-    } else {
-      flattenedSubjects.push({
-        id: subject.id || subject._id,
-        name: subject.name || subject.nom,
-        coefficient: subject.coefficient,
-        classGroup: (subject.classe || subject.classGroup || "GÉNÉRAL")
-          .trim()
-          .toUpperCase(),
-      });
-    }
-  });
-
-  const selectedClass = (formState.classGroup || "").trim().toUpperCase();
-  const filteredSubjects = selectedClass
-    ? flattenedSubjects.filter((s) => s.classGroup === selectedClass)
-    : [];
+  // One entry per subject and class it is taught in
+  const subjectsOfSelectedClass = subjects.filter((subject) =>
+    subject.assignments.some(
+      (assignment) => assignment.classGroup === formState.classGroup,
+    ),
+  );
 
   return (
     <div className={MODAL_BACKDROP}>
@@ -78,9 +57,11 @@ export const GradeSessionModal = ({
               required
             >
               <option value="">Sélectionner une classe...</option>
-              <option value="TERMINALE">Terminale</option>
-              <option value="PREMIERE">Première</option>
-              <option value="SECONDE">Seconde</option>
+              {SESSION_CLASS_GROUPS.map((classGroup) => (
+                <option key={classGroup} value={classGroup}>
+                  {CLASS_GROUP_LABELS[classGroup]}
+                </option>
+              ))}
             </select>
           </div>
 
@@ -95,20 +76,20 @@ export const GradeSessionModal = ({
             >
               <option value="">
                 {formState.classGroup
-                  ? filteredSubjects.length > 0
+                  ? subjectsOfSelectedClass.length > 0
                     ? "Sélectionner une matière..."
                     : "Aucune matière trouvée pour cette classe"
                   : "Veuillez d'abord choisir une classe"}
               </option>
-              {filteredSubjects.map((s, index) => (
-                <option key={`${s.id}-${index}`} value={s.id}>
-                  {s.name}
+              {subjectsOfSelectedClass.map((subject) => (
+                <option key={subject.id} value={subject.id}>
+                  {subject.name}
                 </option>
               ))}
             </select>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className={SELECTS_GRID}>
             <div>
               <label className={FIELD_LABEL}>Type d'examen</label>
               <select
@@ -138,7 +119,7 @@ export const GradeSessionModal = ({
           </div>
 
           <button type="submit" className={SUBMIT_BUTTON}>
-            Soumettre la session
+            Créer la session
           </button>
         </form>
       </div>

@@ -90,6 +90,33 @@ export const UserModal = ({
             </div>
           </div>
 
+          <div className={GRID_TWO_COLS}>
+            <div className={FIELD_GROUP}>
+              <label className={FIELD_LABEL}>
+                E-mail (identifiant de connexion)
+              </label>
+              <input
+                type="email"
+                placeholder="prenom.nom@exemple.mg"
+                value={formState?.email || ""}
+                onChange={(e) => handleInputChange("email", e.target.value)}
+                className={TEXT_INPUT}
+                required
+              />
+            </div>
+            <div className={FIELD_GROUP}>
+              <label className={FIELD_LABEL}>Téléphone</label>
+              <input
+                type="tel"
+                placeholder="034 00 000 00"
+                value={formState?.contactNumber || ""}
+                onChange={(e) =>
+                  handleInputChange("contactNumber", e.target.value)
+                }
+                className={TEXT_INPUT}
+              />
+            </div>
+          </div>
           <div className={FIELD_GROUP}>
             <label className={FIELD_LABEL}>Rôle</label>
             <select
@@ -123,6 +150,7 @@ export const UserModal = ({
                     <option value="SECONDE">Seconde</option>
                     <option value="PREMIERE">Première</option>
                     <option value="TERMINALE">Terminale</option>
+                    <option value="ANCIEN">Ancien</option>
                   </select>
                 </div>
                 <div className={FIELD_GROUP}>

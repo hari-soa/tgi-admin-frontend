@@ -33,3 +33,5 @@ export const SUBMIT_BUTTON =
   "w-full bg-indigo-600 hover:bg-indigo-500 text-white font-medium py-2.5 rounded-lg transition-colors shadow-lg shadow-indigo-600/20";
 export const FOOTER_CONTAINER =
   "py-4 text-center text-xs text-slate-500 border-t border-slate-900";
+export const FIELD_WRAPPER_LEFT = "text-left";
+export const PASSWORD_FIELD_WRAPPER = "relative";

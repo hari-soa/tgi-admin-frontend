@@ -15,3 +15,4 @@ export const TEXTAREA_INPUT =
   "w-full bg-slate-950 border border-slate-800 rounded-lg p-2 text-white focus:outline-none focus:border-blue-500";
 export const SUBMIT_BUTTON =
   "w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-2.5 rounded-xl transition-all mt-2";
+export const DATES_GRID = "grid grid-cols-2 gap-4";

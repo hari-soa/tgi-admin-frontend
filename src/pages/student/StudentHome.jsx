@@ -1,4 +1,10 @@
-import { extractClassNum } from "../../utils/helpers";
+import { extractClassNum, isFormerStudent } from "../../utils/helpers";
+import {
+  CLASS_GROUP_LABELS,
+  HISTORY_TYPE_LABELS,
+  REMARK_CATEGORY_LABELS,
+  formatDate,
+} from "../../utils/labels";
 import {
   CONTAINER_WRAPPER,
   BANNER_CONTAINER,
@@ -26,15 +32,20 @@ import {
   PREVIEW_LIST,
   PREVIEW_ITEM_RED,
   PREVIEW_ITEM_NORMAL,
+  PREVIEW_ITEM_LABEL,
+  EMPTY_PREVIEW_TEXT,
 } from "../../styles/StudentHomeStyles";
 
 export const StudentHome = ({
   currentUser,
   announcements,
-  historiques,
-  remarques,
+  historyRecords,
+  remarks,
+  annualResults,
   setActiveTab,
 }) => {
+  const latestResult = annualResults[0];
+
   return (
     <div className={CONTAINER_WRAPPER}>
       <div className={BANNER_CONTAINER}>
@@ -43,62 +54,58 @@ export const StudentHome = ({
           Bonjour, {currentUser?.lastName} {currentUser?.firstName}
         </h2>
         <p className={BANNER_DESCRIPTION}>
-          {currentUser?.role === "ANCIEN" || currentUser?.role === "ancien"
-            ? `Dossier d'Ancien Élève — Année de sortie : ${currentUser.graduationYear || currentUser.anneeSortie}`
-            : `Classe : ${currentUser?.classGroup || currentUser?.classe || "N/A"} | Matricule : ${
-                currentUser?.matricule || "N/A"
-              } (${extractClassNum(currentUser?.matricule)})`}
+          {isFormerStudent(currentUser)
+            ? `Dossier d'Ancien Élève — Année de sortie : ${currentUser.graduationYear || "N/A"}`
+            : `Classe : ${CLASS_GROUP_LABELS[currentUser?.classGroup] || "N/A"} | Matricule : ${currentUser?.matricule || "N/A"} (${extractClassNum(currentUser?.matricule)})`}
         </p>
       </div>
 
-      <div className={SECTION_BOX}>
-        <h3 className={SECTION_TITLE}>Actualité des Examens</h3>
-        <div className={NEWS_CARD}>
-          <div>
-            <span className={NEWS_BADGE}>Résultats disponibles</span>
-            <h4 className={NEWS_TITLE}>
-              Évaluation du Tronc Commun S1 disponible
-            </h4>
-            <p className={NEWS_SUBTITLE}>Consultez vos notes</p>
+      {latestResult && (
+        <div className={SECTION_BOX}>
+          <h3 className={SECTION_TITLE}>Actualité des Examens</h3>
+          <div className={NEWS_CARD}>
+            <div>
+              <span className={NEWS_BADGE}>Résultats disponibles</span>
+              <h4 className={NEWS_TITLE}>
+                Bulletin {latestResult.academicYear} disponible
+              </h4>
+              <p className={NEWS_SUBTITLE}>
+                Moyenne générale : {latestResult.overallAverage} / 20
+              </p>
+            </div>
+            <button
+              onClick={() => setActiveTab("grades")}
+              className={NEWS_BUTTON}
+            >
+              Voir le résultat →
+            </button>
           </div>
-          <button onClick={() => setActiveTab("notes")} className={NEWS_BUTTON}>
-            Voir le résultat →
-          </button>
         </div>
-      </div>
+      )}
 
       <div>
         <h3 className={SUBSECTION_TITLE}>Annonces Générales</h3>
         <div className={GRID_TWO_COLS}>
-          {announcements
-            .filter(
-              (ann) =>
-                ann.targetScope === "ALL" ||
-                ann.cible === "tout" ||
-                ann.targetScope === currentUser?.classGroup ||
-                ann.cible === currentUser?.classe,
-            )
-            .map((ann) => (
+          {announcements.map((announcement) => {
+            const isUrgent = announcement.priority === "URGENT";
+            return (
               <div
-                key={ann.id}
+                key={announcement.id}
                 className={
-                  ann.priority === "URGENT" || ann.urgent
-                    ? ANNOUNCEMENT_CARD_URGENT
-                    : ANNOUNCEMENT_CARD_NORMAL
+                  isUrgent ? ANNOUNCEMENT_CARD_URGENT : ANNOUNCEMENT_CARD_NORMAL
                 }
               >
-                {(ann.priority === "URGENT" || ann.urgent) && (
+                {isUrgent && (
                   <span className={ANNOUNCEMENT_BADGE_URGENT}>Urgent</span>
                 )}
-                <h4 className={ANNOUNCEMENT_TITLE}>{ann.title}</h4>
-                <p className={ANNOUNCEMENT_CONTEXT}>
-                  {ann.content || ann.context}
-                </p>
+                <h4 className={ANNOUNCEMENT_TITLE}>{announcement.title}</h4>
+                <p className={ANNOUNCEMENT_CONTEXT}>{announcement.content}</p>
                 <span className={ANNOUNCEMENT_DATE}>
-                  {ann.createdAt || ann.date || "Récemment"}
+                  {formatDate(announcement.createdAt)}
                 </span>
               </div>
-            ))}
+            );
+          })}
         </div>
       </div>
 
@@ -106,36 +113,41 @@ export const StudentHome = ({
         <div className={PREVIEW_BOX}>
           <h4 className={PREVIEW_TITLE}>Historique Présences / Absences</h4>
           <div className={PREVIEW_LIST}>
-            {historiques
-              .filter((h) => h.studentId === currentUser?.id)
-              .slice(0, 2)
-              .map((h) => (
-                <div
-                  key={h.id}
-                  className={h.isRed ? PREVIEW_ITEM_RED : PREVIEW_ITEM_NORMAL}
-                >
-                  <span className="font-bold">{h.type}</span> (
-                  {h.detail || h.reason}) — {h.raison || h.reason}
-                </div>
-              ))}
+            {historyRecords.slice(0, 2).map((record) => (
+              <div key={record.id} className={PREVIEW_ITEM_NORMAL}>
+                <span className={PREVIEW_ITEM_LABEL}>
+                  {HISTORY_TYPE_LABELS[record.type]}
+                </span>{" "}
+                ({formatDate(record.startDate)}) — {record.reason}
+              </div>
+            ))}
+            {historyRecords.length === 0 && (
+              <p className={EMPTY_PREVIEW_TEXT}>Rien à signaler.</p>
+            )}
           </div>
         </div>
 
         <div className={PREVIEW_BOX}>
           <h4 className={PREVIEW_TITLE}>Remarques Récentes</h4>
           <div className={PREVIEW_LIST}>
-            {remarques
-              .filter((r) => r.studentId === currentUser?.id)
-              .slice(0, 2)
-              .map((r) => (
-                <div
-                  key={r.id}
-                  className={r.isRed ? PREVIEW_ITEM_RED : PREVIEW_ITEM_NORMAL}
-                >
-                  <span className="font-bold">{r.type || r.category}</span> —{" "}
-                  {r.raison || r.content}
-                </div>
-              ))}
+            {remarks.slice(0, 2).map((remark) => (
+              <div
+                key={remark.id}
+                className={
+                  remark.category === "WARNING"
+                    ? PREVIEW_ITEM_RED
+                    : PREVIEW_ITEM_NORMAL
+                }
+              >
+                <span className={PREVIEW_ITEM_LABEL}>
+                  {REMARK_CATEGORY_LABELS[remark.category]}
+                </span>{" "}
+                — {remark.content}
+              </div>
+            ))}
+            {remarks.length === 0 && (
+              <p className={EMPTY_PREVIEW_TEXT}>Aucune remarque.</p>
+            )}
           </div>
         </div>
       </div>
