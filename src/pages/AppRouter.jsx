@@ -36,6 +36,7 @@ const AppRouter = ({
   setActiveModal,
   setFormState,
   onValidateSession,
+  onReviseSession,
   onSaveDraft,
   onSubmitSession,
   onExportReportCard,
@@ -53,19 +54,12 @@ const AppRouter = ({
   const isSecretary = userRole === "SECRETARY";
   const isStudent = userRole === "STUDENT";
 
-  // The student pages show the student themself, or the one an administrator
-  // or a secretary has selected in the students list.
-  const viewedStudent = isStudent ? currentUser : targetStudent;
-
   if (activeTab === "profile") {
     return (
       <Profile
-        currentUser={targetStudent || currentUser}
+        currentUser={currentUser}
         onUpdateUser={onUpdateUser}
         isAdmin={isAdmin}
-        isThirdPartyView={
-          !!targetStudent && targetStudent.id !== currentUser.id
-        }
       />
     );
   }
@@ -93,8 +87,8 @@ const AppRouter = ({
     );
   }
 
-  if (viewedStudent) {
-    if (activeTab === "home" && isStudent) {
+  if (isStudent) {
+    if (activeTab === "home") {
       return (
         <StudentHome
           currentUser={currentUser}
@@ -110,7 +104,7 @@ const AppRouter = ({
     if (activeTab === "grades") {
       return (
         <StudentGrades
-          student={viewedStudent}
+          student={currentUser}
           annualResults={annualResults}
           onExportReportCard={onExportReportCard}
         />
@@ -120,7 +114,7 @@ const AppRouter = ({
     if (activeTab === "history") {
       return (
         <StudentHistory
-          student={viewedStudent}
+          student={currentUser}
           historyRecords={historyRecords}
           remarks={remarks}
         />
@@ -165,6 +159,7 @@ const AppRouter = ({
           setFormState={setFormState}
           onDeleteSubject={onDeleteSubject}
           onValidateSession={onValidateSession}
+          onReviseSession={onReviseSession}
         />
       );
     }
@@ -182,9 +177,10 @@ const AppRouter = ({
           toggleUserStatus={toggleUserStatus}
           deleteUser={deleteUser}
           onUpdateUser={onUpdateUser}
-          setActiveTab={setActiveTab}
           historyRecords={historyRecords}
           remarks={remarks}
+          annualResults={annualResults}
+          onExportReportCard={onExportReportCard}
         />
       );
     }

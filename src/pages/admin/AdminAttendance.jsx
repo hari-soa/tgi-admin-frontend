@@ -18,7 +18,6 @@ import {
   PROF_NAME,
   SUBJECT_LINE,
   CLASS_HIGHLIGHT,
-  CLASSROOM_TEXT,
   LATE_DETAIL_TEXT,
   ABSENT_DETAIL_TEXT,
   CARD_FOOTER,
@@ -43,7 +42,6 @@ const STATUS_LABELS = {
   PENDING: "En attente",
 };
 
-// The API sends times as HH:MM:SS, the cards only need HH:MM
 const formatTime = (time) => time.slice(0, 5);
 
 export const AdminAttendance = ({
@@ -70,7 +68,6 @@ export const AdminAttendance = ({
       dayOfWeek: card.dayOfWeek,
       startTime: formatTime(card.startTime),
       endTime: formatTime(card.endTime),
-      classroom: card.classroom,
     });
     setActiveModal("attendance");
   };
@@ -130,7 +127,6 @@ export const AdminAttendance = ({
                   <span>{card.subjectName}</span>
                   <span className={CLASS_HIGHLIGHT}>({card.targetClass})</span>
                 </p>
-                <p className={CLASSROOM_TEXT}>Salle : {card.classroom}</p>
 
                 {card.status === "LATE" && (
                   <p className={LATE_DETAIL_TEXT}>

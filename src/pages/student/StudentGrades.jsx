@@ -5,6 +5,8 @@ import {
   HEADER_TITLE,
   HEADER_SUBTITLE,
   HEADER_ACTIONS,
+  BACK_BUTTON,
+  COEFFICIENT_NOTE,
   SELECT_INPUT,
   EXPORT_BUTTON,
   TABLE_CONTAINER,
@@ -39,12 +41,16 @@ const GRADE_COLUMNS = [
   { label: "T3", field: "term3TrimesterGrade" },
 ];
 
+const MAX_GRADE = 20;
 const TABLE_COLUMN_COUNT = GRADE_COLUMNS.length + 3;
 
-export const StudentGrades = ({ annualResults, onExportReportCard }) => {
+export const StudentGrades = ({
+  annualResults,
+  onExportReportCard,
+  onBack,
+}) => {
   const [selectedResultId, setSelectedResultId] = useState("");
 
-  // Results are loaded after the first render: default to the most recent one
   const currentReportCard =
     annualResults.find((result) => result.id === selectedResultId) ||
     annualResults[0];
@@ -57,18 +63,25 @@ export const StudentGrades = ({ annualResults, onExportReportCard }) => {
           <p className={HEADER_SUBTITLE}>Suivi académique officiel</p>
         </div>
         <div className={HEADER_ACTIONS}>
-          <select
-            value={currentReportCard?.id || ""}
-            onChange={(event) => setSelectedResultId(event.target.value)}
-            className={SELECT_INPUT}
-          >
-            {annualResults.map((result) => (
-              <option key={result.id} value={result.id}>
-                {result.academicYear} — Classe :{" "}
-                {CLASS_GROUP_LABELS[result.classGroup]}
-              </option>
-            ))}
-          </select>
+          {onBack && (
+            <button onClick={onBack} className={BACK_BUTTON}>
+              ← Retour au profil
+            </button>
+          )}
+          {annualResults.length > 0 && (
+            <select
+              value={currentReportCard?.id || ""}
+              onChange={(event) => setSelectedResultId(event.target.value)}
+              className={SELECT_INPUT}
+            >
+              {annualResults.map((result) => (
+                <option key={result.id} value={result.id}>
+                  {result.academicYear} — Classe :{" "}
+                  {CLASS_GROUP_LABELS[result.classGroup]}
+                </option>
+              ))}
+            </select>
+          )}
           {currentReportCard && (
             <button
               onClick={() => onExportReportCard(currentReportCard.id)}
@@ -115,11 +128,13 @@ export const StudentGrades = ({ annualResults, onExportReportCard }) => {
                     <td className={TABLE_HEAD_CELL}>{subject.coefficient}</td>
                     {GRADE_COLUMNS.map(({ field }) => (
                       <td key={field} className={TABLE_HEAD_CELL_CENTER}>
-                        {subject[field] ?? "-"}
+                        {subject[field] ?? ""}
                       </td>
                     ))}
                     <td className={CELL_AVERAGE}>
-                      {subject.subjectOverallAverage} / 20
+                      {subject.subjectOverallAverage === null
+                        ? ""
+                        : `${subject.subjectOverallAverage} / ${subject.coefficient * MAX_GRADE}`}
                     </td>
                   </tr>
                 ))
@@ -127,6 +142,11 @@ export const StudentGrades = ({ annualResults, onExportReportCard }) => {
             </tbody>
           </table>
         </div>
+        <p className={COEFFICIENT_NOTE}>
+          Chaque note est la note sur 20 multipliée par le coefficient de la
+          matière. Une case vide correspond à une absence : elle n'est pas
+          comptée dans la moyenne.
+        </p>
         {currentReportCard && (
           <div className={SUMMARY_BAR}>
             <div>

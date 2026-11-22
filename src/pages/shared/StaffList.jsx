@@ -12,11 +12,6 @@ import {
   META_LABEL,
   ACTION_CONTAINER,
   ACTION_BUTTON,
-  DETAIL_HEADER,
-  DETAIL_HEADER_ACTIONS,
-  BACK_BUTTON,
-  DELETE_DETAIL_BUTTON,
-  DETAIL_PANEL,
   CARD_ACTIONS,
   CARD_PRIMARY_ACTION,
   DELETE_CARD_BUTTON,
@@ -24,12 +19,7 @@ import {
 import { useState } from "react";
 import Profile from "./Profile";
 import { getAvatarSource, getFullName } from "../../utils/helpers";
-
-const STAFF_ROLE_LABELS = {
-  ADMIN: "Administrateur",
-  SECRETARY: "Secrétaire",
-  TEACHER: "Enseignant",
-};
+import { CLASS_GROUP_LABELS, USER_ROLE_LABELS } from "../../utils/labels";
 
 export const StaffList = ({
   staffUsers,
@@ -37,7 +27,9 @@ export const StaffList = ({
   onUpdateUser,
   isAdmin,
 }) => {
-  const [selectedStaff, setSelectedStaff] = useState(null);
+  const [selectedStaffId, setSelectedStaffId] = useState(null);
+  const selectedStaff =
+    staffUsers.find((staff) => staff.id === selectedStaffId) || null;
 
   const handleDeleteStaff = async (staff) => {
     const confirmed = window.confirm(
@@ -45,49 +37,16 @@ export const StaffList = ({
     );
     if (!confirmed) return;
     await deleteUser(staff.id);
-    setSelectedStaff(null);
-  };
-
-  const handleUpdateStaff = async (userId, updatedData) => {
-    await onUpdateUser(userId, updatedData);
-    setSelectedStaff({ ...selectedStaff, ...updatedData });
   };
 
   if (selectedStaff) {
     return (
-      <div className={CONTAINER_WRAPPER}>
-        <div className={DETAIL_HEADER}>
-          <div>
-            <h2 className={HEADER_TITLE}>Fiche du Personnel</h2>
-            <p className={HEADER_SUBTITLE}>
-              Gestion, modification et suivi du profil
-            </p>
-          </div>
-          <div className={DETAIL_HEADER_ACTIONS}>
-            <button
-              onClick={() => setSelectedStaff(null)}
-              className={BACK_BUTTON}
-            >
-              ← Retour à la liste
-            </button>
-            {isAdmin && (
-              <button
-                onClick={() => handleDeleteStaff(selectedStaff)}
-                className={DELETE_DETAIL_BUTTON}
-              >
-                Supprimer l'utilisateur
-              </button>
-            )}
-          </div>
-        </div>
-        <div className={DETAIL_PANEL}>
-          <Profile
-            currentUser={selectedStaff}
-            onUpdateUser={handleUpdateStaff}
-            isAdmin={isAdmin}
-          />
-        </div>
-      </div>
+      <Profile
+        currentUser={selectedStaff}
+        onUpdateUser={onUpdateUser}
+        isAdmin={isAdmin}
+        onBack={() => setSelectedStaffId(null)}
+      />
     );
   }
 
@@ -115,7 +74,7 @@ export const StaffList = ({
                     {staff.lastName} {staff.firstName}
                   </h3>
                   <span className={ROLE_BADGE}>
-                    {STAFF_ROLE_LABELS[staff.role]}
+                    {USER_ROLE_LABELS[staff.role]}
                   </span>
                 </div>
               </div>
@@ -137,19 +96,19 @@ export const StaffList = ({
                 {staff.homeroomClass && (
                   <p>
                     <span className={META_LABEL}>Classe principale :</span>{" "}
-                    {staff.homeroomClass}
+                    {CLASS_GROUP_LABELS[staff.homeroomClass] || staff.homeroomClass}
                   </p>
                 )}
               </div>
             </div>
             <div className={`${ACTION_CONTAINER} ${CARD_ACTIONS}`}>
               <button
-                onClick={() => setSelectedStaff(staff)}
+                onClick={() => setSelectedStaffId(staff.id)}
                 className={`${ACTION_BUTTON} ${CARD_PRIMARY_ACTION}`}
               >
-                {isAdmin ? "Voir / Modifier le profil →" : "Voir le profil →"}
+                Voir le profil
               </button>
-              {isAdmin && (
+              {isAdmin && !staff.isSuperAdmin && (
                 <button
                   onClick={() => handleDeleteStaff(staff)}
                   className={DELETE_CARD_BUTTON}

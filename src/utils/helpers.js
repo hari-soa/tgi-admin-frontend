@@ -10,9 +10,10 @@ const DAYS_OF_WEEK = [
 
 const NUMERIC_USER_FIELDS = ["classRollNumber", "entryYear", "graduationYear"];
 
+const CLASS_GROUP_ORDER = ["SECONDE", "PREMIERE", "TERMINALE", "ANCIEN"];
+
 const pad = (value) => String(value).padStart(2, "0");
 
-// Extract class number from Matricule (e.g. TGI-25020 -> n°020)
 export const extractClassNum = (matricule) => {
   if (!matricule) return "n°--";
   const parts = matricule.split("-");
@@ -23,20 +24,17 @@ export const extractClassNum = (matricule) => {
   return "n°01";
 };
 
-/** Local calendar date as YYYY-MM-DD (toISOString would shift it to UTC). */
 export const getTodayIsoDate = () => {
   const now = new Date();
   return `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`;
 };
 
-/** Weekday name used by the API (MONDAY...SATURDAY), or null for a Sunday. */
 export const getDayOfWeek = (isoDate) => {
   const [year, month, day] = isoDate.split("-").map(Number);
   const dayName = DAYS_OF_WEEK[new Date(year, month - 1, day).getDay()];
   return dayName === "SUNDAY" ? null : dayName;
 };
 
-/** Removes empty strings, null and undefined: the API rejects "" for optional fields. */
 export const omitEmptyValues = (payload) => {
   const entries = Object.entries(payload).filter(
     ([, value]) => value !== "" && value !== null && value !== undefined,
@@ -44,7 +42,6 @@ export const omitEmptyValues = (payload) => {
   return Object.fromEntries(entries);
 };
 
-/** Builds the body of a user update from a form: cleans empty values and numbers. */
 export const toUserUpdatePayload = (formData) => {
   const cleaned = omitEmptyValues(formData);
   const numericEntries = NUMERIC_USER_FIELDS.filter(
@@ -61,7 +58,6 @@ export const isFormerStudent = (user) => user?.classGroup === "ANCIEN";
 const AVATAR_BACKGROUND_COLOR = "#1e293b";
 const AVATAR_TEXT_COLOR = "#94a3b8";
 
-/** Profile picture of a user, or an SVG with their initials when there is none. */
 export const getAvatarSource = (user) => {
   if (user?.profilePictureUrl) return user.profilePictureUrl;
 
@@ -71,10 +67,64 @@ export const getAvatarSource = (user) => {
   return `data:image/svg+xml;utf8,${encodeURIComponent(svg)}`;
 };
 
-/** Fields of `edited` whose value differs from `original` (what a PATCH should send). */
 export const getChangedFields = (original, edited) =>
   Object.fromEntries(
     Object.entries(edited).filter(
       ([field, value]) => String(value ?? "") !== String(original[field] ?? ""),
     ),
   );
+
+const getClassGroupRank = (student) => {
+  const rank = CLASS_GROUP_ORDER.indexOf(student.classGroup);
+  return rank === -1 ? CLASS_GROUP_ORDER.length : rank;
+};
+
+export const sortStudentsByClassAndMatricule = (students) =>
+  [...students].sort(
+    (first, second) =>
+      getClassGroupRank(first) - getClassGroupRank(second) ||
+      (first.matricule || "").localeCompare(second.matricule || "", "fr", {
+        numeric: true,
+      }),
+  );
+
+const MAX_GRADE = 20;
+
+export const buildGradeValues = (session) =>
+  Object.fromEntries(
+    (session?.draftGrades ?? []).map((entry) => [
+      entry.studentId,
+      entry.value === null || entry.value === undefined
+        ? ""
+        : String(entry.value),
+    ]),
+  );
+
+export const buildAbsenceMotifs = (session) =>
+  Object.fromEntries(
+    (session?.absences ?? [])
+      .filter((absence) => absence.motif)
+      .map((absence) => [absence.studentId, absence.motif]),
+  );
+
+export const toGradeEntries = (rosterStudents, gradeValues) =>
+  rosterStudents.map((student) => {
+    const rawValue = gradeValues[student.id];
+    const hasValue = rawValue !== undefined && rawValue !== "";
+    return { studentId: student.id, value: hasValue ? Number(rawValue) : null };
+  });
+
+export const toAbsenceMotifEntries = (rosterStudents, gradeValues, motifs) =>
+  rosterStudents
+    .filter(
+      (student) =>
+        (gradeValues[student.id] ?? "") === "" && motifs[student.id]?.trim(),
+    )
+    .map((student) => ({
+      studentId: student.id,
+      motif: motifs[student.id].trim(),
+    }));
+
+export const isValidGradeValue = (rawValue) =>
+  rawValue === "" ||
+  (Number(rawValue) >= 0 && Number(rawValue) <= MAX_GRADE);

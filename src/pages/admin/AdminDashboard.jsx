@@ -1,4 +1,7 @@
 import { useState } from "react";
+import GradeSessionEditor, {
+  GRADE_EDITOR_MODES,
+} from "../../components/common/GradeSessionEditor";
 import {
   ACTIONS_CONTAINER,
   ADD_BUTTON,
@@ -63,8 +66,10 @@ export const AdminDashboard = ({
   setFormState,
   onDeleteSubject,
   onValidateSession,
+  onReviseSession,
 }) => {
-  const [selectedClassView, setSelectedClassView] = useState(null); // "SECONDE", "PREMIERE", "TERMINALE" ou null
+  const [selectedClassView, setSelectedClassView] = useState(null);
+  const [editedSessionId, setEditedSessionId] = useState(null);
 
   const pendingSessions = gradeSessions.filter(
     (session) => session.status === "PENDING_REVIEW",
@@ -104,7 +109,6 @@ export const AdminDashboard = ({
       id: subject.id,
       name: subject.name,
       coefficient: subject.coefficient,
-      description: subject.description,
       classGroup: assignmentClass,
       teacherId:
         subject.assignments?.find((a) => a.classGroup === assignmentClass)
@@ -112,6 +116,21 @@ export const AdminDashboard = ({
     });
     setActiveModal("subject");
   };
+
+  const editedSession =
+    gradeSessions.find((session) => session.id === editedSessionId) || null;
+
+  if (editedSession) {
+    return (
+      <GradeSessionEditor
+        session={editedSession}
+        users={users}
+        mode={GRADE_EDITOR_MODES.ADMIN_MODE}
+        onBack={() => setEditedSessionId(null)}
+        onRevise={onReviseSession}
+      />
+    );
+  }
 
   return (
     <div className={CONTAINER_WRAPPER}>
@@ -314,15 +333,26 @@ export const AdminDashboard = ({
                     <span className={BADGE_VALIDATION}>Validation requise</span>
                   </div>
                   <p className={ITEM_SUBTITLE}>
-                    Saisie complétée par la secrétaire.
+                    Saisie complétée par la secrétaire
+                    {session.absences.length > 0 &&
+                      ` • ${session.absences.length} absent(s)`}
+                    .
                   </p>
                 </div>
-                <button
-                  onClick={() => onValidateSession(session.id)}
-                  className={VALIDATE_BUTTON}
-                >
-                  Valider & publier les notes
-                </button>
+                <div className={PENDING_ITEM_ACTIONS}>
+                  <button
+                    onClick={() => setEditedSessionId(session.id)}
+                    className={SESSION_SECONDARY_BUTTON}
+                  >
+                    Modifier
+                  </button>
+                  <button
+                    onClick={() => onValidateSession(session.id)}
+                    className={VALIDATE_BUTTON}
+                  >
+                    Valider & publier les notes
+                  </button>
+                </div>
               </div>
             ))
           )}

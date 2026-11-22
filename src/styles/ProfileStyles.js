@@ -26,6 +26,9 @@ export const FIELD_VALUE = "text-white font-medium mt-1";
 export const FIELD_VALUE_CAPITALIZE = "text-white font-medium mt-1 capitalize";
 export const ADDRESS_GRID_SPAN = "sm:col-span-2";
 export const PAGE_HEADER_ROW = "flex justify-between items-center mb-6";
+export const HEADER_ACTIONS = "flex items-center gap-3";
+export const BACK_BUTTON =
+  "px-4 py-2 bg-slate-800 text-slate-300 rounded-lg font-semibold border border-slate-700 hover:bg-slate-700 transition";
 export const EDIT_BUTTON =
   "px-4 py-2 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-500 transition";
 export const EDIT_FORM = "space-y-6";

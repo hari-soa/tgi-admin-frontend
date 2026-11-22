@@ -72,27 +72,27 @@ export const Login = ({ setCurrentUser, showToast }) => {
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="Enter your e-mail"
+                placeholder="Saisissez votre e-mail"
                 className={INPUT_FIELD}
               />
             </div>
 
             <div>
-              <label className={LABEL_TEXT}>Password</label>
+              <label className={LABEL_TEXT}>Mot de passe</label>
               <div className={PASSWORD_FIELD_WRAPPER}>
                 <input
                   type={showPassword ? "text" : "password"}
                   required
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  placeholder="Enter your password"
+                  placeholder="Saisissez votre mot de passe"
                   className={PASSWORD_INPUT_FIELD}
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
                   className={PASSWORD_TOGGLE_BTN}
-                  title={showPassword ? "Hide password" : "Show password"}
+                  title={showPassword ? "Masquer le mot de passe" : "Afficher le mot de passe"}
                 >
                   {showPassword ? (
                     <svg
@@ -144,19 +144,19 @@ export const Login = ({ setCurrentUser, showToast }) => {
                   onChange={(e) => setRememberMe(e.target.checked)}
                   className={CHECKBOX_INPUT}
                 />
-                <span className={CHECKBOX_TEXT}>Remember me</span>
+                <span className={CHECKBOX_TEXT}>Se souvenir de moi</span>
               </label>
             </div>
 
             <button type="submit" className={SUBMIT_BUTTON}>
-              Sign In
+              Se connecter
             </button>
           </form>
         </div>
       </div>
 
       <footer className={FOOTER_CONTAINER}>
-        © 2026 TGI - Technologie Générale Industriel. All rights reserved.
+        © 2026 TGI - Technologie Générale Industriel. Tous droits réservés.
       </footer>
     </div>
   );
