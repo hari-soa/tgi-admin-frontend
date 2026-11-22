@@ -26,12 +26,9 @@ export const LATE_DETAIL_TEXT = "text-xs text-yellow-400 mt-2";
 export const ABSENT_DETAIL_TEXT = "text-xs text-red-400 mt-2";
 export const CARD_FOOTER =
   "mt-4 pt-3 border-t border-slate-800 flex items-center justify-between";
-export const FOOTER_NOTE = "text-[10px] text-slate-500";
 export const BUTTONS_GROUP = "flex space-x-1";
 export const BUTTON_PRESENT =
   "bg-emerald-600/20 hover:bg-emerald-600 text-emerald-400 hover:text-white px-2 py-1 rounded text-[10px] transition-colors";
-export const BUTTON_LATE =
-  "bg-yellow-600/20 hover:bg-yellow-600 text-yellow-400 hover:text-white px-2 py-1 rounded text-[10px] transition-colors";
 export const BUTTON_ABSENT =
   "bg-red-600/20 hover:bg-red-600 text-red-400 hover:text-white px-2 py-1 rounded text-[10px] transition-colors";
 export const HEADER_ACTIONS = "flex items-center gap-4";
@@ -43,4 +40,3 @@ export const EDIT_BUTTON =
   "text-xs bg-slate-800 hover:bg-slate-700 text-slate-300 px-2.5 py-1 rounded border border-slate-700";
 export const DELETE_BUTTON =
   "text-xs bg-red-950/60 hover:bg-red-900/80 text-red-300 px-2.5 py-1 rounded border border-red-800/50";
-export const CLASSROOM_TEXT = "text-xs text-slate-500 mt-1";

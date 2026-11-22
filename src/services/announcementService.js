@@ -1,26 +1,27 @@
-import { apiFetch, jsonBody } from "./api";
+import { callOperation } from "./api";
 
 export const getAllAnnouncements = async () => {
-  const data = await apiFetch("/announcements");
+  const data = await callOperation("listAnnouncements");
   return data.announcements;
 };
 
 export const createAnnouncement = async (announcementData) => {
-  const data = await apiFetch("/announcements", {
-    method: "POST",
-    body: jsonBody(announcementData),
+  const data = await callOperation("createAnnouncement", {
+    body: announcementData,
   });
   return data.announcement;
 };
 
 export const updateAnnouncement = async (announcementId, announcementData) => {
-  const data = await apiFetch(`/announcements/${announcementId}`, {
-    method: "PATCH",
-    body: jsonBody(announcementData),
+  const data = await callOperation("updateAnnouncement", {
+    pathParams: { id: announcementId },
+    body: announcementData,
   });
   return data.announcement;
 };
 
 export const deleteAnnouncement = async (announcementId) => {
-  await apiFetch(`/announcements/${announcementId}`, { method: "DELETE" });
+  await callOperation("deleteAnnouncement", {
+    pathParams: { id: announcementId },
+  });
 };

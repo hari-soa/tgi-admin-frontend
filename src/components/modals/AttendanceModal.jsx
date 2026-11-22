@@ -217,7 +217,6 @@ export const AttendanceModal = ({
             </select>
           </div>
 
-          {/* HEURES DE DÉBUT & FIN */}
           <div className={GRID_TWO_COLS}>
             <div>
               <label className={FIELD_LABEL}>Heure de début</label>
@@ -240,18 +239,6 @@ export const AttendanceModal = ({
                 required
               />
             </div>
-          </div>
-
-          <div>
-            <label className={FIELD_LABEL}>Salle</label>
-            <input
-              type="text"
-              value={formState.classroom || ""}
-              onChange={(e) => handleInputChange("classroom", e.target.value)}
-              className={TEXT_INPUT}
-              placeholder="Ex : B12"
-              required
-            />
           </div>
 
           <button type="submit" className={SUBMIT_BUTTON}>

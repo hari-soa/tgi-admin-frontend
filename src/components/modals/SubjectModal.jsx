@@ -41,14 +41,14 @@ export const SubjectModal = ({
 
         <form onSubmit={onSubmit} className={FORM_CONTAINER}>
           <h3 className={MODAL_TITLE}>
-            {formState?.id ? "Edit Subject" : "Create New Subject"}
+            {formState?.id ? "Modifier la matière" : "Créer une matière"}
           </h3>
 
           <div>
-            <label className={FIELD_LABEL}>Subject Name</label>
+            <label className={FIELD_LABEL}>Nom de la matière</label>
             <input
               type="text"
-              placeholder="Matière"
+              placeholder="Ex : Mathématiques"
               value={formState?.name || ""}
               onChange={(e) => handleInputChange("name", e.target.value)}
               className={TEXT_INPUT}
@@ -73,7 +73,7 @@ export const SubjectModal = ({
               />
             </div>
             <div>
-              <label className={FIELD_LABEL}>Associated Class</label>
+              <label className={FIELD_LABEL}>Classe associée</label>
               <select
                 value={formState?.classGroup || "SECONDE"}
                 onChange={(e) =>
@@ -89,14 +89,14 @@ export const SubjectModal = ({
           </div>
 
           <div>
-            <label className={FIELD_LABEL}>Responsible Professor</label>
+            <label className={FIELD_LABEL}>Professeur responsable</label>
             <select
               value={formState?.teacherId || ""}
               onChange={(e) => handleInputChange("teacherId", e.target.value)}
               className={SELECT_INPUT}
               required
             >
-              <option value="">Select a professor...</option>
+              <option value="">Sélectionner un professeur...</option>
               {professorList.map((p) => (
                 <option key={p.id} value={p.id}>
                   {p.lastName || p.nom} {p.firstName || p.prenom}
@@ -105,19 +105,8 @@ export const SubjectModal = ({
             </select>
           </div>
 
-          <div>
-            <label className={FIELD_LABEL}>Description</label>
-            <input
-              type="text"
-              placeholder="Description..."
-              value={formState?.description || ""}
-              onChange={(e) => handleInputChange("description", e.target.value)}
-              className={TEXT_INPUT}
-            />
-          </div>
-
           <button type="submit" className={SUBMIT_BUTTON}>
-            {formState?.id ? "Update Subject" : "Save Subject"}
+            {formState?.id ? "Mettre à jour la matière" : "Enregistrer la matière"}
           </button>
         </form>
       </div>

@@ -31,7 +31,6 @@ export const GradeSessionModal = ({
     }
   };
 
-  // One entry per subject and class it is taught in
   const subjectsOfSelectedClass = subjects.filter((subject) =>
     subject.assignments.some(
       (assignment) => assignment.classGroup === formState.classGroup,

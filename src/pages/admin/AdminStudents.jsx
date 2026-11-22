@@ -1,10 +1,13 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
+import StudentGrades from "../student/StudentGrades";
 import { extractClassNum, isFormerStudent } from "../../utils/helpers";
 import {
   CLASS_GROUP_LABELS,
   HISTORY_TYPE_LABELS,
   REMARK_CATEGORY_LABELS,
+  GENDER_LABELS,
   formatDate,
+  formatDateOrDateTime,
 } from "../../utils/labels";
 import {
   ACTION_BLUE_BUTTON,
@@ -31,8 +34,6 @@ import {
   HEADER_SECTION,
   HEADER_SUBTITLE,
   HEADER_TITLE,
-  ITEM_LABEL_BLUE,
-  ITEM_LABEL_EMERALD,
   META_GRID,
   META_LABEL,
   META_VALUE_CAPITALIZE,
@@ -49,10 +50,17 @@ import {
   PROFILE_VIEW_BUTTON,
   ROW_ACTIONS,
   SAVE_BUTTON,
+  RECORD_BADGE_HISTORY,
+  RECORD_BADGE_REMARK,
+  RECORD_CARD,
+  RECORD_CARD_HEADER,
+  RECORD_DATE,
+  RECORD_EMPTY,
+  RECORD_GRID,
+  RECORD_SECTION,
+  RECORD_SECTION_TITLE,
+  RECORD_TEXT,
   SUB_SECTIONS_GRID,
-  SUB_SECTION_BOX,
-  SUB_SECTION_ITEM,
-  SUB_SECTION_TITLE,
   TABLE_ACTIONS_CELL,
   TABLE_AVATAR,
   TABLE_BODY,
@@ -84,20 +92,26 @@ export const AdminStudents = ({
   setFormState,
   toggleUserStatus,
   deleteUser,
-  setActiveTab,
   historyRecords,
   remarks,
+  annualResults,
+  onExportReportCard,
   onUpdateUser,
 }) => {
   const [isEditing, setIsEditing] = useState(false);
-  const [formData, setFormData] = useState({ ...targetStudent });
+  const [isReportCardOpen, setIsReportCardOpen] = useState(false);
+  const [formData, setFormData] = useState({});
 
-  useEffect(() => {
-    if (targetStudent) {
-      setFormData({ ...targetStudent });
-      setIsEditing(false);
-    }
-  }, [targetStudent]);
+  const startEditing = () => {
+    setFormData({ ...targetStudent });
+    setIsEditing(true);
+  };
+
+  const closeStudentFile = () => {
+    setTargetStudent(null);
+    setIsEditing(false);
+    setIsReportCardOpen(false);
+  };
 
   const handleChange = (field, value) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
@@ -159,7 +173,14 @@ export const AdminStudents = ({
         </div>
       )}
 
-      {targetStudent ? (
+      {targetStudent && isReportCardOpen ? (
+        <StudentGrades
+          student={targetStudent}
+          annualResults={annualResults}
+          onExportReportCard={onExportReportCard}
+          onBack={() => setIsReportCardOpen(false)}
+        />
+      ) : targetStudent ? (
         <div className={PROFILE_CARD}>
           <div className={PROFILE_HEADER}>
             <div className={PROFILE_INFO_CONTAINER}>
@@ -186,19 +207,13 @@ export const AdminStudents = ({
             <div className={BUTTONS_ROW}>
               {!isEditing && (
                 <button
-                  onClick={() => setIsEditing(true)}
+                  onClick={startEditing}
                   className={EDIT_BUTTON}
                 >
                   Modifier le profil ✏️
                 </button>
               )}
-              <button
-                onClick={() => {
-                  setTargetStudent(null);
-                  setIsEditing(false);
-                }}
-                className={CLOSE_BUTTON}
-              >
+              <button onClick={closeStudentFile} className={CLOSE_BUTTON}>
                 ← Fermer la fiche
               </button>
             </div>
@@ -345,7 +360,7 @@ export const AdminStudents = ({
                 <div>
                   <span className={META_LABEL}>Genre :</span>{" "}
                   <span className={META_VALUE_CAPITALIZE}>
-                    {targetStudent.gender}
+                    {GENDER_LABELS[targetStudent.gender]}
                   </span>
                 </div>
                 <div>
@@ -363,9 +378,7 @@ export const AdminStudents = ({
                 <div>
                   <span className={META_LABEL}>Date de Naissance :</span>{" "}
                   <span className={META_VALUE_WHITE}>
-                    {targetStudent.dateOfBirth
-                      ? new Date(targetStudent.dateOfBirth).toLocaleDateString()
-                      : "N/A"}
+                    {formatDate(targetStudent.dateOfBirth) || "N/A"}
                   </span>
                 </div>
                 <div>
@@ -391,7 +404,7 @@ export const AdminStudents = ({
               <div className={DETAIL_ACTIONS_ROW}>
                 <div className={PROFILE_ACTIONS}>
                   <button
-                    onClick={() => setActiveTab("grades")}
+                    onClick={() => setIsReportCardOpen(true)}
                     className={ACTION_BLUE_BUTTON}
                   >
                     Voir résultat (Bulletin)
@@ -412,30 +425,50 @@ export const AdminStudents = ({
               </div>
 
               <div className={SUB_SECTIONS_GRID}>
-                <div className={SUB_SECTION_BOX}>
-                  <h4 className={SUB_SECTION_TITLE}>Historique Discipline</h4>
-                  {historyRecords.map((record) => (
-                    <div key={record.id} className={SUB_SECTION_ITEM}>
-                      <span className={ITEM_LABEL_BLUE}>
-                        {HISTORY_TYPE_LABELS[record.type]}
-                      </span>{" "}
-                      — {record.reason} ({formatDate(record.startDate)}
-                      {record.endDate !== record.startDate &&
-                        ` → ${formatDate(record.endDate)}`}
-                      )
-                    </div>
-                  ))}
+                <div className={RECORD_SECTION}>
+                  <h4 className={RECORD_SECTION_TITLE}>Historique Discipline</h4>
+                  <div className={RECORD_GRID}>
+                    {historyRecords.length === 0 && (
+                      <p className={RECORD_EMPTY}>Aucun événement enregistré.</p>
+                    )}
+                    {historyRecords.map((record) => (
+                      <div key={record.id} className={RECORD_CARD}>
+                        <div className={RECORD_CARD_HEADER}>
+                          <span className={RECORD_BADGE_HISTORY}>
+                            {HISTORY_TYPE_LABELS[record.type]}
+                          </span>
+                          <span className={RECORD_DATE}>
+                            {formatDateOrDateTime(record.startDate)}
+                            {formatDate(record.endDate) !==
+                              formatDate(record.startDate) &&
+                              ` → ${formatDate(record.endDate)}`}
+                          </span>
+                        </div>
+                        <p className={RECORD_TEXT}>{record.reason}</p>
+                      </div>
+                    ))}
+                  </div>
                 </div>
-                <div className={SUB_SECTION_BOX}>
-                  <h4 className={SUB_SECTION_TITLE}>Remarques Dossier</h4>
-                  {remarks.map((remark) => (
-                    <div key={remark.id} className={SUB_SECTION_ITEM}>
-                      <span className={ITEM_LABEL_EMERALD}>
-                        {REMARK_CATEGORY_LABELS[remark.category]}
-                      </span>{" "}
-                      — {remark.content}
-                    </div>
-                  ))}
+                <div className={RECORD_SECTION}>
+                  <h4 className={RECORD_SECTION_TITLE}>Remarques Dossier</h4>
+                  <div className={RECORD_GRID}>
+                    {remarks.length === 0 && (
+                      <p className={RECORD_EMPTY}>Aucune remarque enregistrée.</p>
+                    )}
+                    {remarks.map((remark) => (
+                      <div key={remark.id} className={RECORD_CARD}>
+                        <div className={RECORD_CARD_HEADER}>
+                          <span className={RECORD_BADGE_REMARK}>
+                            {REMARK_CATEGORY_LABELS[remark.category]}
+                          </span>
+                          <span className={RECORD_DATE}>
+                            {formatDate(remark.createdAt)}
+                          </span>
+                        </div>
+                        <p className={RECORD_TEXT}>{remark.content}</p>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               </div>
             </>
@@ -483,7 +516,9 @@ export const AdminStudents = ({
                         </span>
                       )}
                     </td>
-                    <td className={TABLE_CELL_CAPITALIZE}>{student.gender}</td>
+                    <td className={TABLE_CELL_CAPITALIZE}>
+                      {GENDER_LABELS[student.gender]}
+                    </td>
                     <td className={TABLE_HEAD_CELL}>
                       <label className={TOGGLE_LABEL}>
                         <input
@@ -506,15 +541,13 @@ export const AdminStudents = ({
                         >
                           Voir le profil
                         </button>
-                        {
-                          <button
-                            onClick={() => handleDeleteStudent(student)}
-                            className={DELETE_ICON_BUTTON}
-                            title="Supprimer"
-                          >
-                            🗑️
-                          </button>
-                        }
+                        <button
+                          onClick={() => handleDeleteStudent(student)}
+                          className={DELETE_ICON_BUTTON}
+                          title="Supprimer"
+                        >
+                          🗑️
+                        </button>
                       </div>
                     </td>
                   </tr>

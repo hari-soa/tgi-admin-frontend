@@ -1,9 +1,10 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import {
   ADDRESS_GRID_SPAN,
   AVATAR_WRAPPER,
   BADGE_CONTAINER,
   CANCEL_BUTTON,
+  BACK_BUTTON,
   CARD_BOX,
   CONTAINER_WRAPPER,
   DETAILS_GRID,
@@ -15,6 +16,7 @@ import {
   FIELD_VALUE_CAPITALIZE,
   FILE_INPUT,
   FORM_ACTIONS,
+  HEADER_ACTIONS,
   HEADER_SUBTITLE,
   HEADER_TITLE,
   NAME_FIELDS_GRID,
@@ -30,14 +32,16 @@ import {
   USER_NAME,
 } from "../../styles/ProfileStyles";
 import { getAvatarSource, getChangedFields } from "../../utils/helpers";
+import {
+  CLASS_GROUP_LABELS,
+  GENDER_LABELS,
+  USER_ROLE_LABELS,
+  formatDate,
+} from "../../utils/labels";
 
-export const Profile = ({ currentUser, onUpdateUser, isAdmin }) => {
+export const Profile = ({ currentUser, onUpdateUser, isAdmin, onBack }) => {
   const [isEditing, setIsEditing] = useState(false);
-  const [formData, setFormData] = useState({ ...currentUser });
-
-  useEffect(() => {
-    setFormData({ ...currentUser });
-  }, [currentUser]);
+  const [formData, setFormData] = useState({});
 
   if (!currentUser) return null;
 
@@ -45,6 +49,11 @@ export const Profile = ({ currentUser, onUpdateUser, isAdmin }) => {
   const isStudent = userRole === "STUDENT";
   const isTeacher = userRole === "TEACHER";
   const isSecretary = userRole === "SECRETARY";
+
+  const startEditing = () => {
+    setFormData({ ...currentUser });
+    setIsEditing(true);
+  };
 
   const handleChange = (field, value) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
@@ -79,11 +88,18 @@ export const Profile = ({ currentUser, onUpdateUser, isAdmin }) => {
             Informations administratives enregistrées
           </p>
         </div>
-        {isAdmin && !isEditing && (
-          <button onClick={() => setIsEditing(true)} className={EDIT_BUTTON}>
-            Modifier le profil ✏️
-          </button>
-        )}
+        <div className={HEADER_ACTIONS}>
+          {onBack && (
+            <button onClick={onBack} className={BACK_BUTTON}>
+              ← Retour à la liste
+            </button>
+          )}
+          {isAdmin && !isEditing && (
+            <button onClick={startEditing} className={EDIT_BUTTON}>
+              Modifier le profil ✏️
+            </button>
+          )}
+        </div>
       </div>
 
       <div className={CARD_BOX}>
@@ -277,7 +293,9 @@ export const Profile = ({ currentUser, onUpdateUser, isAdmin }) => {
                   Matricule : {currentUser.matricule || "N/A"}
                 </p>
                 <div className={BADGE_CONTAINER}>
-                  <span className={ROLE_BADGE}>{currentUser.role}</span>
+                  <span className={ROLE_BADGE}>
+                    {USER_ROLE_LABELS[currentUser.role] || currentUser.role}
+                  </span>
                   <span
                     className={
                       currentUser.isActive !== false
@@ -285,7 +303,7 @@ export const Profile = ({ currentUser, onUpdateUser, isAdmin }) => {
                         : STATUS_INACTIVE_BADGE
                     }
                   >
-                    {currentUser.isActive !== false ? "ACTIVE" : "INACTIF"}
+                    {currentUser.isActive !== false ? "ACTIF" : "INACTIF"}
                   </span>
                 </div>
               </div>
@@ -307,7 +325,7 @@ export const Profile = ({ currentUser, onUpdateUser, isAdmin }) => {
               <div>
                 <label className={FIELD_LABEL}>Genre</label>
                 <p className={FIELD_VALUE_CAPITALIZE}>
-                  {currentUser.gender || "Non spécifié"}
+                  {GENDER_LABELS[currentUser.gender] || "Non spécifié"}
                 </p>
               </div>
 
@@ -322,16 +340,14 @@ export const Profile = ({ currentUser, onUpdateUser, isAdmin }) => {
                   <div>
                     <label className={FIELD_LABEL}>Classe & Numéro</label>
                     <p className={FIELD_VALUE}>
-                      {currentUser.classGroup || "Non assignée"} (N°
+                      {CLASS_GROUP_LABELS[currentUser.classGroup] || "Non assignée"} (N°
                       {currentUser.classRollNumber || "N/A"})
                     </p>
                   </div>
                   <div>
                     <label className={FIELD_LABEL}>Date de Naissance</label>
                     <p className={FIELD_VALUE}>
-                      {currentUser.dateOfBirth
-                        ? new Date(currentUser.dateOfBirth).toLocaleDateString()
-                        : "N/A"}
+                      {formatDate(currentUser.dateOfBirth) || "N/A"}
                     </p>
                   </div>
                   <div className={ADDRESS_GRID_SPAN}>

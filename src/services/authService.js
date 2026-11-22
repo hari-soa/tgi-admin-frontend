@@ -1,10 +1,8 @@
-import { apiFetch, jsonBody, setAuthToken } from "./api";
+import { callOperation, setAuthToken } from "./api";
 
-/** The API calls the password "matricule". Stores the token and returns { token, user }. */
 export const loginUser = async (email, matricule) => {
-  const loginResult = await apiFetch("/auth/login", {
-    method: "POST",
-    body: jsonBody({ email, matricule }),
+  const loginResult = await callOperation("login", {
+    body: { email, matricule },
   });
 
   setAuthToken(loginResult.token);
@@ -12,7 +10,7 @@ export const loginUser = async (email, matricule) => {
 };
 
 export const getCurrentUserProfile = async () => {
-  const data = await apiFetch("/auth/me");
+  const data = await callOperation("getAuthenticatedUser");
   return data.user;
 };
 

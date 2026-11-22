@@ -33,13 +33,6 @@ export const ACTION_BLUE_BUTTON =
 export const ACTION_SECONDARY_BUTTON =
   "bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold px-4 py-2 rounded-xl border border-slate-700 transition-all";
 export const SUB_SECTIONS_GRID = "grid grid-cols-1 md:grid-cols-2 gap-4";
-export const SUB_SECTION_BOX =
-  "bg-slate-950 p-4 rounded-xl border border-slate-800";
-export const SUB_SECTION_TITLE = "font-bold text-white text-xs mb-2";
-export const SUB_SECTION_ITEM =
-  "text-[11px] border-b border-slate-800/60 py-1.5 text-slate-300";
-export const ITEM_LABEL_BLUE = "font-bold text-blue-400";
-export const ITEM_LABEL_EMERALD = "font-bold text-emerald-400";
 export const TABLE_CONTAINER =
   "bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-xl";
 export const TABLE_SCROLL = "overflow-x-auto";
@@ -55,10 +48,6 @@ export const TABLE_AVATAR =
 export const TABLE_CELL_MATRICULE = "p-4 font-mono text-blue-400";
 export const TABLE_CELL_DEFAULT = "p-4";
 export const ALUMNI_TEXT = "text-slate-400";
-export const STATUS_BUTTON_ACTIVE =
-  "px-2.5 py-1 rounded text-[10px] font-bold transition-all bg-emerald-500/20 text-emerald-400 hover:bg-emerald-500/30";
-export const STATUS_BUTTON_INACTIVE =
-  "px-2.5 py-1 rounded text-[10px] font-bold transition-all bg-red-500/20 text-red-400 hover:bg-red-500/30";
 export const TABLE_ACTIONS_CELL = "p-4 text-right space-x-2";
 export const PROFILE_VIEW_BUTTON =
   "bg-blue-600/20 hover:bg-blue-600 text-blue-300 hover:text-white px-3 py-1 rounded text-xs transition-colors";
@@ -96,3 +85,17 @@ export const TOGGLE_TEXT = "ml-3 text-xs font-bold text-slate-300";
 export const ROW_ACTIONS = "flex items-center justify-end gap-3";
 export const DELETE_ICON_BUTTON =
   "p-2 text-rose-400 hover:text-rose-200 hover:bg-rose-950/40 rounded-lg transition";
+export const RECORD_SECTION =
+  "bg-slate-950/40 border border-slate-800 rounded-xl p-4";
+export const RECORD_SECTION_TITLE = "text-sm font-bold text-white mb-4";
+export const RECORD_GRID = "grid grid-cols-1 gap-4";
+export const RECORD_CARD =
+  "p-5 rounded-2xl border transition-all bg-slate-900 border-slate-800";
+export const RECORD_CARD_HEADER = "flex items-center justify-between mb-3";
+export const RECORD_BADGE_HISTORY =
+  "text-[10px] font-bold px-2 py-0.5 rounded uppercase bg-blue-500/10 text-blue-400";
+export const RECORD_BADGE_REMARK =
+  "text-[10px] font-bold px-2 py-0.5 rounded uppercase bg-emerald-500/10 text-emerald-400";
+export const RECORD_DATE = "text-xs text-slate-500";
+export const RECORD_TEXT = "text-slate-300 text-sm leading-relaxed";
+export const RECORD_EMPTY = "text-slate-500 text-sm";

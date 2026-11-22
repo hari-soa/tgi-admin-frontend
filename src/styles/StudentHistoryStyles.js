@@ -16,5 +16,4 @@ export const BADGE_EMERALD =
   "text-xs font-bold uppercase px-2 py-0.5 rounded bg-emerald-600/30 text-emerald-300";
 export const DETAIL_TEXT = "text-xs font-semibold";
 export const REASON_TEXT = "text-sm mt-2 font-medium";
-export const AUTHOR_TEXT = "text-[10px] opacity-60 mt-2";
 export const DATE_TEXT = "text-xs font-mono opacity-70 whitespace-nowrap";

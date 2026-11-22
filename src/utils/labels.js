@@ -1,5 +1,3 @@
-// Labels displayed in the interface for the values sent by the API.
-
 export const HISTORY_TYPE_LABELS = {
   ABSENCE: "Absence",
   LATENESS: "Retard",
@@ -47,5 +45,35 @@ export const ACADEMIC_DECISION_LABELS = {
   PENDING: "En attente du conseil",
 };
 
+export const GENDER_LABELS = {
+  MALE: "Masculin",
+  FEMALE: "Féminin",
+};
+
+export const USER_ROLE_LABELS = {
+  ADMIN: "Administrateur",
+  SECRETARY: "Secrétaire",
+  TEACHER: "Enseignant",
+  STUDENT: "Élève",
+};
+
 export const formatDate = (isoDate) =>
   isoDate ? new Date(isoDate).toLocaleDateString("fr-FR") : "";
+
+const isMidnightUtc = (date) =>
+  date.getUTCHours() + date.getUTCMinutes() + date.getUTCSeconds() === 0;
+
+export const formatDateOrDateTime = (isoDate) => {
+  if (!isoDate) return "";
+  return isMidnightUtc(new Date(isoDate))
+    ? formatDate(isoDate)
+    : formatDateTime(isoDate);
+};
+
+const formatDateTime = (isoDate) =>
+  isoDate
+    ? new Date(isoDate).toLocaleString("fr-FR", {
+        dateStyle: "short",
+        timeStyle: "short",
+      })
+    : "";

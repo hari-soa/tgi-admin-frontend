@@ -4,6 +4,12 @@ import Topbar from "./components/layout/Topbar";
 import AppRouter from "./pages/AppRouter";
 import Toast from "./components/common/Toast";
 import Login from "./components/auth/Login";
+import {
+  ErrorBanner,
+  ErrorPanel,
+  LoadingPanel,
+  getDisplayedErrorMessage,
+} from "./components/common/ResourceStatus";
 
 import UserModal from "./components/modals/UserModal";
 import AnnouncementModal from "./components/modals/AnnouncementModal";
@@ -12,6 +18,7 @@ import GradeSessionModal from "./components/modals/GradeSessionModal";
 import AttendanceModal from "./components/modals/AttendanceModal";
 import HistoryRemarkModal from "./components/modals/HistoryRemarkModal";
 
+import { ConnectionError } from "./services/api";
 import { getCurrentUserProfile, logoutUser } from "./services/authService";
 import {
   getAllUsers,
@@ -37,6 +44,7 @@ import {
   createGradeSession,
   saveGradeSessionDraft,
   submitGradeSession,
+  reviseGradeSession,
   validateGradeSession,
   getStudentResults,
   exportResultPdf,
@@ -59,8 +67,14 @@ import {
   getTodayIsoDate,
   getDayOfWeek,
   omitEmptyValues,
+  sortStudentsByClassAndMatricule,
   toUserUpdatePayload,
 } from "./utils/helpers";
+import {
+  RESOURCE_STATUS,
+  notifyDataChanged,
+  useLiveResource,
+} from "./utils/useLiveResource";
 import {
   APP_LAYOUT,
   APP_CONTENT,
@@ -74,29 +88,19 @@ const TOAST_DURATION_MS = 4000;
 const DEFAULT_TAB = "dashboard";
 const DEFAULT_SLOT_START = "08:00";
 const DEFAULT_SLOT_END = "10:00";
-const STAFF_ROLES_WITH_GRADE_SESSIONS = ["ADMIN", "SECRETARY"];
+const STAFF_ROLES = ["ADMIN", "SECRETARY"];
+const EMPTY_STUDENT_RECORDS = { history: [], remarks: [], results: [] };
 
 const App = () => {
   const [currentUser, setCurrentUser] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const [sessionStatus, setSessionStatus] = useState(RESOURCE_STATUS.LOADING);
   const [activeTab, setActiveTab] = useState(
     () => localStorage.getItem("activeTab") || DEFAULT_TAB,
   );
 
-  const [users, setUsers] = useState([]);
-  const [staffUsers, setStaffUsers] = useState([]);
-  const [announcements, setAnnouncements] = useState([]);
-  const [subjects, setSubjects] = useState([]);
-  const [gradeSessions, setGradeSessions] = useState([]);
-  const [attendanceCards, setAttendanceCards] = useState([]);
   const [attendanceDate, setAttendanceDate] = useState(getTodayIsoDate());
-
-  const [historyRecords, setHistoryRecords] = useState([]);
-  const [remarks, setRemarks] = useState([]);
-  const [annualResults, setAnnualResults] = useState([]);
-
   const [selectedStudentFilter, setSelectedStudentFilter] = useState("all");
-  const [targetStudent, setTargetStudent] = useState(null);
+  const [targetStudentId, setTargetStudentId] = useState(null);
   const [activeGradeSession, setActiveGradeSession] = useState(null);
   const [activeModal, setActiveModal] = useState(null);
   const [formState, setFormState] = useState({});
@@ -104,10 +108,90 @@ const App = () => {
 
   const userRole = currentUser?.role || "";
   const isAdmin = userRole === "ADMIN";
+  const isStaff = STAFF_ROLES.includes(userRole);
+  const isLoggedIn = Boolean(currentUser);
 
-  // The student whose grades, history and remarks are displayed: the student
-  // themself, or the one selected by an administrator or a secretary.
+  const usersResource = useLiveResource(getAllUsers, {
+    initialValue: [],
+    enabled: isLoggedIn && isStaff,
+  });
+  const staffResource = useLiveResource(getStaffUsers, {
+    initialValue: [],
+    enabled: isLoggedIn,
+  });
+  const subjectsResource = useLiveResource(getAllSubjects, {
+    initialValue: [],
+    enabled: isLoggedIn,
+  });
+  const announcementsResource = useLiveResource(getAllAnnouncements, {
+    initialValue: [],
+    enabled: isLoggedIn,
+  });
+  const gradeSessionsResource = useLiveResource(getGradeSessions, {
+    initialValue: [],
+    enabled: isLoggedIn && isStaff,
+  });
+
+  const users = usersResource.data;
+  const staffUsers = staffResource.data;
+  const targetStudent =
+    users.find((user) => user.id === targetStudentId) || null;
+  const setTargetStudent = (student) => setTargetStudentId(student?.id ?? null);
   const viewedStudent = userRole === "STUDENT" ? currentUser : targetStudent;
+
+  const attendanceResource = useLiveResource(
+    async () => {
+      const dayOfWeek = getDayOfWeek(attendanceDate);
+      return dayOfWeek ? getDailyAttendance(dayOfWeek, attendanceDate) : [];
+    },
+    {
+      initialValue: [],
+      enabled: isLoggedIn && isAdmin,
+      dependencies: [attendanceDate],
+    },
+  );
+
+  const studentRecordsResource = useLiveResource(
+    async () => {
+      const [history, remarks, results] = await Promise.all([
+        getStudentHistory(viewedStudent.id),
+        getStudentRemarks(viewedStudent.id),
+        getStudentResults(viewedStudent.id),
+      ]);
+      return { history, remarks, results };
+    },
+    {
+      initialValue: EMPTY_STUDENT_RECORDS,
+      enabled: isLoggedIn && Boolean(viewedStudent),
+      dependencies: [viewedStudent?.id],
+    },
+  );
+
+  const resources = [
+    usersResource,
+    staffResource,
+    subjectsResource,
+    announcementsResource,
+    gradeSessionsResource,
+    attendanceResource,
+    studentRecordsResource,
+  ];
+  const isLoadingData = resources.some(
+    (resource) => resource.status === RESOURCE_STATUS.LOADING,
+  );
+  const failedResource = resources.find(
+    (resource) => resource.status === RESOURCE_STATUS.ERROR,
+  );
+  const reloadEverything = () =>
+    resources.forEach((resource) => resource.reload());
+
+  const announcements = announcementsResource.data;
+  const subjects = subjectsResource.data;
+  const gradeSessions = gradeSessionsResource.data;
+  const attendanceCards = attendanceResource.data;
+  const historyRecords = studentRecordsResource.data.history;
+  const remarks = studentRecordsResource.data.remarks;
+  const annualResults = studentRecordsResource.data.results;
 
   const showToast = (message) => {
     setToastMessage(message);
@@ -123,99 +207,34 @@ const App = () => {
     localStorage.setItem("activeTab", activeTab);
   }, [activeTab]);
 
-  useEffect(() => {
-    const restoreSession = async () => {
-      if (localStorage.getItem("token")) {
-        try {
-          setCurrentUser(await getCurrentUserProfile());
-        } catch {
-          logoutUser();
-        }
-      }
-      setLoading(false);
-    };
+  const restoreSession = useCallback(async () => {
+    setSessionStatus(RESOURCE_STATUS.LOADING);
 
-    restoreSession();
-  }, []);
-
-  const refreshDirectory = useCallback(async () => {
-    const canListUsers = STAFF_ROLES_WITH_GRADE_SESSIONS.includes(userRole);
-    const [usersData, staffData] = await Promise.all([
-      canListUsers ? getAllUsers() : Promise.resolve([]),
-      getStaffUsers(),
-    ]);
-    setUsers(usersData);
-    setStaffUsers(staffData);
-  }, [userRole]);
-
-  const refreshGradeSessions = useCallback(async () => {
-    if (STAFF_ROLES_WITH_GRADE_SESSIONS.includes(userRole)) {
-      setGradeSessions(await getGradeSessions());
-    }
-  }, [userRole]);
-
-  useEffect(() => {
-    if (!currentUser) return;
-
-    const loadSharedData = async () => {
-      try {
-        const [subjectsData, announcementsData] = await Promise.all([
-          getAllSubjects(),
-          getAllAnnouncements(),
-        ]);
-        await Promise.all([refreshDirectory(), refreshGradeSessions()]);
-        setSubjects(subjectsData);
-        setAnnouncements(announcementsData);
-      } catch (error) {
-        showToast(`Erreur de chargement des données : ${error.message}`);
-      }
-    };
-
-    loadSharedData();
-  }, [currentUser, refreshDirectory, refreshGradeSessions]);
-
-  const refreshAttendance = useCallback(async () => {
-    const dayOfWeek = getDayOfWeek(attendanceDate);
-    setAttendanceCards(
-      dayOfWeek ? await getDailyAttendance(dayOfWeek, attendanceDate) : [],
-    );
-  }, [attendanceDate]);
-
-  useEffect(() => {
-    if (!isAdmin) return;
-    refreshAttendance().catch((error) =>
-      showToast(`Erreur de chargement du pointage : ${error.message}`),
-    );
-  }, [isAdmin, refreshAttendance]);
-
-  const refreshStudentRecords = useCallback(async () => {
-    if (!viewedStudent) {
-      setHistoryRecords([]);
-      setRemarks([]);
-      setAnnualResults([]);
+    if (!localStorage.getItem("token")) {
+      setSessionStatus(RESOURCE_STATUS.READY);
       return;
     }
 
-    const [historyData, remarksData, resultsData] = await Promise.all([
-      getStudentHistory(viewedStudent.id),
-      getStudentRemarks(viewedStudent.id),
-      getStudentResults(viewedStudent.id),
-    ]);
-    setHistoryRecords(historyData);
-    setRemarks(remarksData);
-    setAnnualResults(resultsData);
-  }, [viewedStudent?.id]);
+    try {
+      setCurrentUser(await getCurrentUserProfile());
+    } catch (error) {
+      if (error instanceof ConnectionError) {
+        setSessionStatus(RESOURCE_STATUS.ERROR);
+        return;
+      }
+      logoutUser();
+    }
+    setSessionStatus(RESOURCE_STATUS.READY);
+  }, []);
 
   useEffect(() => {
-    refreshStudentRecords().catch((error) =>
-      showToast(`Erreur de chargement du dossier élève : ${error.message}`),
-    );
-  }, [refreshStudentRecords]);
+    restoreSession();
+  }, [restoreSession]);
 
-  /** Runs a server action, refreshes the data it changed, and reports the outcome. */
   const runAction = async (action, successMessage) => {
     try {
       await action();
+      notifyDataChanged();
       if (successMessage) showToast(successMessage);
       return true;
     } catch (error) {
@@ -227,12 +246,10 @@ const App = () => {
   const handleLogout = () => {
     logoutUser();
     setCurrentUser(null);
-    setTargetStudent(null);
+    setTargetStudentId(null);
     setActiveTab(DEFAULT_TAB);
     showToast("Déconnexion réussie");
   };
-
-  // ---------- Users ----------
 
   const handleCreateUser = async (event) => {
     event.preventDefault();
@@ -242,8 +259,6 @@ const App = () => {
       lastName: formState.lastName,
       matricule: formState.matricule,
       gender: formState.gender || "MALE",
-      email: formState.email,
-      contactNumber: formState.contactNumber,
     };
     const rolePayloads = {
       STUDENT: {
@@ -260,7 +275,6 @@ const App = () => {
         role,
         omitEmptyValues({ ...basePayload, ...rolePayloads[role] }),
       );
-      await refreshDirectory();
     }, "Utilisateur créé avec succès");
 
     if (succeeded) closeModal();
@@ -272,9 +286,7 @@ const App = () => {
         userId,
         toUserUpdatePayload(userData),
       );
-      await refreshDirectory();
       if (currentUser.id === userId) setCurrentUser(updatedUser);
-      if (targetStudent?.id === userId) setTargetStudent(updatedUser);
     }, "Profil mis à jour avec succès");
   };
 
@@ -285,9 +297,7 @@ const App = () => {
 
     await runAction(
       async () => {
-        const updatedUser = await updateUser(userId, { isActive: newStatus });
-        await refreshDirectory();
-        if (targetStudent?.id === userId) setTargetStudent(updatedUser);
+        await updateUser(userId, { isActive: newStatus });
       },
       newStatus ? "Compte réactivé" : "Compte désactivé",
     );
@@ -296,12 +306,9 @@ const App = () => {
   const deleteUser = async (userId) => {
     await runAction(async () => {
       await deleteUserOnServer(userId);
-      await refreshDirectory();
-      if (targetStudent?.id === userId) setTargetStudent(null);
+      if (targetStudentId === userId) setTargetStudentId(null);
     }, "Utilisateur supprimé avec succès");
   };
-
-  // ---------- Announcements ----------
 
   const handleSubmitAnnouncement = async (event) => {
     event.preventDefault();
@@ -322,7 +329,6 @@ const App = () => {
         } else {
           await createAnnouncement(payload);
         }
-        setAnnouncements(await getAllAnnouncements());
       },
       isEdition
         ? "Annonce modifiée avec succès"
@@ -335,18 +341,14 @@ const App = () => {
   const handleDeleteAnnouncement = async (announcementId) => {
     await runAction(async () => {
       await deleteAnnouncementOnServer(announcementId);
-      setAnnouncements(await getAllAnnouncements());
     }, "Annonce supprimée avec succès");
   };
-
-  // ---------- Subjects ----------
 
   const handleSubmitSubject = async (event) => {
     event.preventDefault();
     const payload = {
       name: formState.name,
       coefficient: Number(formState.coefficient),
-      description: formState.description || undefined,
       assignments: [
         {
           classGroup: formState.classGroup || "SECONDE",
@@ -363,7 +365,6 @@ const App = () => {
         } else {
           await createSubject(payload);
         }
-        setSubjects(await getAllSubjects());
       },
       isEdition ? "Matière modifiée avec succès" : "Matière créée avec succès",
     );
@@ -374,11 +375,8 @@ const App = () => {
   const handleDeleteSubject = async (subjectId) => {
     await runAction(async () => {
       await deleteSubjectOnServer(subjectId);
-      setSubjects(await getAllSubjects());
     }, "Matière supprimée avec succès");
   };
-
-  // ---------- Grade sessions ----------
 
   const handleCreateGradeSession = async (event) => {
     event.preventDefault();
@@ -389,7 +387,6 @@ const App = () => {
         examType: formState.examType || "TRIMESTER",
         term: formState.term || "FIRST_TRIMESTER",
       });
-      await refreshGradeSessions();
     }, "Session de notes créée avec succès");
 
     if (succeeded) closeModal();
@@ -398,23 +395,25 @@ const App = () => {
   const handleSaveDraft = async (sessionId, grades) => {
     await runAction(async () => {
       await saveGradeSessionDraft(sessionId, grades);
-      await refreshGradeSessions();
     }, "Brouillon enregistré");
   };
 
   const handleSubmitSession = async (sessionId, grades) => {
     const succeeded = await runAction(async () => {
       await submitGradeSession(sessionId, grades);
-      await refreshGradeSessions();
     }, "Notes soumises à l'administrateur avec succès");
 
     if (succeeded) setActiveGradeSession(null);
   };
 
+  const handleReviseSession = async (sessionId, grades, absences) =>
+    runAction(async () => {
+      await reviseGradeSession(sessionId, grades, absences);
+    }, "Notes corrigées avec succès");
+
   const handleValidateSession = async (sessionId) => {
     await runAction(async () => {
       await validateGradeSession(sessionId);
-      await Promise.all([refreshGradeSessions(), refreshStudentRecords()]);
     }, "Session validée : les notes sont publiées dans les bulletins");
   };
 
@@ -423,8 +422,6 @@ const App = () => {
       window.open(await exportResultPdf(resultId), "_blank", "noopener");
     });
   };
-
-  // ---------- Teacher attendance ----------
 
   const handleSubmitSlot = async (event) => {
     event.preventDefault();
@@ -435,7 +432,6 @@ const App = () => {
       dayOfWeek: formState.dayOfWeek || "MONDAY",
       startTime: formState.startTime || DEFAULT_SLOT_START,
       endTime: formState.endTime || DEFAULT_SLOT_END,
-      classroom: formState.classroom,
     };
     const isEdition = Boolean(formState.id);
 
@@ -446,7 +442,6 @@ const App = () => {
         } else {
           await createAttendanceSlot(payload);
         }
-        await refreshAttendance();
       },
       isEdition ? "Créneau modifié avec succès" : "Créneau créé avec succès",
     );
@@ -457,25 +452,20 @@ const App = () => {
   const handleDeleteSlot = async (slotId) => {
     await runAction(async () => {
       await deleteAttendanceSlot(slotId);
-      await refreshAttendance();
     }, "Créneau supprimé avec succès");
   };
 
   const handleCheckAttendance = async (slotId, date) => {
     await runAction(async () => {
       await checkAttendance(slotId, date);
-      await refreshAttendance();
     }, "Présence enregistrée");
   };
 
   const handleMarkAbsence = async (slotId, date, motif) => {
     await runAction(async () => {
       await markAbsence(slotId, date, motif);
-      await refreshAttendance();
     }, "Absence enregistrée");
   };
-
-  // ---------- History and remarks of the selected student ----------
 
   const handleAddHistoryRecord = async (event) => {
     event.preventDefault();
@@ -487,7 +477,6 @@ const App = () => {
         endDate: formState.endDate || formState.startDate,
         reason: formState.reason,
       });
-      await refreshStudentRecords();
     }, "Événement ajouté au dossier de l'élève");
 
     if (succeeded) closeModal();
@@ -501,25 +490,37 @@ const App = () => {
         category: formState.category || "BEHAVIOR",
         content: formState.content,
       });
-      await refreshStudentRecords();
     }, "Remarque ajoutée au dossier de l'élève");
 
     if (succeeded) closeModal();
   };
 
-  const studentUsers = users.filter((user) => {
-    if (user.role !== "STUDENT") return false;
-    if (selectedStudentFilter === "all") return true;
-    return user.classGroup === selectedStudentFilter;
-  });
+  const studentUsers = sortStudentsByClassAndMatricule(
+    users.filter((user) => {
+      if (user.role !== "STUDENT") return false;
+      if (selectedStudentFilter === "all") return true;
+      return user.classGroup === selectedStudentFilter;
+    }),
+  );
 
-  if (loading) {
+  if (sessionStatus === RESOURCE_STATUS.LOADING) {
     return (
       <div className={LOADING_SCREEN}>
         <div className={LOADING_CONTENT}>
           <div className={LOADING_SPINNER}></div>
           <p>Chargement...</p>
         </div>
+      </div>
+    );
+  }
+
+  if (sessionStatus === RESOURCE_STATUS.ERROR) {
+    return (
+      <div className={LOADING_SCREEN}>
+        <ErrorPanel
+          message={getDisplayedErrorMessage(new ConnectionError().message)}
+          onRetry={restoreSession}
+        />
       </div>
     );
   }
@@ -553,43 +554,58 @@ const App = () => {
 
       <div className={APP_CONTENT}>
         <main className={APP_MAIN}>
-          <AppRouter
-            currentUser={currentUser}
-            activeTab={activeTab}
-            setActiveTab={setActiveTab}
-            users={users}
-            studentUsers={studentUsers}
-            staffUsers={staffUsers}
-            announcements={announcements}
-            subjects={subjects}
-            annualResults={annualResults}
-            gradeSessions={gradeSessions}
-            historyRecords={historyRecords}
-            remarks={remarks}
-            attendanceCards={attendanceCards}
-            attendanceDate={attendanceDate}
-            onAttendanceDateChange={setAttendanceDate}
-            selectedStudentFilter={selectedStudentFilter}
-            setSelectedStudentFilter={setSelectedStudentFilter}
-            targetStudent={targetStudent}
-            setTargetStudent={setTargetStudent}
-            activeGradeSession={activeGradeSession}
-            setActiveGradeSession={setActiveGradeSession}
-            setActiveModal={setActiveModal}
-            setFormState={setFormState}
-            onValidateSession={handleValidateSession}
-            onSaveDraft={handleSaveDraft}
-            onSubmitSession={handleSubmitSession}
-            onExportReportCard={handleExportReportCard}
-            onCheckAttendance={handleCheckAttendance}
-            onMarkAbsence={handleMarkAbsence}
-            onDeleteSlot={handleDeleteSlot}
-            toggleUserStatus={toggleUserStatus}
-            deleteUser={deleteUser}
-            onUpdateUser={handleUpdateUser}
-            onDeleteAnnouncement={handleDeleteAnnouncement}
-            onDeleteSubject={handleDeleteSubject}
+          {isLoadingData ? (
+            <LoadingPanel />
+          ) : (
+            <>
+              {failedResource && (
+                <ErrorBanner
+                  message={getDisplayedErrorMessage(failedResource.errorMessage)}
+                  onRetry={reloadEverything}
+                />
+              )}
+              {failedResource && !failedResource.hasData ? null : (
+                      <AppRouter
+                  currentUser={currentUser}
+                  activeTab={activeTab}
+                  setActiveTab={setActiveTab}
+                  users={users}
+                  studentUsers={studentUsers}
+                  staffUsers={staffUsers}
+                  announcements={announcements}
+                  subjects={subjects}
+                  annualResults={annualResults}
+                  gradeSessions={gradeSessions}
+                  historyRecords={historyRecords}
+                  remarks={remarks}
+                  attendanceCards={attendanceCards}
+                  attendanceDate={attendanceDate}
+                  onAttendanceDateChange={setAttendanceDate}
+                  selectedStudentFilter={selectedStudentFilter}
+                  setSelectedStudentFilter={setSelectedStudentFilter}
+                  targetStudent={targetStudent}
+                  setTargetStudent={setTargetStudent}
+                  activeGradeSession={activeGradeSession}
+                  setActiveGradeSession={setActiveGradeSession}
+                  setActiveModal={setActiveModal}
+                  setFormState={setFormState}
+                  onValidateSession={handleValidateSession}
+            onReviseSession={handleReviseSession}
+                  onSaveDraft={handleSaveDraft}
+                  onSubmitSession={handleSubmitSession}
+                  onExportReportCard={handleExportReportCard}
+                  onCheckAttendance={handleCheckAttendance}
+                  onMarkAbsence={handleMarkAbsence}
+                  onDeleteSlot={handleDeleteSlot}
+                  toggleUserStatus={toggleUserStatus}
+                  deleteUser={deleteUser}
+                  onUpdateUser={handleUpdateUser}
+                  onDeleteAnnouncement={handleDeleteAnnouncement}
+                  onDeleteSubject={handleDeleteSubject}
           />
+              )}
+            </>
+          )}
         </main>
       </div>
 

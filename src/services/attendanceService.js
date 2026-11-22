@@ -1,43 +1,39 @@
-import { apiFetch, jsonBody } from "./api";
+import { callOperation } from "./api";
 
 export const getDailyAttendance = async (dayOfWeek, attendanceDate) => {
-  const query = new URLSearchParams({ day: dayOfWeek, date: attendanceDate });
-  const data = await apiFetch(`/attendance/daily?${query}`);
+  const data = await callOperation("getDailyAttendance", {
+    query: { day: dayOfWeek, date: attendanceDate },
+  });
   return data.cards;
 };
 
 export const createAttendanceSlot = async (slotData) => {
-  const data = await apiFetch("/attendance/slots", {
-    method: "POST",
-    body: jsonBody(slotData),
-  });
+  const data = await callOperation("createAttendanceSlot", { body: slotData });
   return data.slot;
 };
 
 export const updateAttendanceSlot = async (slotId, slotData) => {
-  const data = await apiFetch(`/attendance/slots/${slotId}`, {
-    method: "PATCH",
-    body: jsonBody(slotData),
+  const data = await callOperation("updateAttendanceSlot", {
+    pathParams: { slotId },
+    body: slotData,
   });
   return data.slot;
 };
 
 export const deleteAttendanceSlot = async (slotId) => {
-  await apiFetch(`/attendance/slots/${slotId}`, { method: "DELETE" });
+  await callOperation("deleteAttendanceSlot", { pathParams: { slotId } });
 };
 
 export const checkAttendance = async (slotId, attendanceDate) => {
-  const data = await apiFetch("/attendance/check", {
-    method: "POST",
-    body: jsonBody({ slotId, attendanceDate }),
+  const data = await callOperation("checkAttendance", {
+    body: { slotId, attendanceDate },
   });
   return data.attendance;
 };
 
 export const markAbsence = async (slotId, attendanceDate, motif) => {
-  const data = await apiFetch("/attendance/absence", {
-    method: "POST",
-    body: jsonBody({ slotId, attendanceDate, motif }),
+  const data = await callOperation("markAttendanceAbsence", {
+    body: { slotId, attendanceDate, motif },
   });
   return data.attendance;
 };
